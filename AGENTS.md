@@ -21,6 +21,13 @@ This file is the project's committed home for project-intrinsic agent knowledge:
   after disabling) — re-run that style of check after touching the loader or any feature.
 - Features can't import `js/cart.js` (no imports allowed at all) — those that need cart contents
   read `localStorage.getItem("owl-park-cart")` directly and poll on an interval to react to changes.
+- Sharp edge in `js/feature-loader.js`'s `injectSnippet`: it parses a feature's raw text with
+  `DOMParser`, wrapped in a manually-built `<html><body>...</body></html>` shell before parsing —
+  don't remove that wrapper. Without it, a feature file whose first elements are `<script>`/`<style>`
+  (i.e. no markup fragment before the behavior script) gets silently parsed into `<head>` instead of
+  `<body>` by the HTML parsing algorithm, so `parsed.body.childNodes` misses them entirely and the
+  feature never activates. This bit 14 of the 20 shipped features until caught by checking
+  `window.__owlParkFeatures` registration counts after enable-all, not just DOM-residue counts.
 - `renderCatalog()` (`js/main.js`) replaces `#catalog-grid`'s `innerHTML` on every tab switch, wiping
   out anything a feature appended onto a `.product-row`. Features that decorate product rows
   (`product-badges`, `product-info-tooltips`, `urgency-stock-indicator`, `live-visitor-counter`,
