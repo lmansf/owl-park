@@ -86,9 +86,10 @@ future feature that genuinely needs one.
 **Gotcha for per-product-card features:** `renderCatalog()` in `js/main.js` replaces
 `#catalog-grid`'s `innerHTML` wholesale on every tab switch, which wipes out any DOM nodes a
 feature appended directly onto a `.product-card`. Features that decorate product cards (see
-`product-badges` and `product-info-tooltips`) work around this with a `MutationObserver` on
-`#catalog-grid` that re-applies the injection after each re-render, guarded by an idempotency
-check (skip a card that already has the feature's tagged node) so it doesn't double-inject.
+`product-badges`, `product-info-tooltips`, `urgency-stock-indicator`, `live-visitor-counter`, and
+`membership-glow`) work around this with a `MutationObserver` on `#catalog-grid` that re-applies
+the injection after each re-render, guarded by an idempotency check (skip a card that already has
+the feature's tagged node) so it doesn't double-inject.
 
 ## The 20 enhancements
 
@@ -151,3 +152,12 @@ openspec/                  OpenSpec proposal/specs/design/tasks for this project
 The product/PLU model, cart, features plugin system, and manager UI were specced before
 implementation — see `openspec/changes/critter-cove-shop/` for the proposal, design doc, per-
 capability specs, and task breakdown.
+
+## Continuous Integration
+
+`.github/workflows/ci.yml` runs on every push and pull request. Since there's no build step and no
+test suite, the checks are static/structural: JSON validity for every `.json` file, `node --check`
+syntax validation for every file under `js/` and `features/`, a consistency check that every folder
+in `features/` is registered in `features/index.json` (and vice versa) with a matching manifest,
+and an HTTP smoke test that serves the site with `python3 -m http.server` and fetches the key pages
+and assets.

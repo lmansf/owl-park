@@ -18,8 +18,13 @@ This file is the project's committed home for project-intrinsic agent knowledge:
   the loader or any feature's teardown logic.
 - `renderCatalog()` (`js/main.js`) replaces `#catalog-grid`'s `innerHTML` on every tab switch, wiping
   out anything a feature appended onto a `.product-card`. Features that decorate product cards
-  (`product-badges`, `product-info-tooltips`) re-apply via a `MutationObserver` on `#catalog-grid`
-  guarded by an idempotency check — see README.md's "Authoring a new feature" section.
+  (`product-badges`, `product-info-tooltips`, `urgency-stock-indicator`, `live-visitor-counter`,
+  `membership-glow`) re-apply via a `MutationObserver` on `#catalog-grid` guarded by an idempotency
+  check — see README.md's "Authoring a new feature" section.
+- CI (`.github/workflows/ci.yml`) runs on every push/PR: JSON validity, `node --check` on all JS,
+  a `features/index.json` <-> `features/` folder consistency check, and an HTTP smoke test of key
+  pages/assets over `python3 -m http.server`. There's no separate test suite — this is the whole
+  automated check surface.
 
 ## Maintaining this file
 
