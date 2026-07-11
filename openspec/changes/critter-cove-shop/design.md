@@ -1,6 +1,6 @@
 ## Context
 
-Critter Cove Shop is a demo/test project: a fictional zoo's ticket + membership storefront used as a
+Owl Park is a demo/test project: a fictional owl park's ticket + membership storefront used as a
 design-review sandbox. There is no real backend, payment processor, or build pipeline. The
 distinguishing requirement is the `features/` system: small enhancement snippets that a reviewer can
 plug and unplug at runtime to compare visual/behavioral variants, without a compiler step. That

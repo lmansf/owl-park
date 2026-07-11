@@ -1,9 +1,9 @@
-# Critter Cove Shop
+# Owl Park
 
-A fictional zoo's ticket & membership storefront, built as a demo/test project and design-review
-sandbox. The whole site is vanilla HTML/CSS/JS with **no build step**, because the centerpiece is
-a `features/` plugin system that lets you plug and unplug small enhancement modules on the live
-page at runtime.
+A fictional owl park's ticket & membership storefront, built as a demo/test project and
+design-review sandbox. The whole site is vanilla HTML/CSS/JS with **no build step**, because the
+centerpiece is a `features/` plugin system that lets you plug and unplug small enhancement modules
+on the live page at runtime.
 
 ## Running locally
 
@@ -37,7 +37,7 @@ tickets, plus Individual and Family & Household memberships.
 
 ## Shopping cart
 
-`js/cart.js` is a small state module backed by `localStorage` (`critter-cove-cart` key). It
+`js/cart.js` is a small state module backed by `localStorage` (`owl-park-cart` key). It
 exposes add/remove/set-quantity/clear plus a subscribe hook (`Cart.onChange`) that the storefront
 UI (`js/main.js`) uses to re-render the cart drawer any time it changes. The cart persists across
 reloads, and totals are always recomputed from current cart lines rather than cached.
@@ -126,7 +126,7 @@ feature discovered via `features/index.json`, shows its current on/off state, an
 toggle switch per feature. Toggling calls straight into the loader's `activateFeature`/
 `deactivateFeature`, so the effect is visible immediately — switch to the shop tab (or just
 navigate back) and the change is already live. Enabled/disabled state is persisted to
-`localStorage` (`critter-cove-enabled-features` key) so it survives reloads. "Enable All" /
+`localStorage` (`owl-park-enabled-features` key) so it survives reloads. "Enable All" /
 "Disable All" / "Reset to Defaults" toolbar buttons are provided for quickly comparing states.
 
 ## Project structure

@@ -4,8 +4,8 @@
     "plu": "4011",
     "category": "ticket",
     "name": "General Admission",
-    "tagline": "One day, every habitat",
-    "description": "A full day of access to every exhibit at Critter Cove, from the Red Panda Ridge to the Coral Cove aquarium.",
+    "tagline": "One day, every aviary",
+    "description": "A full day of access to every aviary at Owl Park, from the Canopy Walk to the Barn Owl Loft.",
     "price": 34.0,
     "unit": "per adult",
     "emoji": "🎟️",
@@ -20,7 +20,7 @@
     "description": "Skip the per-person math: a single-day pass covering two adults and up to three children (ages 3-12).",
     "price": 99.0,
     "unit": "per family (5)",
-    "emoji": "🐘",
+    "emoji": "🪺",
     "accent": "#e2662d"
   },
   {
@@ -28,8 +28,8 @@
     "plu": "4157",
     "category": "ticket",
     "name": "Twilight Explorer Ticket",
-    "tagline": "Evening hours, nocturnal habitats",
-    "description": "Entry from 4pm to close, when the nocturnal house and after-dark keeper talks come alive.",
+    "tagline": "Evening hours, when the owls wake up",
+    "description": "Entry from 4pm to close, right as our owls start stirring and the after-dark keeper talks begin.",
     "price": 22.0,
     "unit": "per adult",
     "emoji": "🌙",
@@ -44,7 +44,7 @@
     "description": "12 months of unlimited general admission for one member, plus member pricing on keeper experiences.",
     "price": 89.0,
     "unit": "per year",
-    "emoji": "🦦",
+    "emoji": "🪶",
     "accent": "#0f9aa8"
   },
   {
@@ -56,7 +56,7 @@
     "description": "12 months of unlimited admission for 2 adults and up to 4 dependents at the same address, plus guest passes.",
     "price": 179.0,
     "unit": "per year",
-    "emoji": "🦁",
+    "emoji": "🌳",
     "accent": "#a8321f",
     "featured": true
   }

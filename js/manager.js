@@ -62,7 +62,7 @@ async function resetDefaults() {
   for (const f of features) {
     await toggleFeature(f, false);
   }
-  localStorage.removeItem("critter-cove-enabled-features");
+  localStorage.removeItem("owl-park-enabled-features");
   await applyEnabledFeatures();
   render();
 }

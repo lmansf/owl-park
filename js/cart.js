@@ -1,4 +1,4 @@
-const CART_STORAGE_KEY = "critter-cove-cart";
+const CART_STORAGE_KEY = "owl-park-cart";
 
 function readCart() {
   try {

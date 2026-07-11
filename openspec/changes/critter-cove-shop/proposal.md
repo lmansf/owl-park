@@ -1,6 +1,6 @@
 ## Why
 
-Critter Cove needs a demo e-commerce storefront for selling zoo tickets and memberships that also
+Owl Park needs a demo e-commerce storefront for selling park tickets and memberships that also
 serves as a design-review sandbox: the whole point is to let a reviewer plug and unplug small
 visual/behavioral enhancement modules at runtime (no build step, no reload where avoidable) and see
 how each one changes the storefront. No such demo exists yet in this repo.
@@ -16,7 +16,7 @@ how each one changes the storefront. No such demo exists yet in this repo.
 - Add a `features/` plugin system: self-contained enhancement modules (HTML/CSS/JS + manifest per
   folder) that a runtime loader can inject into and cleanly remove from the live page.
 - Implement 20 concrete feature modules spanning visual, behavioral, and utility/accessibility
-  enhancements relevant to a zoo ticket/membership storefront.
+  enhancements relevant to a park ticket/membership storefront.
 - Add a feature manager UI page that lists all discovered `features/` modules, shows enabled/disabled
   state, and lets a reviewer toggle each one live; toggle state persists across reloads.
 

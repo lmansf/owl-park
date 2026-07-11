@@ -10,7 +10,7 @@
  * even if a feature's own teardown misses something.
  */
 
-const ENABLED_STORAGE_KEY = "critter-cove-enabled-features";
+const ENABLED_STORAGE_KEY = "owl-park-enabled-features";
 const FEATURES_BASE = "features";
 
 const moduleCache = new Map(); // feature id -> imported module
