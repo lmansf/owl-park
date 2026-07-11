@@ -9,6 +9,7 @@ constraint (no build step) shapes every other decision below.
 ## Goals / Non-Goals
 
 **Goals:**
+
 - A static, no-build-step site (plain HTML/CSS/JS) that runs from any static file server.
 - A product/PLU data model that is trivially re-mappable.
 - A cart with persistence and a mocked checkout.
@@ -16,6 +17,7 @@ constraint (no build step) shapes every other decision below.
 - 20 working feature modules and a manager UI to toggle them.
 
 **Non-Goals:**
+
 - Real payment processing, authentication, or a backend/database.
 - A framework or bundler (React/Vite/webpack, etc.) — plain JS modules only.
 - Production-grade e-commerce concerns (tax, shipping, inventory backend, fraud checks).
@@ -34,7 +36,7 @@ constraint (no build step) shapes every other decision below.
   backend, survives reloads, meets the spec.
 - **Feature registry is a static `features/index.json` listing feature folder names**, read by the
   loader to discover manifests (rather than trying to directory-list `features/` via `fetch`, which
-  static file servers don't expose generically). Authoring a new feature means adding a folder *and*
+  static file servers don't expose generically). Authoring a new feature means adding a folder _and_
   a one-line entry in this index.
 - **Loader contract**: each feature module exports (as an ES module) `activate(context)` and
   `deactivate(context)` functions. `activate` injects a `<style>` tag (feature CSS), an HTML fragment

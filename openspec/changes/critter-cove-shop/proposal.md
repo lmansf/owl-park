@@ -23,12 +23,14 @@ how each one changes the storefront. No such demo exists yet in this repo.
 ## Capabilities
 
 ### New Capabilities
+
 - `product-catalog`: Product/PLU data model for tickets and memberships, and the storefront listing UI.
 - `shopping-cart`: Add/remove/quantity cart state, persistence, subtotal/total calculation, and mocked checkout/confirmation.
 - `features-plugin-system`: The `features/` module format (manifest + asset files) and the runtime loader/unloader contract.
 - `feature-manager-ui`: The UI surface for discovering, toggling, and persisting feature enablement.
 
 ### Modified Capabilities
+
 (none — this is a net-new project)
 
 ## Impact

@@ -1,130 +1,130 @@
 <script type="application/json" data-owlpark-manifest>
-{
-  "id": "live-visitor-counter",
-  "name": "Live Visitor Counter",
-  "description": "Simulated \"N people are looking at this\" counter on product cards.",
-  "category": "behavioral",
-  "enabledByDefault": false,
-  "requiresReload": false
-}
+  {
+    "id": "live-visitor-counter",
+    "name": "Live Visitor Counter",
+    "description": "Simulated \"N people are looking at this\" counter on product cards.",
+    "category": "behavioral",
+    "enabledByDefault": false,
+    "requiresReload": false
+  }
 </script>
 
 <style>
-.owlpark-feat-live-visitor-counter {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.76rem;
-  color: #5a716f;
-  margin-top: 0.3rem;
-}
-.owlpark-feat-live-visitor-counter .lv-icon {
-  font-size: 0.85rem;
-}
-.owlpark-feat-live-visitor-counter .lv-count {
-  font-weight: 700;
-  color: var(--cove-teal-dark, #0a4d55);
-}
+  .owlpark-feat-live-visitor-counter {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.76rem;
+    color: #5a716f;
+    margin-top: 0.3rem;
+  }
+  .owlpark-feat-live-visitor-counter .lv-icon {
+    font-size: 0.85rem;
+  }
+  .owlpark-feat-live-visitor-counter .lv-count {
+    font-weight: 700;
+    color: var(--cove-teal-dark, #0a4d55);
+  }
 </style>
 
 <script>
-(function () {
-  var FEATURE_ID = "live-visitor-counter";
-  var counts = new Map(); // productId -> current count
+  (function () {
+    var FEATURE_ID = "live-visitor-counter";
+    var counts = new Map(); // productId -> current count
 
-  var intervalId = null;
-  var observer = null;
+    var intervalId = null;
+    var observer = null;
 
-  function randomStart() {
-    return Math.floor(Math.random() * 13) + 3; // 3-15
-  }
-
-  function injectInto(row) {
-    var productId = row.getAttribute("data-product-id");
-    if (
-      !productId ||
-      row.querySelector('[data-owlpark-feature="' + FEATURE_ID + '"]')
-    )
-      return;
-
-    if (!counts.has(productId)) counts.set(productId, randomStart());
-
-    var line = document.createElement("div");
-    line.className = "owlpark-feat-live-visitor-counter";
-    line.setAttribute("data-owlpark-feature", FEATURE_ID);
-    line.setAttribute("data-product-id", productId);
-    line.innerHTML =
-      '<span class="lv-icon">👀</span><span><span class="lv-count">' +
-      counts.get(productId) +
-      "</span> people viewing this now</span>";
-
-    var desc = row.querySelector(".product-desc");
-    if (desc) {
-      desc.insertAdjacentElement("afterend", line);
-    } else {
-      row.appendChild(line);
+    function randomStart() {
+      return Math.floor(Math.random() * 13) + 3; // 3-15
     }
-  }
 
-  function applyToRows() {
-    document
-      .querySelectorAll(".product-row[data-product-id]")
-      .forEach(injectInto);
-  }
-
-  function tick() {
-    document
-      .querySelectorAll(
-        '.owlpark-feat-live-visitor-counter[data-owlpark-feature="' +
-          FEATURE_ID +
-          '"]',
+    function injectInto(row) {
+      var productId = row.getAttribute("data-product-id");
+      if (
+        !productId ||
+        row.querySelector('[data-owlpark-feature="' + FEATURE_ID + '"]')
       )
-      .forEach(function (line) {
-        var productId = line.getAttribute("data-product-id");
-        var count = counts.get(productId) || randomStart();
-        var delta = Math.random() < 0.5 ? -1 : 1;
-        count = Math.max(1, count + delta);
-        counts.set(productId, count);
-        var countEl = line.querySelector(".lv-count");
-        if (countEl) countEl.textContent = String(count);
-      });
-  }
+        return;
 
-  function activate() {
-    applyToRows();
-    var grid = document.getElementById("catalog-grid");
-    if (grid) {
-      observer = new MutationObserver(function () {
-        applyToRows();
-      });
-      observer.observe(grid, { childList: true });
+      if (!counts.has(productId)) counts.set(productId, randomStart());
+
+      var line = document.createElement("div");
+      line.className = "owlpark-feat-live-visitor-counter";
+      line.setAttribute("data-owlpark-feature", FEATURE_ID);
+      line.setAttribute("data-product-id", productId);
+      line.innerHTML =
+        '<span class="lv-icon">👀</span><span><span class="lv-count">' +
+        counts.get(productId) +
+        "</span> people viewing this now</span>";
+
+      var desc = row.querySelector(".product-desc");
+      if (desc) {
+        desc.insertAdjacentElement("afterend", line);
+      } else {
+        row.appendChild(line);
+      }
     }
-    intervalId = setInterval(tick, 3500);
-  }
 
-  function deactivate() {
-    if (intervalId) {
-      clearInterval(intervalId);
-      intervalId = null;
+    function applyToRows() {
+      document
+        .querySelectorAll(".product-row[data-product-id]")
+        .forEach(injectInto);
     }
-    if (observer) {
-      observer.disconnect();
-      observer = null;
+
+    function tick() {
+      document
+        .querySelectorAll(
+          '.owlpark-feat-live-visitor-counter[data-owlpark-feature="' +
+            FEATURE_ID +
+            '"]',
+        )
+        .forEach(function (line) {
+          var productId = line.getAttribute("data-product-id");
+          var count = counts.get(productId) || randomStart();
+          var delta = Math.random() < 0.5 ? -1 : 1;
+          count = Math.max(1, count + delta);
+          counts.set(productId, count);
+          var countEl = line.querySelector(".lv-count");
+          if (countEl) countEl.textContent = String(count);
+        });
     }
-    counts.clear();
-    document
-      .querySelectorAll('[data-owlpark-feature="' + FEATURE_ID + '"]')
-      .forEach(function (el) {
-        el.remove();
-      });
-  }
 
-  activate();
+    function activate() {
+      applyToRows();
+      var grid = document.getElementById("catalog-grid");
+      if (grid) {
+        observer = new MutationObserver(function () {
+          applyToRows();
+        });
+        observer.observe(grid, { childList: true });
+      }
+      intervalId = setInterval(tick, 3500);
+    }
 
-  window.__owlParkFeatures = window.__owlParkFeatures || {};
-  window.__owlParkFeatures["live-visitor-counter"] = {
-    activate: activate,
-    deactivate: deactivate,
-  };
-})();
+    function deactivate() {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+      if (observer) {
+        observer.disconnect();
+        observer = null;
+      }
+      counts.clear();
+      document
+        .querySelectorAll('[data-owlpark-feature="' + FEATURE_ID + '"]')
+        .forEach(function (el) {
+          el.remove();
+        });
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures["live-visitor-counter"] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
 </script>

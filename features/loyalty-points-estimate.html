@@ -1,106 +1,106 @@
 <script type="application/json" data-owlpark-manifest>
-{
-  "id": "loyalty-points-estimate",
-  "name": "Loyalty Points Estimate",
-  "description": "Estimated loyalty points earned, shown at checkout.",
-  "category": "behavioral",
-  "enabledByDefault": false,
-  "requiresReload": false
-}
+  {
+    "id": "loyalty-points-estimate",
+    "name": "Loyalty Points Estimate",
+    "description": "Estimated loyalty points earned, shown at checkout.",
+    "category": "behavioral",
+    "enabledByDefault": false,
+    "requiresReload": false
+  }
 </script>
 
 <style>
-.owlpark-feat-loyalty-points-estimate {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-top: 0.6rem;
-  padding-top: 0.5rem;
-  border-top: 1px dashed #d8cfae;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #9a6a1a;
-}
-.owlpark-feat-loyalty-points-estimate .lp-icon {
-  font-size: 1rem;
-}
+  .owlpark-feat-loyalty-points-estimate {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.6rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed #d8cfae;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #9a6a1a;
+  }
+  .owlpark-feat-loyalty-points-estimate .lp-icon {
+    font-size: 1rem;
+  }
 </style>
 
 <script>
-(function () {
-  var FEATURE_ID = "loyalty-points-estimate";
+  (function () {
+    var FEATURE_ID = "loyalty-points-estimate";
 
-  var observer = null;
+    var observer = null;
 
-  function parseTotal(summaryEl) {
-    var matches = summaryEl.textContent.match(/\$[\d,]+\.\d{2}/g);
-    if (!matches || matches.length === 0) return 0;
-    var last = matches[matches.length - 1].replace(/[$,]/g, "");
-    return parseFloat(last) || 0;
-  }
-
-  function injectPointsLine() {
-    var summaryEl = document.getElementById("order-summary");
-    if (!summaryEl) return;
-
-    // Avoid stacking a duplicate line if this fires more than once per checkout.
-    var existing = summaryEl.querySelector(
-      '[data-owlpark-feature="' + FEATURE_ID + '"]',
-    );
-    if (existing) existing.remove();
-
-    var total = parseTotal(summaryEl);
-    if (total <= 0) return;
-
-    var points = Math.round(total); // 1 point per $1 spent
-    var line = document.createElement("div");
-    line.className = "owlpark-feat-loyalty-points-estimate";
-    line.setAttribute("data-owlpark-feature", FEATURE_ID);
-    line.innerHTML =
-      '<span class="lp-icon">⭐</span><span>You\'d earn approximately ' +
-      points +
-      " loyalty points on this order!</span>";
-    summaryEl.appendChild(line);
-  }
-
-  function activate() {
-    var modal = document.getElementById("checkout-modal");
-    if (!modal) return;
-    observer = new MutationObserver(function (mutations) {
-      for (var i = 0; i < mutations.length; i++) {
-        var m = mutations[i];
-        if (
-          m.attributeName === "class" &&
-          !modal.classList.contains("hidden")
-        ) {
-          injectPointsLine();
-        }
-      }
-    });
-    observer.observe(modal, { attributes: true, attributeFilter: ["class"] });
-
-    // Cover the case where the feature is toggled on while the modal is already open.
-    if (!modal.classList.contains("hidden")) injectPointsLine();
-  }
-
-  function deactivate() {
-    if (observer) {
-      observer.disconnect();
-      observer = null;
+    function parseTotal(summaryEl) {
+      var matches = summaryEl.textContent.match(/\$[\d,]+\.\d{2}/g);
+      if (!matches || matches.length === 0) return 0;
+      var last = matches[matches.length - 1].replace(/[$,]/g, "");
+      return parseFloat(last) || 0;
     }
-    document
-      .querySelectorAll('[data-owlpark-feature="' + FEATURE_ID + '"]')
-      .forEach(function (el) {
-        el.remove();
+
+    function injectPointsLine() {
+      var summaryEl = document.getElementById("order-summary");
+      if (!summaryEl) return;
+
+      // Avoid stacking a duplicate line if this fires more than once per checkout.
+      var existing = summaryEl.querySelector(
+        '[data-owlpark-feature="' + FEATURE_ID + '"]',
+      );
+      if (existing) existing.remove();
+
+      var total = parseTotal(summaryEl);
+      if (total <= 0) return;
+
+      var points = Math.round(total); // 1 point per $1 spent
+      var line = document.createElement("div");
+      line.className = "owlpark-feat-loyalty-points-estimate";
+      line.setAttribute("data-owlpark-feature", FEATURE_ID);
+      line.innerHTML =
+        '<span class="lp-icon">⭐</span><span>You\'d earn approximately ' +
+        points +
+        " loyalty points on this order!</span>";
+      summaryEl.appendChild(line);
+    }
+
+    function activate() {
+      var modal = document.getElementById("checkout-modal");
+      if (!modal) return;
+      observer = new MutationObserver(function (mutations) {
+        for (var i = 0; i < mutations.length; i++) {
+          var m = mutations[i];
+          if (
+            m.attributeName === "class" &&
+            !modal.classList.contains("hidden")
+          ) {
+            injectPointsLine();
+          }
+        }
       });
-  }
+      observer.observe(modal, { attributes: true, attributeFilter: ["class"] });
 
-  activate();
+      // Cover the case where the feature is toggled on while the modal is already open.
+      if (!modal.classList.contains("hidden")) injectPointsLine();
+    }
 
-  window.__owlParkFeatures = window.__owlParkFeatures || {};
-  window.__owlParkFeatures["loyalty-points-estimate"] = {
-    activate: activate,
-    deactivate: deactivate,
-  };
-})();
+    function deactivate() {
+      if (observer) {
+        observer.disconnect();
+        observer = null;
+      }
+      document
+        .querySelectorAll('[data-owlpark-feature="' + FEATURE_ID + '"]')
+        .forEach(function (el) {
+          el.remove();
+        });
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures["loyalty-points-estimate"] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
 </script>

@@ -14,7 +14,7 @@ This file is the project's committed home for project-intrinsic agent knowledge:
 - Each `features/<id>.html` is ONE self-contained file (manifest + style + markup + a plain,
   non-module `<script>` IIFE) — no separate files, no `import`/`export` anywhere, per README.md's
   "The `features/` plugin system" section. The loader re-creates and appends the file's non-manifest
-  elements live; creating a *new* `<script>` element (not `innerHTML`) is what makes it execute.
+  elements live; creating a _new_ `<script>` element (not `innerHTML`) is what makes it execute.
   Anything a feature injects beyond its own file's static markup must be tagged
   `data-owlpark-feature="<id>"` so `js/feature-loader.js`'s cleanup pass can catch it. Verified via
   automated enable-all/disable-all DOM audits (zero `[data-owlpark-feature]`/stray `<style>` residue

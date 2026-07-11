@@ -1,48 +1,48 @@
 <script type="application/json" data-owlpark-manifest>
-{
-  "id": "weather-widget",
-  "name": "Park Weather Widget",
-  "description": "Fun mocked \"park weather\" badge encouraging visits on nice days.",
-  "category": "visual",
-  "enabledByDefault": false,
-  "requiresReload": false
-}
+  {
+    "id": "weather-widget",
+    "name": "Park Weather Widget",
+    "description": "Fun mocked \"park weather\" badge encouraging visits on nice days.",
+    "category": "visual",
+    "enabledByDefault": false,
+    "requiresReload": false
+  }
 </script>
 
 <style>
-.owlpark-feat-weather-widget {
-  position: fixed;
-  top: 5.4rem;
-  right: 1.2rem;
-  z-index: 30;
-  background: white;
-  border: 1px solid var(--cove-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-card);
-  padding: 0.55rem 0.9rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--cove-teal-dark);
-  max-width: 240px;
-}
-
-.owlpark-feat-weather-widget .ww-icon {
-  font-size: 1.15rem;
-}
-
-@media (max-width: 700px) {
   .owlpark-feat-weather-widget {
-    top: auto;
-    bottom: 1.2rem;
-    right: 1rem;
-    left: 1rem;
-    max-width: none;
-    justify-content: center;
+    position: fixed;
+    top: 5.4rem;
+    right: 1.2rem;
+    z-index: 30;
+    background: white;
+    border: 1px solid var(--cove-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+    padding: 0.55rem 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--cove-teal-dark);
+    max-width: 240px;
   }
-}
+
+  .owlpark-feat-weather-widget .ww-icon {
+    font-size: 1.15rem;
+  }
+
+  @media (max-width: 700px) {
+    .owlpark-feat-weather-widget {
+      top: auto;
+      bottom: 1.2rem;
+      right: 1rem;
+      left: 1rem;
+      max-width: none;
+      justify-content: center;
+    }
+  }
 </style>
 
 <div class="owlpark-feat-weather-widget">
@@ -51,46 +51,49 @@
 </div>
 
 <script>
-(function () {
-  var FEATURE_ID = "weather-widget";
-  var FORECASTS = [
-    { icon: "☀️", text: "72°F and sunny — perfect park weather!" },
-    { icon: "⛅", text: "68°F with light clouds — great day to visit!" },
-    { icon: "🌤️", text: "75°F, mild breeze — the owls approve." },
-    {
-      icon: "🌈",
-      text: "70°F after a morning shower — rainbows over the aviary!",
-    },
-  ];
+  (function () {
+    var FEATURE_ID = "weather-widget";
+    var FORECASTS = [
+      { icon: "☀️", text: "72°F and sunny — perfect park weather!" },
+      { icon: "⛅", text: "68°F with light clouds — great day to visit!" },
+      { icon: "🌤️", text: "75°F, mild breeze — the owls approve." },
+      {
+        icon: "🌈",
+        text: "70°F after a morning shower — rainbows over the aviary!",
+      },
+    ];
 
-  var intervalId = null;
+    var intervalId = null;
 
-  function activate() {
-    var root = document.querySelector(".owlpark-feat-weather-widget");
-    if (!root) return;
-    var iconEl = root.querySelector(".ww-icon");
-    var textEl = root.querySelector(".ww-text");
+    function activate() {
+      var root = document.querySelector(".owlpark-feat-weather-widget");
+      if (!root) return;
+      var iconEl = root.querySelector(".ww-icon");
+      var textEl = root.querySelector(".ww-text");
 
-    function applyRandomForecast() {
-      var pick = FORECASTS[Math.floor(Math.random() * FORECASTS.length)];
-      if (iconEl) iconEl.textContent = pick.icon;
-      if (textEl) textEl.textContent = pick.text;
+      function applyRandomForecast() {
+        var pick = FORECASTS[Math.floor(Math.random() * FORECASTS.length)];
+        if (iconEl) iconEl.textContent = pick.icon;
+        if (textEl) textEl.textContent = pick.text;
+      }
+
+      applyRandomForecast();
+      intervalId = setInterval(applyRandomForecast, 10000);
     }
 
-    applyRandomForecast();
-    intervalId = setInterval(applyRandomForecast, 10000);
-  }
-
-  function deactivate() {
-    if (intervalId) {
-      clearInterval(intervalId);
-      intervalId = null;
+    function deactivate() {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
     }
-  }
 
-  activate();
+    activate();
 
-  window.__owlParkFeatures = window.__owlParkFeatures || {};
-  window.__owlParkFeatures[FEATURE_ID] = { activate: activate, deactivate: deactivate };
-})();
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures[FEATURE_ID] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
 </script>

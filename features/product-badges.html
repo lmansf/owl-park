@@ -1,86 +1,99 @@
 <script type="application/json" data-owlpark-manifest>
-{
-  "id": "product-badges",
-  "name": "Product Badges",
-  "description": "\"Popular\" / \"Best Value\" / \"Members' Pick\" ribbon badges on product rows.",
-  "category": "visual",
-  "enabledByDefault": true,
-  "requiresReload": false
-}
+  {
+    "id": "product-badges",
+    "name": "Product Badges",
+    "description": "\"Popular\" / \"Best Value\" / \"Members' Pick\" ribbon badges on product rows.",
+    "category": "visual",
+    "enabledByDefault": true,
+    "requiresReload": false
+  }
 </script>
 
 <style>
-.owlpark-feat-product-badges {
-  position: absolute;
-  top: -0.5rem;
-  left: 0.9rem;
-  font-size: 0.68rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  padding: 0.28rem 0.6rem;
-  border-radius: 999px;
-  color: white;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  z-index: 3;
-}
-.owlpark-feat-product-badges.popular {
-  background: #e2662d;
-}
-.owlpark-feat-product-badges.best-value {
-  background: #2f8f4e;
-}
-.owlpark-feat-product-badges.members-pick {
-  background: #a8321f;
-}
+  .owlpark-feat-product-badges {
+    position: absolute;
+    top: -0.5rem;
+    left: 0.9rem;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 0.28rem 0.6rem;
+    border-radius: 999px;
+    color: white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    z-index: 3;
+  }
+  .owlpark-feat-product-badges.popular {
+    background: #e2662d;
+  }
+  .owlpark-feat-product-badges.best-value {
+    background: #2f8f4e;
+  }
+  .owlpark-feat-product-badges.members-pick {
+    background: #a8321f;
+  }
 </style>
 
 <script>
-(function () {
-  var BADGES = {
-    "prod-ga-ticket": { label: "Popular", cls: "popular" },
-    "prod-family-day-pass": { label: "Best Value", cls: "best-value" },
-    "prod-household-membership": { label: "Members' Pick", cls: "members-pick" },
-  };
+  (function () {
+    var BADGES = {
+      "prod-ga-ticket": { label: "Popular", cls: "popular" },
+      "prod-family-day-pass": { label: "Best Value", cls: "best-value" },
+      "prod-household-membership": {
+        label: "Members' Pick",
+        cls: "members-pick",
+      },
+    };
 
-  var observer = null;
+    var observer = null;
 
-  function applyToRows() {
-    document.querySelectorAll(".product-row[data-product-id]").forEach(function (row) {
-      if (row.querySelector('[data-owlpark-feature="product-badges"]')) return;
-      var badge = BADGES[row.getAttribute("data-product-id")];
-      if (!badge) return;
+    function applyToRows() {
+      document
+        .querySelectorAll(".product-row[data-product-id]")
+        .forEach(function (row) {
+          if (row.querySelector('[data-owlpark-feature="product-badges"]'))
+            return;
+          var badge = BADGES[row.getAttribute("data-product-id")];
+          if (!badge) return;
 
-      var ribbon = document.createElement("span");
-      ribbon.className = "owlpark-feat-product-badges " + badge.cls;
-      ribbon.setAttribute("data-owlpark-feature", "product-badges");
-      ribbon.textContent = badge.label;
-      row.appendChild(ribbon);
-    });
-  }
-
-  function activate() {
-    applyToRows();
-    var grid = document.getElementById("catalog-grid");
-    if (grid) {
-      observer = new MutationObserver(function () { applyToRows(); });
-      observer.observe(grid, { childList: true });
+          var ribbon = document.createElement("span");
+          ribbon.className = "owlpark-feat-product-badges " + badge.cls;
+          ribbon.setAttribute("data-owlpark-feature", "product-badges");
+          ribbon.textContent = badge.label;
+          row.appendChild(ribbon);
+        });
     }
-  }
 
-  function deactivate() {
-    if (observer) {
-      observer.disconnect();
-      observer = null;
+    function activate() {
+      applyToRows();
+      var grid = document.getElementById("catalog-grid");
+      if (grid) {
+        observer = new MutationObserver(function () {
+          applyToRows();
+        });
+        observer.observe(grid, { childList: true });
+      }
     }
-    document
-      .querySelectorAll('[data-owlpark-feature="product-badges"]')
-      .forEach(function (el) { el.remove(); });
-  }
 
-  activate();
+    function deactivate() {
+      if (observer) {
+        observer.disconnect();
+        observer = null;
+      }
+      document
+        .querySelectorAll('[data-owlpark-feature="product-badges"]')
+        .forEach(function (el) {
+          el.remove();
+        });
+    }
 
-  window.__owlParkFeatures = window.__owlParkFeatures || {};
-  window.__owlParkFeatures["product-badges"] = { activate: activate, deactivate: deactivate };
-})();
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures["product-badges"] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
 </script>

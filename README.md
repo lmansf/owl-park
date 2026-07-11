@@ -69,7 +69,7 @@ file contains, in order:
 
 `features/index.json` is the registry: a flat JSON array of feature filenames. The runtime loader
 (`js/feature-loader.js`) fetches each file's raw text once, parses out the manifest for discovery,
-and on activate re-creates every non-manifest element and appends it live — creating a *new*
+and on activate re-creates every non-manifest element and appends it live — creating a _new_
 `<script>` element and appending it (rather than setting `innerHTML`) is what makes the browser
 execute it. All 20 shipped features toggle live with zero page reloads; the manifest/manager UI
 still support a `requiresReload` escape hatch for a future feature that genuinely needs one.
@@ -86,7 +86,7 @@ not a code import.
    block, optional `<style>`, optional static markup, and a plain `<script>` IIFE.
 2. In that script, define `activate()`/`deactivate()`, call `activate()` yourself at the bottom,
    and register into `window.__owlParkFeatures["my-feature"]`. Keep them symmetric: whatever
-   `activate()` creates, `deactivate()` must remove — and tag anything you create *dynamically*
+   `activate()` creates, `deactivate()` must remove — and tag anything you create _dynamically_
    (e.g. a badge appended onto an existing `.product-row`) with `data-owlpark-feature="my-feature"`
    yourself, since the loader only auto-tags the file's own top-level elements, not nodes your
    script creates elsewhere on the page.
@@ -104,28 +104,28 @@ the feature's tagged node) so it doesn't double-inject.
 
 ## The 20 enhancements
 
-| Feature | Category | Description |
-|---|---|---|
-| Seasonal Banner | visual | Rotating seasonal promo banner (Summer Safari, Winter Lights) across the top of the storefront. |
-| Owl Spotlight | visual | "Owl of the Day" spotlight card featuring an Owl Park resident, rotating every few seconds. |
-| Confetti Checkout | visual | Confetti burst animation on the checkout confirmation screen. |
-| Dark Mode | visual | Dark/light theme toggle in the header. |
-| Feather Cursor Trail | visual | Decorative feather trail that follows the mouse cursor. |
-| Product Badges | visual | "Popular" / "Best Value" / "Members' Pick" ribbon badges on product rows. |
-| Membership Glow | visual | Glowing highlight and ribbon on the recommended membership tier. |
-| Park Weather Widget | visual | Fun mocked "park weather" badge encouraging visits on nice days. |
-| Feeding Time Countdown | behavioral | Live countdown timer to the next keeper feeding or special event. |
-| Cart Reminder Toast | behavioral | Gentle toast reminder if items sit in the cart without checking out. |
-| Membership Upsell Modal | behavioral | Suggests a membership upgrade when a ticket-only cart builds up. |
-| Urgency Stock Indicator | behavioral | "Only a few left today" urgency messaging on limited passes. |
-| Recently Viewed | behavioral | Strip tracking and displaying recently viewed products. |
-| Exit Intent Offer | behavioral | Exit-intent detection with a one-time discount nudge. |
-| Live Visitor Counter | behavioral | Simulated "N people are looking at this" counter on product cards. |
-| Loyalty Points Estimate | behavioral | Estimated loyalty points earned, shown at checkout. |
-| High-Contrast Mode | utility | High-contrast accessibility mode toggle for improved readability. |
-| Font Size Adjuster | utility | Floating control to increase or decrease site-wide font size. |
-| Product Info Tooltips | utility | Info icons on product rows with detailed inclusion tooltips. |
-| Printable Receipt | utility | Adds a print/download receipt button to the checkout confirmation. |
+| Feature                 | Category   | Description                                                                                     |
+| ----------------------- | ---------- | ----------------------------------------------------------------------------------------------- |
+| Seasonal Banner         | visual     | Rotating seasonal promo banner (Summer Safari, Winter Lights) across the top of the storefront. |
+| Owl Spotlight           | visual     | "Owl of the Day" spotlight card featuring an Owl Park resident, rotating every few seconds.     |
+| Confetti Checkout       | visual     | Confetti burst animation on the checkout confirmation screen.                                   |
+| Dark Mode               | visual     | Dark/light theme toggle in the header.                                                          |
+| Feather Cursor Trail    | visual     | Decorative feather trail that follows the mouse cursor.                                         |
+| Product Badges          | visual     | "Popular" / "Best Value" / "Members' Pick" ribbon badges on product rows.                       |
+| Membership Glow         | visual     | Glowing highlight and ribbon on the recommended membership tier.                                |
+| Park Weather Widget     | visual     | Fun mocked "park weather" badge encouraging visits on nice days.                                |
+| Feeding Time Countdown  | behavioral | Live countdown timer to the next keeper feeding or special event.                               |
+| Cart Reminder Toast     | behavioral | Gentle toast reminder if items sit in the cart without checking out.                            |
+| Membership Upsell Modal | behavioral | Suggests a membership upgrade when a ticket-only cart builds up.                                |
+| Urgency Stock Indicator | behavioral | "Only a few left today" urgency messaging on limited passes.                                    |
+| Recently Viewed         | behavioral | Strip tracking and displaying recently viewed products.                                         |
+| Exit Intent Offer       | behavioral | Exit-intent detection with a one-time discount nudge.                                           |
+| Live Visitor Counter    | behavioral | Simulated "N people are looking at this" counter on product cards.                              |
+| Loyalty Points Estimate | behavioral | Estimated loyalty points earned, shown at checkout.                                             |
+| High-Contrast Mode      | utility    | High-contrast accessibility mode toggle for improved readability.                               |
+| Font Size Adjuster      | utility    | Floating control to increase or decrease site-wide font size.                                   |
+| Product Info Tooltips   | utility    | Info icons on product rows with detailed inclusion tooltips.                                    |
+| Printable Receipt       | utility    | Adds a print/download receipt button to the checkout confirmation.                              |
 
 (Each feature also has a `description` in its own `data-owlpark-manifest` block, shown live in the
 Feature Manager UI; this table mirrors the same feature set.)

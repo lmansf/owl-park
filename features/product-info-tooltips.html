@@ -1,124 +1,145 @@
 <script type="application/json" data-owlpark-manifest>
-{
-  "id": "product-info-tooltips",
-  "name": "Product Info Tooltips",
-  "description": "Info icons on product rows with detailed inclusion tooltips.",
-  "category": "utility",
-  "enabledByDefault": false,
-  "requiresReload": false
-}
+  {
+    "id": "product-info-tooltips",
+    "name": "Product Info Tooltips",
+    "description": "Info icons on product rows with detailed inclusion tooltips.",
+    "category": "utility",
+    "enabledByDefault": false,
+    "requiresReload": false
+  }
 </script>
 
 <style>
-.owlpark-feat-product-info-tooltips.pit-info-wrap {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  margin-left: 0.3rem;
-  vertical-align: middle;
-}
-.owlpark-feat-product-info-tooltips .pit-info-icon {
-  width: 1.3rem;
-  height: 1.3rem;
-  border-radius: 50%;
-  background: var(--cove-teal-dark, #0a4d55);
-  color: white;
-  border: none;
-  font-size: 0.72rem;
-  font-weight: 700;
-  cursor: help;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-.owlpark-feat-product-info-tooltips .pit-tooltip {
-  visibility: hidden;
-  opacity: 0;
-  position: absolute;
-  top: 1.6rem;
-  left: 0;
-  width: 15rem;
-  max-width: 60vw;
-  background: var(--cove-ink, #1e2a2b);
-  color: white;
-  font-size: 0.76rem;
-  line-height: 1.4;
-  padding: 0.6rem 0.75rem;
-  border-radius: 8px;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.25);
-  transition: opacity 0.15s ease;
-  pointer-events: none;
-  z-index: 5;
-}
-.owlpark-feat-product-info-tooltips.pit-info-wrap:hover .pit-tooltip,
-.owlpark-feat-product-info-tooltips .pit-info-icon:focus + .pit-tooltip {
-  visibility: visible;
-  opacity: 1;
-}
+  .owlpark-feat-product-info-tooltips.pit-info-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    margin-left: 0.3rem;
+    vertical-align: middle;
+  }
+  .owlpark-feat-product-info-tooltips .pit-info-icon {
+    width: 1.3rem;
+    height: 1.3rem;
+    border-radius: 50%;
+    background: var(--cove-teal-dark, #0a4d55);
+    color: white;
+    border: none;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: help;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .owlpark-feat-product-info-tooltips .pit-tooltip {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    top: 1.6rem;
+    left: 0;
+    width: 15rem;
+    max-width: 60vw;
+    background: var(--cove-ink, #1e2a2b);
+    color: white;
+    font-size: 0.76rem;
+    line-height: 1.4;
+    padding: 0.6rem 0.75rem;
+    border-radius: 8px;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.25);
+    transition: opacity 0.15s ease;
+    pointer-events: none;
+    z-index: 5;
+  }
+  .owlpark-feat-product-info-tooltips.pit-info-wrap:hover .pit-tooltip,
+  .owlpark-feat-product-info-tooltips .pit-info-icon:focus + .pit-tooltip {
+    visibility: visible;
+    opacity: 1;
+  }
 </style>
 
 <script>
-(function () {
-  var TICKET_FINE_PRINT =
-    "Valid for one calendar day from date of purchase. Non-transferable. Rain-check policy applies for closures.";
-  var MEMBERSHIP_FINE_PRINT =
-    "12-month term from purchase date. Includes 10% gift shop discount. Auto-renewal reminder sent 30 days prior.";
+  (function () {
+    var TICKET_FINE_PRINT =
+      "Valid for one calendar day from date of purchase. Non-transferable. Rain-check policy applies for closures.";
+    var MEMBERSHIP_FINE_PRINT =
+      "12-month term from purchase date. Includes 10% gift shop discount. Auto-renewal reminder sent 30 days prior.";
 
-  var observer = null;
-  var byId = {};
+    var observer = null;
+    var byId = {};
 
-  function applyToRows() {
-    document.querySelectorAll(".product-row[data-product-id]").forEach(function (row) {
-      if (row.querySelector('[data-owlpark-feature="product-info-tooltips"]')) return;
-      var product = byId[row.getAttribute("data-product-id")];
-      if (!product) return;
+    function applyToRows() {
+      document
+        .querySelectorAll(".product-row[data-product-id]")
+        .forEach(function (row) {
+          if (
+            row.querySelector('[data-owlpark-feature="product-info-tooltips"]')
+          )
+            return;
+          var product = byId[row.getAttribute("data-product-id")];
+          if (!product) return;
 
-      var finePrint = product.category === "membership" ? MEMBERSHIP_FINE_PRINT : TICKET_FINE_PRINT;
+          var finePrint =
+            product.category === "membership"
+              ? MEMBERSHIP_FINE_PRINT
+              : TICKET_FINE_PRINT;
 
-      var wrap = document.createElement("div");
-      wrap.className = "owlpark-feat-product-info-tooltips pit-info-wrap";
-      wrap.setAttribute("data-owlpark-feature", "product-info-tooltips");
-      wrap.innerHTML =
-        '<button type="button" class="pit-info-icon" aria-label="Product details">i</button>' +
-        '<div class="pit-tooltip" role="tooltip">' + finePrint + "</div>";
-      var titleLine = row.querySelector(".row-title-line");
-      if (titleLine) {
-        titleLine.appendChild(wrap);
-      } else {
-        row.style.position = row.style.position || "relative";
-        row.appendChild(wrap);
-      }
-    });
-  }
-
-  function activate() {
-    fetch("data/products.json")
-      .then(function (res) { return res.json(); })
-      .then(function (products) {
-        products.forEach(function (p) { byId[p.id] = p; });
-        applyToRows();
-        var grid = document.getElementById("catalog-grid");
-        if (grid) {
-          observer = new MutationObserver(function () { applyToRows(); });
-          observer.observe(grid, { childList: true });
-        }
-      });
-  }
-
-  function deactivate() {
-    if (observer) {
-      observer.disconnect();
-      observer = null;
+          var wrap = document.createElement("div");
+          wrap.className = "owlpark-feat-product-info-tooltips pit-info-wrap";
+          wrap.setAttribute("data-owlpark-feature", "product-info-tooltips");
+          wrap.innerHTML =
+            '<button type="button" class="pit-info-icon" aria-label="Product details">i</button>' +
+            '<div class="pit-tooltip" role="tooltip">' +
+            finePrint +
+            "</div>";
+          var titleLine = row.querySelector(".row-title-line");
+          if (titleLine) {
+            titleLine.appendChild(wrap);
+          } else {
+            row.style.position = row.style.position || "relative";
+            row.appendChild(wrap);
+          }
+        });
     }
-    document
-      .querySelectorAll('[data-owlpark-feature="product-info-tooltips"]')
-      .forEach(function (el) { el.remove(); });
-  }
 
-  activate();
+    function activate() {
+      fetch("data/products.json")
+        .then(function (res) {
+          return res.json();
+        })
+        .then(function (products) {
+          products.forEach(function (p) {
+            byId[p.id] = p;
+          });
+          applyToRows();
+          var grid = document.getElementById("catalog-grid");
+          if (grid) {
+            observer = new MutationObserver(function () {
+              applyToRows();
+            });
+            observer.observe(grid, { childList: true });
+          }
+        });
+    }
 
-  window.__owlParkFeatures = window.__owlParkFeatures || {};
-  window.__owlParkFeatures["product-info-tooltips"] = { activate: activate, deactivate: deactivate };
-})();
+    function deactivate() {
+      if (observer) {
+        observer.disconnect();
+        observer = null;
+      }
+      document
+        .querySelectorAll('[data-owlpark-feature="product-info-tooltips"]')
+        .forEach(function (el) {
+          el.remove();
+        });
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures["product-info-tooltips"] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
 </script>

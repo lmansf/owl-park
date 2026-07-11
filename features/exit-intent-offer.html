@@ -1,145 +1,148 @@
 <script type="application/json" data-owlpark-manifest>
-{
-  "id": "exit-intent-offer",
-  "name": "Exit Intent Offer",
-  "description": "Exit-intent detection with a one-time discount nudge.",
-  "category": "behavioral",
-  "enabledByDefault": false,
-  "requiresReload": false
-}
+  {
+    "id": "exit-intent-offer",
+    "name": "Exit Intent Offer",
+    "description": "Exit-intent detection with a one-time discount nudge.",
+    "category": "behavioral",
+    "enabledByDefault": false,
+    "requiresReload": false
+  }
 </script>
 
 <style>
-.owlpark-feat-exit-intent-offer {
-  position: fixed;
-  inset: 0;
-  background: rgba(10, 30, 32, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 80;
-  animation: exit-intent-fade-in 0.2s ease;
-}
-@keyframes exit-intent-fade-in {
-  from {
-    opacity: 0;
+  .owlpark-feat-exit-intent-offer {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 30, 32, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 80;
+    animation: exit-intent-fade-in 0.2s ease;
   }
-  to {
-    opacity: 1;
+  @keyframes exit-intent-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
-}
-.owlpark-feat-exit-intent-offer .exit-intent-card {
-  background: white;
-  border-radius: var(--radius-lg, 18px);
-  padding: 1.8rem 2rem;
-  max-width: 380px;
-  width: 90vw;
-  text-align: center;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
-}
-.owlpark-feat-exit-intent-offer .exit-intent-icon {
-  font-size: 2.2rem;
-}
-.owlpark-feat-exit-intent-offer h3 {
-  margin: 0.5rem 0 0.4rem;
-  color: var(--cove-teal-dark, #0a4d55);
-}
-.owlpark-feat-exit-intent-offer p {
-  margin: 0 0 1.1rem;
-  font-size: 0.92rem;
-  color: #4a5657;
-}
-.owlpark-feat-exit-intent-offer .exit-intent-code {
-  display: inline-block;
-  background: var(--cove-sand, #faf3e6);
-  border: 1px dashed var(--cove-orange, #e2662d);
-  color: var(--cove-orange, #e2662d);
-  font-weight: 700;
-  padding: 0.25rem 0.7rem;
-  border-radius: 8px;
-  letter-spacing: 0.5px;
-}
-.owlpark-feat-exit-intent-offer .exit-intent-close-btn {
-  display: block;
-  margin: 1.1rem auto 0;
-  background: var(--cove-teal, #0f6f7a);
-  color: white;
-  border: none;
-  padding: 0.55rem 1.3rem;
-  border-radius: 999px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.owlpark-feat-exit-intent-offer .exit-intent-close-btn:hover {
-  filter: brightness(1.06);
-}
+  .owlpark-feat-exit-intent-offer .exit-intent-card {
+    background: white;
+    border-radius: var(--radius-lg, 18px);
+    padding: 1.8rem 2rem;
+    max-width: 380px;
+    width: 90vw;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
+  }
+  .owlpark-feat-exit-intent-offer .exit-intent-icon {
+    font-size: 2.2rem;
+  }
+  .owlpark-feat-exit-intent-offer h3 {
+    margin: 0.5rem 0 0.4rem;
+    color: var(--cove-teal-dark, #0a4d55);
+  }
+  .owlpark-feat-exit-intent-offer p {
+    margin: 0 0 1.1rem;
+    font-size: 0.92rem;
+    color: #4a5657;
+  }
+  .owlpark-feat-exit-intent-offer .exit-intent-code {
+    display: inline-block;
+    background: var(--cove-sand, #faf3e6);
+    border: 1px dashed var(--cove-orange, #e2662d);
+    color: var(--cove-orange, #e2662d);
+    font-weight: 700;
+    padding: 0.25rem 0.7rem;
+    border-radius: 8px;
+    letter-spacing: 0.5px;
+  }
+  .owlpark-feat-exit-intent-offer .exit-intent-close-btn {
+    display: block;
+    margin: 1.1rem auto 0;
+    background: var(--cove-teal, #0f6f7a);
+    color: white;
+    border: none;
+    padding: 0.55rem 1.3rem;
+    border-radius: 999px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .owlpark-feat-exit-intent-offer .exit-intent-close-btn:hover {
+    filter: brightness(1.06);
+  }
 </style>
 
 <script>
-(function () {
-  var FEATURE_ID = "exit-intent-offer";
+  (function () {
+    var FEATURE_ID = "exit-intent-offer";
 
-  var leaveHandler = null;
-  var shownThisSession = false;
+    var leaveHandler = null;
+    var shownThisSession = false;
 
-  function showOffer() {
-    if (
-      shownThisSession ||
-      document.querySelector('[data-owlpark-feature="' + FEATURE_ID + '"]')
-    )
-      return;
-    shownThisSession = true;
+    function showOffer() {
+      if (
+        shownThisSession ||
+        document.querySelector('[data-owlpark-feature="' + FEATURE_ID + '"]')
+      )
+        return;
+      shownThisSession = true;
 
-    var overlay = document.createElement("div");
-    overlay.className = "owlpark-feat-exit-intent-offer";
-    overlay.setAttribute("data-owlpark-feature", FEATURE_ID);
-    overlay.innerHTML =
-      '<div class="exit-intent-card">' +
-      '<div class="exit-intent-icon">🐾</div>' +
-      "<h3>Wait — don't go!</h3>" +
-      '<p>Use code <span class="exit-intent-code">COVE10</span> for 10% off your first membership.</p>' +
-      '<button type="button" class="exit-intent-close-btn">No thanks, I\'ll browse</button>' +
-      "</div>";
+      var overlay = document.createElement("div");
+      overlay.className = "owlpark-feat-exit-intent-offer";
+      overlay.setAttribute("data-owlpark-feature", FEATURE_ID);
+      overlay.innerHTML =
+        '<div class="exit-intent-card">' +
+        '<div class="exit-intent-icon">🐾</div>' +
+        "<h3>Wait — don't go!</h3>" +
+        '<p>Use code <span class="exit-intent-code">COVE10</span> for 10% off your first membership.</p>' +
+        '<button type="button" class="exit-intent-close-btn">No thanks, I\'ll browse</button>' +
+        "</div>";
 
-    function close() {
-      overlay.remove();
-    }
-    overlay
-      .querySelector(".exit-intent-close-btn")
-      .addEventListener("click", close);
-    overlay.addEventListener("click", function (e) {
-      if (e.target === overlay) close();
-    });
-
-    document.body.appendChild(overlay);
-  }
-
-  function activate() {
-    shownThisSession = false;
-    leaveHandler = function (event) {
-      if (event.clientY <= 0) showOffer();
-    };
-    document.documentElement.addEventListener("mouseleave", leaveHandler);
-  }
-
-  function deactivate() {
-    if (leaveHandler) {
-      document.documentElement.removeEventListener("mouseleave", leaveHandler);
-      leaveHandler = null;
-    }
-    document
-      .querySelectorAll('[data-owlpark-feature="' + FEATURE_ID + '"]')
-      .forEach(function (el) {
-        el.remove();
+      function close() {
+        overlay.remove();
+      }
+      overlay
+        .querySelector(".exit-intent-close-btn")
+        .addEventListener("click", close);
+      overlay.addEventListener("click", function (e) {
+        if (e.target === overlay) close();
       });
-  }
 
-  activate();
+      document.body.appendChild(overlay);
+    }
 
-  window.__owlParkFeatures = window.__owlParkFeatures || {};
-  window.__owlParkFeatures["exit-intent-offer"] = {
-    activate: activate,
-    deactivate: deactivate,
-  };
-})();
+    function activate() {
+      shownThisSession = false;
+      leaveHandler = function (event) {
+        if (event.clientY <= 0) showOffer();
+      };
+      document.documentElement.addEventListener("mouseleave", leaveHandler);
+    }
+
+    function deactivate() {
+      if (leaveHandler) {
+        document.documentElement.removeEventListener(
+          "mouseleave",
+          leaveHandler,
+        );
+        leaveHandler = null;
+      }
+      document
+        .querySelectorAll('[data-owlpark-feature="' + FEATURE_ID + '"]')
+        .forEach(function (el) {
+          el.remove();
+        });
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures["exit-intent-offer"] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
 </script>

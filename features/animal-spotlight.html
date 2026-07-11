@@ -1,42 +1,42 @@
 <script type="application/json" data-owlpark-manifest>
-{
-  "id": "animal-spotlight",
-  "name": "Owl Spotlight",
-  "description": "\"Owl of the Day\" spotlight card featuring an Owl Park resident, rotating every few seconds.",
-  "category": "visual",
-  "enabledByDefault": true,
-  "requiresReload": false
-}
+  {
+    "id": "animal-spotlight",
+    "name": "Owl Spotlight",
+    "description": "\"Owl of the Day\" spotlight card featuring an Owl Park resident, rotating every few seconds.",
+    "category": "visual",
+    "enabledByDefault": true,
+    "requiresReload": false
+  }
 </script>
 
 <style>
-.owlpark-feat-animal-spotlight {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-  background: linear-gradient(90deg, #0f6f7a, #0a4d55);
-  color: white;
-  padding: 0.7rem 1.3rem;
-}
-.owlpark-feat-animal-spotlight .as-emoji {
-  font-size: 2.1rem;
-  flex-shrink: 0;
-}
-.owlpark-feat-animal-spotlight .as-label {
-  font-size: 0.68rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  opacity: 0.85;
-  font-weight: 700;
-}
-.owlpark-feat-animal-spotlight .as-name {
-  font-weight: 700;
-  font-size: 1rem;
-}
-.owlpark-feat-animal-spotlight .as-fact {
-  font-size: 0.82rem;
-  opacity: 0.9;
-}
+  .owlpark-feat-animal-spotlight {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    background: linear-gradient(90deg, #0f6f7a, #0a4d55);
+    color: white;
+    padding: 0.7rem 1.3rem;
+  }
+  .owlpark-feat-animal-spotlight .as-emoji {
+    font-size: 2.1rem;
+    flex-shrink: 0;
+  }
+  .owlpark-feat-animal-spotlight .as-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.85;
+    font-weight: 700;
+  }
+  .owlpark-feat-animal-spotlight .as-name {
+    font-weight: 700;
+    font-size: 1rem;
+  }
+  .owlpark-feat-animal-spotlight .as-fact {
+    font-size: 0.82rem;
+    opacity: 0.9;
+  }
 </style>
 
 <div class="owlpark-feat-animal-spotlight">
@@ -44,65 +44,70 @@
   <div>
     <div class="as-label">Owl of the Day</div>
     <div class="as-name">Barn Owl</div>
-    <div class="as-fact">Barn owls can locate prey in total darkness using hearing alone.</div>
+    <div class="as-fact">
+      Barn owls can locate prey in total darkness using hearing alone.
+    </div>
   </div>
 </div>
 
 <script>
-(function () {
-  var OWLS = [
-    {
-      emoji: "🦉",
-      name: "Barn Owl",
-      fact: "Barn owls can locate prey in total darkness using hearing alone.",
-    },
-    {
-      emoji: "🦉",
-      name: "Snowy Owl",
-      fact: "Snowy owls are one of the few owl species that hunt during the day, not just at night.",
-    },
-    {
-      emoji: "🦉",
-      name: "Great Horned Owl",
-      fact: "A great horned owl's grip strength is roughly 28 pounds per square inch.",
-    },
-    {
-      emoji: "🦉",
-      name: "Elf Owl",
-      fact: "Elf owls are the smallest owl species in the world, weighing about as much as a handful of coins.",
-    },
-  ];
+  (function () {
+    var OWLS = [
+      {
+        emoji: "🦉",
+        name: "Barn Owl",
+        fact: "Barn owls can locate prey in total darkness using hearing alone.",
+      },
+      {
+        emoji: "🦉",
+        name: "Snowy Owl",
+        fact: "Snowy owls are one of the few owl species that hunt during the day, not just at night.",
+      },
+      {
+        emoji: "🦉",
+        name: "Great Horned Owl",
+        fact: "A great horned owl's grip strength is roughly 28 pounds per square inch.",
+      },
+      {
+        emoji: "🦉",
+        name: "Elf Owl",
+        fact: "Elf owls are the smallest owl species in the world, weighing about as much as a handful of coins.",
+      },
+    ];
 
-  var intervalId = null;
+    var intervalId = null;
 
-  function render(index) {
-    var root = document.querySelector(".owlpark-feat-animal-spotlight");
-    if (!root) return;
-    var owl = OWLS[index];
-    root.querySelector(".as-emoji").textContent = owl.emoji;
-    root.querySelector(".as-name").textContent = owl.name;
-    root.querySelector(".as-fact").textContent = owl.fact;
-  }
-
-  function activate() {
-    var index = 0;
-    render(index);
-    intervalId = setInterval(function () {
-      index = (index + 1) % OWLS.length;
-      render(index);
-    }, 6000);
-  }
-
-  function deactivate() {
-    if (intervalId) {
-      clearInterval(intervalId);
-      intervalId = null;
+    function render(index) {
+      var root = document.querySelector(".owlpark-feat-animal-spotlight");
+      if (!root) return;
+      var owl = OWLS[index];
+      root.querySelector(".as-emoji").textContent = owl.emoji;
+      root.querySelector(".as-name").textContent = owl.name;
+      root.querySelector(".as-fact").textContent = owl.fact;
     }
-  }
 
-  activate();
+    function activate() {
+      var index = 0;
+      render(index);
+      intervalId = setInterval(function () {
+        index = (index + 1) % OWLS.length;
+        render(index);
+      }, 6000);
+    }
 
-  window.__owlParkFeatures = window.__owlParkFeatures || {};
-  window.__owlParkFeatures["animal-spotlight"] = { activate: activate, deactivate: deactivate };
-})();
+    function deactivate() {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures["animal-spotlight"] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
 </script>

@@ -1,143 +1,146 @@
 <script type="application/json" data-owlpark-manifest>
-{
-  "id": "dark-mode",
-  "name": "Dark Mode",
-  "description": "Dark/light theme toggle in the header.",
-  "category": "visual",
-  "enabledByDefault": false,
-  "requiresReload": false
-}
+  {
+    "id": "dark-mode",
+    "name": "Dark Mode",
+    "description": "Dark/light theme toggle in the header.",
+    "category": "visual",
+    "enabledByDefault": false,
+    "requiresReload": false
+  }
 </script>
 
 <style>
-.owlpark-feat-dark-mode-btn {
-  background: rgba(255, 255, 255, 0.15);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  padding: 0.4rem 0.7rem;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-.owlpark-feat-dark-mode-btn:hover {
-  background: rgba(255, 255, 255, 0.28);
-}
+  .owlpark-feat-dark-mode-btn {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    padding: 0.4rem 0.7rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .owlpark-feat-dark-mode-btn:hover {
+    background: rgba(255, 255, 255, 0.28);
+  }
 
-body.owlpark-dark-mode-active {
-  background: #12181a;
-  color: #e6ece9;
-}
-body.owlpark-dark-mode-active .hero {
-  background: #12181a;
-}
-body.owlpark-dark-mode-active .hero h1 {
-  color: #7fd8d8;
-}
-body.owlpark-dark-mode-active .hero p {
-  color: #b7c2c1;
-}
-body.owlpark-dark-mode-active .catalog-heading h2 {
-  color: #7fd8d8;
-}
-body.owlpark-dark-mode-active .product-row {
-  background: #1b2426;
-  border-color: #2c3638;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-}
-body.owlpark-dark-mode-active .row-divider {
-  border-color: #2c3638;
-}
-body.owlpark-dark-mode-active .product-desc,
-body.owlpark-dark-mode-active .price-unit {
-  color: #b7c2c1;
-}
-body.owlpark-dark-mode-active .product-tagline {
-  color: #8a9694;
-}
-body.owlpark-dark-mode-active .product-plu {
-  color: #6d7876;
-}
-body.owlpark-dark-mode-active .price-amount {
-  color: #7fd8d8;
-}
-body.owlpark-dark-mode-active .tab-btn {
-  background: #1b2426;
-  border-color: #2c3638;
-  color: #7fd8d8;
-}
-body.owlpark-dark-mode-active .tab-btn.active {
-  background: #0f6f7a;
-  color: white;
-}
-body.owlpark-dark-mode-active .cart-drawer,
-body.owlpark-dark-mode-active .modal-card {
-  background: #1b2426;
-  color: #e6ece9;
-}
-body.owlpark-dark-mode-active .cart-header,
-body.owlpark-dark-mode-active .cart-footer {
-  border-color: #2c3638;
-}
-body.owlpark-dark-mode-active .cart-line {
-  border-color: #2c3638;
-}
-body.owlpark-dark-mode-active .cart-line-emoji {
-  background: #12181a;
-}
-body.owlpark-dark-mode-active .qty-btn {
-  background: #12181a;
-  border-color: #2c3638;
-  color: #e6ece9;
-}
-body.owlpark-dark-mode-active .modal-summary {
-  background: #12181a;
-}
-body.owlpark-dark-mode-active .site-footer {
-  color: #6d7876;
-}
+  body.owlpark-dark-mode-active {
+    background: #12181a;
+    color: #e6ece9;
+  }
+  body.owlpark-dark-mode-active .hero {
+    background: #12181a;
+  }
+  body.owlpark-dark-mode-active .hero h1 {
+    color: #7fd8d8;
+  }
+  body.owlpark-dark-mode-active .hero p {
+    color: #b7c2c1;
+  }
+  body.owlpark-dark-mode-active .catalog-heading h2 {
+    color: #7fd8d8;
+  }
+  body.owlpark-dark-mode-active .product-row {
+    background: #1b2426;
+    border-color: #2c3638;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  }
+  body.owlpark-dark-mode-active .row-divider {
+    border-color: #2c3638;
+  }
+  body.owlpark-dark-mode-active .product-desc,
+  body.owlpark-dark-mode-active .price-unit {
+    color: #b7c2c1;
+  }
+  body.owlpark-dark-mode-active .product-tagline {
+    color: #8a9694;
+  }
+  body.owlpark-dark-mode-active .product-plu {
+    color: #6d7876;
+  }
+  body.owlpark-dark-mode-active .price-amount {
+    color: #7fd8d8;
+  }
+  body.owlpark-dark-mode-active .tab-btn {
+    background: #1b2426;
+    border-color: #2c3638;
+    color: #7fd8d8;
+  }
+  body.owlpark-dark-mode-active .tab-btn.active {
+    background: #0f6f7a;
+    color: white;
+  }
+  body.owlpark-dark-mode-active .cart-drawer,
+  body.owlpark-dark-mode-active .modal-card {
+    background: #1b2426;
+    color: #e6ece9;
+  }
+  body.owlpark-dark-mode-active .cart-header,
+  body.owlpark-dark-mode-active .cart-footer {
+    border-color: #2c3638;
+  }
+  body.owlpark-dark-mode-active .cart-line {
+    border-color: #2c3638;
+  }
+  body.owlpark-dark-mode-active .cart-line-emoji {
+    background: #12181a;
+  }
+  body.owlpark-dark-mode-active .qty-btn {
+    background: #12181a;
+    border-color: #2c3638;
+    color: #e6ece9;
+  }
+  body.owlpark-dark-mode-active .modal-summary {
+    background: #12181a;
+  }
+  body.owlpark-dark-mode-active .site-footer {
+    color: #6d7876;
+  }
 </style>
 
 <script>
-(function () {
-  var buttonEl = null;
+  (function () {
+    var buttonEl = null;
 
-  function updateLabel() {
-    if (!buttonEl) return;
-    var active = document.body.classList.contains("owlpark-dark-mode-active");
-    buttonEl.textContent = active ? "☀️ Light Mode" : "🌙 Dark Mode";
-  }
-
-  function onClick() {
-    document.body.classList.toggle("owlpark-dark-mode-active");
-    updateLabel();
-  }
-
-  function activate() {
-    var actions = document.querySelector(".header-actions");
-    if (!actions) return;
-
-    buttonEl = document.createElement("button");
-    buttonEl.type = "button";
-    buttonEl.className = "owlpark-feat-dark-mode-btn";
-    buttonEl.setAttribute("data-owlpark-feature", "dark-mode");
-    actions.prepend(buttonEl);
-    updateLabel();
-    buttonEl.addEventListener("click", onClick);
-  }
-
-  function deactivate() {
-    document.body.classList.remove("owlpark-dark-mode-active");
-    if (buttonEl) {
-      buttonEl.removeEventListener("click", onClick);
-      buttonEl.remove();
-      buttonEl = null;
+    function updateLabel() {
+      if (!buttonEl) return;
+      var active = document.body.classList.contains("owlpark-dark-mode-active");
+      buttonEl.textContent = active ? "☀️ Light Mode" : "🌙 Dark Mode";
     }
-  }
 
-  activate();
+    function onClick() {
+      document.body.classList.toggle("owlpark-dark-mode-active");
+      updateLabel();
+    }
 
-  window.__owlParkFeatures = window.__owlParkFeatures || {};
-  window.__owlParkFeatures["dark-mode"] = { activate: activate, deactivate: deactivate };
-})();
+    function activate() {
+      var actions = document.querySelector(".header-actions");
+      if (!actions) return;
+
+      buttonEl = document.createElement("button");
+      buttonEl.type = "button";
+      buttonEl.className = "owlpark-feat-dark-mode-btn";
+      buttonEl.setAttribute("data-owlpark-feature", "dark-mode");
+      actions.prepend(buttonEl);
+      updateLabel();
+      buttonEl.addEventListener("click", onClick);
+    }
+
+    function deactivate() {
+      document.body.classList.remove("owlpark-dark-mode-active");
+      if (buttonEl) {
+        buttonEl.removeEventListener("click", onClick);
+        buttonEl.remove();
+        buttonEl = null;
+      }
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures["dark-mode"] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
 </script>
