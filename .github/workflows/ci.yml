@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Validate JSON files
+        run: |
+          set -e
+          for f in $(find . -name "*.json" -not -path "./.git/*"); do
+            echo "Checking $f"
+            python3 -m json.tool "$f" > /dev/null
+          done
+
+      - name: Check JS syntax
+        run: |
+          set -e
+          for f in $(find js features -name "*.js"); do
+            echo "Checking $f"
+            node --check "$f"
+          done
+
+      - name: Verify every features/ manifest matches its folder and files
+        run: |
+          set -e
+          python3 - <<'EOF'
+          import json, os, sys
+
+          base = "features"
+          problems = []
+          with open(os.path.join(base, "index.json")) as f:
+              registered = json.load(f)
+
+          for entry in registered:
+              path = os.path.join(base, entry)
+              if not os.path.isdir(path):
+                  problems.append(f"{entry}: listed in index.json but no such folder")
+                  continue
+              manifest_path = os.path.join(path, "manifest.json")
+              if not os.path.isfile(manifest_path):
+                  problems.append(f"{entry}: missing manifest.json")
+                  continue
+              with open(manifest_path) as f:
+                  manifest = json.load(f)
+              if manifest.get("id") != entry:
+                  problems.append(f"{entry}: manifest id '{manifest.get('id')}' != folder name")
+              files = manifest.get("files", {})
+              if "js" not in files:
+                  problems.append(f"{entry}: manifest.files has no js entry")
+              for kind, fname in files.items():
+                  fpath = os.path.join(path, fname)
+                  if not os.path.isfile(fpath):
+                      problems.append(f"{entry}: manifest references missing {kind} file '{fname}'")
+
+          for d in sorted(os.listdir(base)):
+              if os.path.isdir(os.path.join(base, d)) and d not in registered:
+                  problems.append(f"{d}: folder exists but not listed in features/index.json")
+
+          if problems:
+              print("Feature registry problems found:")
+              for p in problems:
+                  print(f"  - {p}")
+              sys.exit(1)
+          print(f"All {len(registered)} registered features check out.")
+          EOF
+
+      - name: Smoke test the static site over HTTP
+        run: |
+          set -e
+          python3 -m http.server 8811 &
+          server_pid=$!
+          sleep 1
+          for path in index.html features-manager.html data/products.json features/index.json css/storefront.css js/main.js; do
+            echo "GET /$path"
+            status=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8811/$path")
+            if [ "$status" != "200" ]; then
+              echo "  -> unexpected status $status"
+              kill $server_pid
+              exit 1
+            fi
+          done
+          kill $server_pid
+          echo "Smoke test passed."
