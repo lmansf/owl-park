@@ -16,6 +16,10 @@ This file is the project's committed home for project-intrinsic agent knowledge:
   `js/feature-loader.js`'s cleanup pass can catch it. Verified via automated enable-all/disable-all DOM
   audits (zero `[data-feature]` residue after disabling) — re-run that style of check after touching
   the loader or any feature's teardown logic.
+- `renderCatalog()` (`js/main.js`) replaces `#catalog-grid`'s `innerHTML` on every tab switch, wiping
+  out anything a feature appended onto a `.product-card`. Features that decorate product cards
+  (`product-badges`, `product-info-tooltips`) re-apply via a `MutationObserver` on `#catalog-grid`
+  guarded by an idempotency check — see README.md's "Authoring a new feature" section.
 
 ## Maintaining this file
 

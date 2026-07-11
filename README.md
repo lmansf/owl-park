@@ -83,6 +83,13 @@ future feature that genuinely needs one.
 4. Reload the storefront or manager UI — your feature now shows up in the Enhancement Manager and
    can be toggled like any other.
 
+**Gotcha for per-product-card features:** `renderCatalog()` in `js/main.js` replaces
+`#catalog-grid`'s `innerHTML` wholesale on every tab switch, which wipes out any DOM nodes a
+feature appended directly onto a `.product-card`. Features that decorate product cards (see
+`product-badges` and `product-info-tooltips`) work around this with a `MutationObserver` on
+`#catalog-grid` that re-applies the injection after each re-render, guarded by an idempotency
+check (skip a card that already has the feature's tagged node) so it doesn't double-inject.
+
 ## The 20 enhancements
 
 | Feature | Category | Description |
