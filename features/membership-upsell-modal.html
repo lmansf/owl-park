@@ -1,0 +1,178 @@
+<script type="application/json" data-owlpark-manifest>
+  {
+    "id": "membership-upsell-modal",
+    "name": "Membership Upsell Modal",
+    "description": "Suggests a membership upgrade when a ticket-only cart builds up.",
+    "category": "behavioral",
+    "enabledByDefault": false,
+    "requiresReload": false
+  }
+</script>
+
+<style>
+  .owlpark-feat-membership-upsell-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 30, 32, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 65;
+    animation: owlpark-membership-upsell-fade-in 0.2s ease;
+  }
+
+  @keyframes owlpark-membership-upsell-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .owlpark-feat-membership-upsell-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 1.8rem;
+    max-width: 380px;
+    width: 90vw;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  }
+
+  .owlpark-feat-membership-upsell-card .mu-icon {
+    font-size: 2.4rem;
+  }
+  .owlpark-feat-membership-upsell-card h3 {
+    margin: 0.5rem 0 0.4rem;
+    color: var(--cove-teal-dark);
+  }
+  .owlpark-feat-membership-upsell-card p {
+    margin: 0 0 1.2rem;
+    color: #4a5657;
+    font-size: 0.92rem;
+  }
+
+  .owlpark-feat-membership-upsell-card .mu-dismiss {
+    background: var(--cove-teal);
+    color: white;
+    border: none;
+    padding: 0.6rem 1.3rem;
+    border-radius: 999px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+</style>
+
+<script>
+  (function () {
+    var FEATURE_ID = "membership-upsell-modal";
+    var CART_STORAGE_KEY = "owl-park-cart";
+    var POLL_MS = 2000;
+
+    var pollIntervalId = null;
+    var modalEl = null;
+    var shownThisSession = false;
+    var products = [];
+    var lastCartSnapshot = "";
+
+    function readCartLines() {
+      try {
+        var raw = localStorage.getItem(CART_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function removeModal() {
+      if (modalEl) {
+        modalEl.remove();
+        modalEl = null;
+      }
+    }
+
+    function showModal() {
+      if (modalEl) return;
+      shownThisSession = true;
+
+      modalEl = document.createElement("div");
+      modalEl.className = "owlpark-feat-membership-upsell-overlay";
+      modalEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+      modalEl.innerHTML =
+        '<div class="owlpark-feat-membership-upsell-card">' +
+        '<div class="mu-icon">🦉</div>' +
+        "<h3>Visiting more than once this year?</h3>" +
+        "<p>A Family Membership pays for itself after just 2 visits — plus unlimited return trips " +
+        "all year long.</p>" +
+        '<button class="mu-dismiss" type="button">Maybe later</button>' +
+        "</div>";
+      document.body.appendChild(modalEl);
+      modalEl
+        .querySelector(".mu-dismiss")
+        .addEventListener("click", removeModal);
+      modalEl.addEventListener("click", function (e) {
+        if (e.target === modalEl) removeModal();
+      });
+    }
+
+    function checkCart() {
+      if (shownThisSession) return;
+      var lines = readCartLines();
+      if (lines.length === 0) return;
+
+      var ticketLines = lines.filter(function (line) {
+        var p = products.find(function (prod) {
+          return prod.id === line.id;
+        });
+        return p && p.category === "ticket";
+      });
+      var allTickets = ticketLines.length === lines.length;
+      var ticketQty = ticketLines.reduce(function (sum, l) {
+        return sum + l.qty;
+      }, 0);
+
+      if (allTickets && ticketQty >= 2) {
+        showModal();
+      }
+    }
+
+    function pollCart() {
+      var snapshot = localStorage.getItem(CART_STORAGE_KEY) || "";
+      if (snapshot !== lastCartSnapshot) {
+        lastCartSnapshot = snapshot;
+        checkCart();
+      }
+    }
+
+    function activate() {
+      shownThisSession = false;
+      lastCartSnapshot = localStorage.getItem(CART_STORAGE_KEY) || "";
+      fetch("data/products.json")
+        .then(function (res) {
+          return res.json();
+        })
+        .then(function (data) {
+          products = data;
+          checkCart();
+        });
+      pollIntervalId = setInterval(pollCart, POLL_MS);
+    }
+
+    function deactivate() {
+      if (pollIntervalId) {
+        clearInterval(pollIntervalId);
+        pollIntervalId = null;
+      }
+      removeModal();
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures[FEATURE_ID] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
+</script>

@@ -1,0 +1,156 @@
+<script type="application/json" data-owlpark-manifest>
+  {
+    "id": "recently-viewed",
+    "name": "Recently Viewed",
+    "description": "Strip tracking and displaying recently viewed products.",
+    "category": "behavioral",
+    "enabledByDefault": false,
+    "requiresReload": false
+  }
+</script>
+
+<style>
+  .owlpark-feat-recently-viewed {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    background: var(--cove-sand, #faf3e6);
+    border-bottom: 1px solid #e4ddca;
+    padding: 0.5rem 1.2rem;
+    font-size: 0.82rem;
+    flex-wrap: wrap;
+  }
+  .owlpark-feat-recently-viewed[hidden] {
+    display: none;
+  }
+  .owlpark-feat-recently-viewed .rv-label {
+    font-weight: 700;
+    color: var(--cove-teal-dark, #0a4d55);
+    white-space: nowrap;
+  }
+  .owlpark-feat-recently-viewed .rv-chips {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+  .owlpark-feat-recently-viewed .rv-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: white;
+    border: 1px solid #e4ddca;
+    border-radius: 999px;
+    padding: 0.2rem 0.6rem 0.2rem 0.35rem;
+    font-size: 0.78rem;
+    color: #3c4849;
+  }
+  .owlpark-feat-recently-viewed .rv-chip-emoji {
+    font-size: 0.9rem;
+  }
+</style>
+
+<div class="owlpark-feat-recently-viewed" id="recently-viewed-strip" hidden>
+  <span class="rv-label">👁️ Recently viewed:</span>
+  <div class="rv-chips" id="rv-chips"></div>
+</div>
+
+<script>
+  (function () {
+    var STORAGE_KEY = "owl-park-recently-viewed";
+    var MAX_ITEMS = 5;
+
+    var productsCache = null;
+    var mouseEnterHandler = null;
+
+    function readViewed() {
+      try {
+        var raw = sessionStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function recordView(productId) {
+      var ids = readViewed();
+      ids = ids.filter(function (id) {
+        return id !== productId;
+      });
+      ids.unshift(productId);
+      ids = ids.slice(0, MAX_ITEMS);
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+      renderStrip();
+    }
+
+    function getProducts() {
+      if (productsCache) return Promise.resolve(productsCache);
+      return fetch("data/products.json")
+        .then(function (res) {
+          return res.json();
+        })
+        .then(function (data) {
+          productsCache = data;
+          return productsCache;
+        });
+    }
+
+    function renderStrip() {
+      var strip = document.getElementById("recently-viewed-strip");
+      var chipsEl = document.getElementById("rv-chips");
+      if (!strip || !chipsEl) return Promise.resolve();
+
+      var ids = readViewed();
+      if (ids.length === 0) {
+        strip.hidden = true;
+        return Promise.resolve();
+      }
+
+      return getProducts().then(function (products) {
+        chipsEl.innerHTML = ids
+          .map(function (id) {
+            var p = products.find(function (prod) {
+              return prod.id === id;
+            });
+            if (!p) return "";
+            return (
+              '<span class="rv-chip"><span class="rv-chip-emoji">' +
+              p.emoji +
+              "</span>" +
+              p.name +
+              "</span>"
+            );
+          })
+          .join("");
+        strip.hidden = false;
+      });
+    }
+
+    function activate() {
+      renderStrip();
+      // mouseenter doesn't bubble, but a capturing listener on document still
+      // observes it as the event travels down to the actual target.
+      mouseEnterHandler = function (event) {
+        var row =
+          event.target.closest &&
+          event.target.closest(".product-row[data-product-id]");
+        if (row) recordView(row.getAttribute("data-product-id"));
+      };
+      document.addEventListener("mouseenter", mouseEnterHandler, true);
+    }
+
+    function deactivate() {
+      if (mouseEnterHandler) {
+        document.removeEventListener("mouseenter", mouseEnterHandler, true);
+        mouseEnterHandler = null;
+      }
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures["recently-viewed"] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
+</script>

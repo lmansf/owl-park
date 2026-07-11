@@ -1,0 +1,86 @@
+<script type="application/json" data-owlpark-manifest>
+  {
+    "id": "paw-cursor-trail",
+    "name": "Feather Cursor Trail",
+    "description": "Decorative feather trail that follows the mouse cursor.",
+    "category": "visual",
+    "enabledByDefault": false,
+    "requiresReload": false
+  }
+</script>
+
+<style>
+  .owlpark-feat-paw-cursor-trail {
+    position: fixed;
+    font-size: 1.1rem;
+    pointer-events: none;
+    z-index: 80;
+    transform: translate(-50%, -50%);
+    animation: owlpark-feather-fade 0.9s ease-out forwards;
+  }
+
+  @keyframes owlpark-feather-fade {
+    0% {
+      opacity: 0.8;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.4);
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    var THROTTLE_MS = 120;
+    var lastSpawn = 0;
+    var handler = null;
+
+    function spawnFeather(x, y) {
+      var feather = document.createElement("span");
+      feather.className = "owlpark-feat-paw-cursor-trail";
+      feather.setAttribute("data-owlpark-feature", "paw-cursor-trail");
+      feather.textContent = "🪶";
+      feather.style.left = x + "px";
+      feather.style.top = y + "px";
+      document.body.appendChild(feather);
+      feather.addEventListener("animationend", function () {
+        this.remove();
+      });
+      setTimeout(function () {
+        feather.remove();
+      }, 1500);
+    }
+
+    function activate() {
+      handler = function (event) {
+        var now = Date.now();
+        if (now - lastSpawn < THROTTLE_MS) return;
+        lastSpawn = now;
+        spawnFeather(event.clientX, event.clientY);
+      };
+      document.addEventListener("mousemove", handler);
+    }
+
+    function deactivate() {
+      if (handler) {
+        document.removeEventListener("mousemove", handler);
+        handler = null;
+      }
+      document
+        .querySelectorAll('[data-owlpark-feature="paw-cursor-trail"]')
+        .forEach(function (el) {
+          el.remove();
+        });
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures["paw-cursor-trail"] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
+</script>

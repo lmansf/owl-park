@@ -1,0 +1,114 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Validate JSON files
+        run: |
+          set -e
+          for f in $(find . -name "*.json" -not -path "./.git/*"); do
+            echo "Checking $f"
+            python3 -m json.tool "$f" > /dev/null
+          done
+
+      - name: Check JS syntax (js/ files and each feature's embedded script)
+        run: |
+          set -e
+          for f in $(find js -name "*.js"); do
+            echo "Checking $f"
+            node --check "$f"
+          done
+          python3 - <<'EOF'
+          import re, subprocess, sys, glob, tempfile, os
+
+          for path in sorted(glob.glob("features/*.html")):
+              text = open(path).read()
+              scripts = re.findall(r'<script(?![^>]*application/json)[^>]*>(.*?)</script>', text, re.S)
+              if not scripts:
+                  print(f"{path}: no behavior <script> block found")
+                  sys.exit(1)
+              body = scripts[-1]
+              with tempfile.NamedTemporaryFile(mode="w", suffix=".js", delete=False) as tf:
+                  tf.write(body)
+                  tmp_path = tf.name
+              proc = subprocess.run(["node", "--check", tmp_path], capture_output=True, text=True)
+              os.unlink(tmp_path)
+              if proc.returncode != 0:
+                  print(f"{path}: syntax error\n{proc.stderr}")
+                  sys.exit(1)
+              print(f"{path}: behavior script OK")
+          EOF
+
+      - name: Verify every features/*.html is registered with a valid manifest
+        run: |
+          set -e
+          python3 - <<'EOF'
+          import json, os, re, sys
+
+          base = "features"
+          problems = []
+          with open(os.path.join(base, "index.json")) as f:
+              registered = json.load(f)
+
+          for entry in registered:
+              path = os.path.join(base, entry)
+              if not os.path.isfile(path):
+                  problems.append(f"{entry}: listed in index.json but no such file")
+                  continue
+              text = open(path).read()
+              m = re.search(r'data-owlpark-manifest>(.*?)</script>', text, re.S)
+              if not m:
+                  problems.append(f"{entry}: no data-owlpark-manifest block found")
+                  continue
+              try:
+                  manifest = json.loads(m.group(1))
+              except json.JSONDecodeError as e:
+                  problems.append(f"{entry}: manifest block is not valid JSON ({e})")
+                  continue
+              expected_id = entry[:-len(".html")] if entry.endswith(".html") else entry
+              if manifest.get("id") != expected_id:
+                  problems.append(f"{entry}: manifest id '{manifest.get('id')}' != filename '{expected_id}'")
+              if "import " in text or "export " in text or 'type="module"' in text:
+                  problems.append(f"{entry}: contains import/export or type=module (features must be plain scripts)")
+
+          for f in sorted(os.listdir(base)):
+              if f.endswith(".html") and f not in registered:
+                  problems.append(f"{f}: file exists but not listed in features/index.json")
+
+          if problems:
+              print("Feature registry problems found:")
+              for p in problems:
+                  print(f"  - {p}")
+              sys.exit(1)
+          print(f"All {len(registered)} registered features check out.")
+          EOF
+
+      - name: Smoke test the static site over HTTP
+        run: |
+          set -e
+          python3 -m http.server 8811 &
+          server_pid=$!
+          sleep 1
+          for path in index.html features-manager.html data/products.json features/index.json css/storefront.css js/main.js; do
+            echo "GET /$path"
+            status=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8811/$path")
+            if [ "$status" != "200" ]; then
+              echo "  -> unexpected status $status"
+              kill $server_pid
+              exit 1
+            fi
+          done
+          kill $server_pid
+          echo "Smoke test passed."

@@ -1,0 +1,105 @@
+<script type="application/json" data-owlpark-manifest>
+  {
+    "id": "confetti-checkout",
+    "name": "Confetti Checkout",
+    "description": "Confetti burst animation on the checkout confirmation screen.",
+    "category": "visual",
+    "enabledByDefault": true,
+    "requiresReload": false
+  }
+</script>
+
+<style>
+  .owlpark-feat-confetti-checkout {
+    position: fixed;
+    top: -10px;
+    width: 8px;
+    height: 14px;
+    z-index: 70;
+    pointer-events: none;
+    animation: owlpark-confetti-fall 1.8s ease-in forwards;
+  }
+
+  @keyframes owlpark-confetti-fall {
+    0% {
+      transform: translateY(0) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(70vh) rotate(540deg);
+      opacity: 0;
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    var COLORS = ["#e2662d", "#2f8f4e", "#0f6f7a", "#f0a02f", "#a8321f"];
+    var PIECE_COUNT = 60;
+    var observer = null;
+
+    function burst() {
+      var modal = document.getElementById("checkout-modal");
+      var rect = modal
+        ? modal.getBoundingClientRect()
+        : { left: window.innerWidth / 2, width: 0 };
+      var centerX = rect.left + rect.width / 2;
+
+      for (var i = 0; i < PIECE_COUNT; i++) {
+        var piece = document.createElement("div");
+        piece.className = "owlpark-feat-confetti-checkout";
+        piece.setAttribute("data-owlpark-feature", "confetti-checkout");
+        piece.style.left = centerX + (Math.random() - 0.5) * 400 + "px";
+        piece.style.background =
+          COLORS[Math.floor(Math.random() * COLORS.length)];
+        piece.style.animationDelay = Math.random() * 0.3 + "s";
+        piece.style.animationDuration = 1.4 + Math.random() * 0.8 + "s";
+        document.body.appendChild(piece);
+        piece.addEventListener("animationend", function () {
+          this.remove();
+        });
+        setTimeout(
+          (function (p) {
+            return function () {
+              p.remove();
+            };
+          })(piece),
+          3000,
+        );
+      }
+    }
+
+    function activate() {
+      var modal = document.getElementById("checkout-modal");
+      if (!modal) return;
+      observer = new MutationObserver(function (mutations) {
+        for (var i = 0; i < mutations.length; i++) {
+          if (mutations[i].attributeName === "class") {
+            if (!modal.classList.contains("hidden")) burst();
+          }
+        }
+      });
+      observer.observe(modal, { attributes: true, attributeFilter: ["class"] });
+    }
+
+    function deactivate() {
+      if (observer) {
+        observer.disconnect();
+        observer = null;
+      }
+      document
+        .querySelectorAll('[data-owlpark-feature="confetti-checkout"]')
+        .forEach(function (el) {
+          el.remove();
+        });
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures["confetti-checkout"] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
+</script>

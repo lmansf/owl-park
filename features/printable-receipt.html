@@ -1,0 +1,94 @@
+<script type="application/json" data-owlpark-manifest>
+  {
+    "id": "printable-receipt",
+    "name": "Printable Receipt",
+    "description": "Adds a print/download receipt button to the checkout confirmation.",
+    "category": "utility",
+    "enabledByDefault": true,
+    "requiresReload": false
+  }
+</script>
+
+<style>
+  .owlpark-feat-printable-receipt {
+    width: 100%;
+    margin-top: 0.6rem;
+    background: white;
+    color: var(--cove-teal-dark, #0a4d55);
+    border: 2px solid var(--cove-teal, #0f6f7a);
+    padding: 0.6rem;
+    border-radius: 999px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .owlpark-feat-printable-receipt:hover {
+    background: var(--cove-sand, #faf3e6);
+  }
+</style>
+
+<script>
+  (function () {
+    var buttonEl = null;
+
+    function printReceipt() {
+      var orderIdEl = document.getElementById("order-id");
+      var summaryEl = document.getElementById("order-summary");
+      var orderId = orderIdEl ? orderIdEl.textContent : "";
+      var summaryHtml = summaryEl ? summaryEl.innerHTML : "";
+
+      var receiptHtml =
+        "<!DOCTYPE html><html><head><title>Owl Park Receipt</title><style>" +
+        'body { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 2rem; color: #1e2a2b; }' +
+        "h1 { color: #0a4d55; margin-bottom: 0.2rem; }" +
+        ".order-id { color: #6b7677; margin-bottom: 1.2rem; }" +
+        ".modal-summary-line { display: flex; justify-content: space-between; padding: 0.2rem 0; }" +
+        "</style></head><body>" +
+        "<h1>🦉 Owl Park</h1>" +
+        '<div class="order-id">' +
+        orderId +
+        "</div>" +
+        summaryHtml +
+        "<p>Thank you for supporting Owl Park!</p>" +
+        "</body></html>";
+
+      var receiptWindow = window.open("", "_blank");
+      if (receiptWindow) {
+        receiptWindow.document.write(receiptHtml);
+        receiptWindow.document.close();
+        receiptWindow.focus();
+        receiptWindow.print();
+      } else {
+        window.print();
+      }
+    }
+
+    function activate() {
+      var closeBtn = document.getElementById("close-modal-btn");
+      if (!closeBtn || !closeBtn.parentElement) return;
+
+      buttonEl = document.createElement("button");
+      buttonEl.type = "button";
+      buttonEl.className = "owlpark-feat-printable-receipt";
+      buttonEl.setAttribute("data-owlpark-feature", "printable-receipt");
+      buttonEl.textContent = "🖨️ Print Receipt";
+      buttonEl.addEventListener("click", printReceipt);
+
+      closeBtn.parentElement.insertBefore(buttonEl, closeBtn);
+    }
+
+    function deactivate() {
+      if (buttonEl) {
+        buttonEl.remove();
+        buttonEl = null;
+      }
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures["printable-receipt"] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
+</script>

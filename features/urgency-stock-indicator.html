@@ -1,0 +1,103 @@
+<script type="application/json" data-owlpark-manifest>
+  {
+    "id": "urgency-stock-indicator",
+    "name": "Urgency Stock Indicator",
+    "description": "\"Only a few left today\" urgency messaging on limited passes.",
+    "category": "behavioral",
+    "enabledByDefault": false,
+    "requiresReload": false
+  }
+</script>
+
+<style>
+  .owlpark-feat-urgency-stock-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #b23b1f;
+    background: #fdecdf;
+    border: 1px solid #f3c9ab;
+    border-radius: 999px;
+    padding: 0.2rem 0.6rem;
+    margin-top: 0.4rem;
+    width: fit-content;
+  }
+  .owlpark-feat-urgency-stock-indicator .urgency-icon {
+    font-size: 0.85rem;
+  }
+</style>
+
+<script>
+  (function () {
+    var TARGET_PRODUCT_IDS = ["prod-family-day-pass", "prod-twilight-ticket"];
+    var FEATURE_ID = "urgency-stock-indicator";
+
+    var observer = null;
+
+    function randomCount() {
+      return Math.floor(Math.random() * 7) + 3; // 3-9
+    }
+
+    function injectInto(row) {
+      if (row.querySelector('[data-owlpark-feature="' + FEATURE_ID + '"]'))
+        return;
+      var line = document.createElement("div");
+      line.className = "owlpark-feat-urgency-stock-indicator";
+      line.setAttribute("data-owlpark-feature", FEATURE_ID);
+      line.innerHTML =
+        '<span class="urgency-icon">🔥</span><span>Only ' +
+        randomCount() +
+        " left for today's date!</span>";
+      var plu = row.querySelector(".product-plu");
+      if (plu) {
+        plu.insertAdjacentElement("afterend", line);
+      } else {
+        row.appendChild(line);
+      }
+    }
+
+    function applyToRows() {
+      TARGET_PRODUCT_IDS.forEach(function (id) {
+        var row = document.querySelector(
+          '.product-row[data-product-id="' + id + '"]',
+        );
+        if (row) injectInto(row);
+      });
+    }
+
+    function activate() {
+      applyToRows();
+      // The catalog list re-renders on tab switches, so watch for new rows
+      // and re-apply the urgency line whenever a target row reappears.
+      var grid = document.getElementById("catalog-grid");
+      if (grid) {
+        observer = new MutationObserver(function () {
+          applyToRows();
+        });
+        observer.observe(grid, { childList: true });
+      }
+    }
+
+    function deactivate() {
+      if (observer) {
+        observer.disconnect();
+        observer = null;
+      }
+      document
+        .querySelectorAll('[data-owlpark-feature="' + FEATURE_ID + '"]')
+        .forEach(function (el) {
+          el.remove();
+        });
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures["urgency-stock-indicator"] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
+</script>

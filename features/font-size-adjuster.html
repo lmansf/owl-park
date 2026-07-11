@@ -1,0 +1,120 @@
+<script type="application/json" data-owlpark-manifest>
+  {
+    "id": "font-size-adjuster",
+    "name": "Font Size Adjuster",
+    "description": "Floating control to increase or decrease site-wide font size.",
+    "category": "utility",
+    "enabledByDefault": false,
+    "requiresReload": false
+  }
+</script>
+
+<style>
+  .owlpark-feat-font-size-adjuster {
+    position: fixed;
+    right: 1.2rem;
+    bottom: 1.2rem;
+    display: flex;
+    gap: 0.35rem;
+    background: white;
+    border: 1px solid #e4ddca;
+    border-radius: 999px;
+    padding: 0.4rem;
+    box-shadow: 0 8px 24px rgba(15, 60, 65, 0.18);
+    z-index: 45;
+  }
+  .owlpark-feat-font-size-adjuster .fsa-btn {
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 50%;
+    border: none;
+    background: var(--cove-sand, #faf3e6);
+    color: var(--cove-teal-dark, #0a4d55);
+    font-weight: 700;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  .owlpark-feat-font-size-adjuster .fsa-btn:hover {
+    background: var(--cove-teal, #0f6f7a);
+    color: white;
+  }
+</style>
+
+<div class="owlpark-feat-font-size-adjuster">
+  <button
+    type="button"
+    class="fsa-btn"
+    id="fsa-decrease"
+    aria-label="Decrease font size"
+  >
+    A-
+  </button>
+  <button
+    type="button"
+    class="fsa-btn"
+    id="fsa-reset"
+    aria-label="Reset font size"
+  >
+    A
+  </button>
+  <button
+    type="button"
+    class="fsa-btn"
+    id="fsa-increase"
+    aria-label="Increase font size"
+  >
+    A+
+  </button>
+</div>
+
+<script>
+  (function () {
+    var MIN_PX = 14;
+    var MAX_PX = 22;
+    var STEP_PX = 2;
+    var DEFAULT_PX = 16;
+
+    var currentPx = DEFAULT_PX;
+    var previousInlineSize = "";
+
+    function apply() {
+      document.documentElement.style.fontSize = currentPx + "px";
+    }
+
+    function activate() {
+      var mount = document.querySelector(".owlpark-feat-font-size-adjuster");
+      if (!mount) return;
+      previousInlineSize = document.documentElement.style.fontSize;
+      currentPx = DEFAULT_PX;
+
+      mount
+        .querySelector("#fsa-increase")
+        .addEventListener("click", function () {
+          currentPx = Math.min(MAX_PX, currentPx + STEP_PX);
+          apply();
+        });
+      mount
+        .querySelector("#fsa-decrease")
+        .addEventListener("click", function () {
+          currentPx = Math.max(MIN_PX, currentPx - STEP_PX);
+          apply();
+        });
+      mount.querySelector("#fsa-reset").addEventListener("click", function () {
+        currentPx = DEFAULT_PX;
+        apply();
+      });
+    }
+
+    function deactivate() {
+      document.documentElement.style.fontSize = previousInlineSize;
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures["font-size-adjuster"] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
+</script>
