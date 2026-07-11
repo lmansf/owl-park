@@ -6,8 +6,7 @@ function randomCount() {
 }
 
 function injectInto(card) {
-  if (card.querySelector(`.${FEATURE_ID.replace(/[^a-z-]/g, "")}-marker`))
-    return;
+  if (card.querySelector(`[data-feature="${FEATURE_ID}"]`)) return;
   const line = document.createElement("div");
   line.className = "urgency-stock-line";
   line.setAttribute("data-feature", FEATURE_ID);
