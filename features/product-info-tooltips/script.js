@@ -3,12 +3,9 @@ const TICKET_FINE_PRINT =
 const MEMBERSHIP_FINE_PRINT =
   "12-month term from purchase date. Includes 10% gift shop discount. Auto-renewal reminder sent 30 days prior.";
 
-export async function activate() {
-  const res = await fetch("data/products.json");
-  const products = await res.json();
-  const byId = Object.fromEntries(products.map((p) => [p.id, p]));
-
+function applyToCards(byId) {
   document.querySelectorAll(".product-card[data-product-id]").forEach((card) => {
+    if (card.querySelector('[data-feature="product-info-tooltips"]')) return;
     const product = byId[card.getAttribute("data-product-id")];
     if (!product) return;
 
@@ -26,6 +23,25 @@ export async function activate() {
   });
 }
 
+let observer = null;
+
+export async function activate() {
+  const res = await fetch("data/products.json");
+  const products = await res.json();
+  const byId = Object.fromEntries(products.map((p) => [p.id, p]));
+
+  applyToCards(byId);
+  const grid = document.getElementById("catalog-grid");
+  if (grid) {
+    observer = new MutationObserver(() => applyToCards(byId));
+    observer.observe(grid, { childList: true });
+  }
+}
+
 export function deactivate() {
+  if (observer) {
+    observer.disconnect();
+    observer = null;
+  }
   document.querySelectorAll('[data-feature="product-info-tooltips"]').forEach((el) => el.remove());
 }

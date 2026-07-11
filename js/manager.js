@@ -58,7 +58,6 @@ async function setAll(enabled) {
 }
 
 async function resetDefaults() {
-  localStorage.removeItem("critter-cove-enabled-features");
   // Deactivate everything currently on, then reapply defaults from scratch.
   for (const f of features) {
     await toggleFeature(f, false);
