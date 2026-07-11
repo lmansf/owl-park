@@ -141,11 +141,19 @@
       }
       fetch("data/products.json")
         .then(function (res) {
+          if (!res.ok) throw new Error("HTTP " + res.status);
           return res.json();
         })
         .then(function (data) {
           products = data;
           showOverlay(products);
+        })
+        .catch(function (err) {
+          console.error("[" + FEATURE_ID + "] failed to load products", err);
+          if (compareBtn) {
+            compareBtn.textContent = "⚖️ Compare unavailable";
+            compareBtn.disabled = true;
+          }
         });
     }
 

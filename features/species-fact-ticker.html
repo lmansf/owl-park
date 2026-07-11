@@ -56,6 +56,11 @@
     function activate() {
       var track = document.getElementById("sft-track");
       if (!track) return;
+      var ticker = track.closest(".owlpark-feat-species-fact-ticker");
+      var hero = document.querySelector(".hero-banner");
+      if (ticker && hero && ticker.previousElementSibling !== hero) {
+        hero.insertAdjacentElement("afterend", ticker);
+      }
       track.innerHTML = FACTS.map(function (fact) {
         return "<span>" + fact + "</span>";
       }).join("");

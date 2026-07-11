@@ -22,6 +22,12 @@
   .owlpark-feat-copy-order-id-button:hover {
     color: var(--cove-teal-dark, #0a4d55);
   }
+  .owlpark-feat-copy-order-id-button::before {
+    content: "📋";
+  }
+  .owlpark-feat-copy-order-id-button.copied::before {
+    content: "✅";
+  }
 </style>
 
 <script>
@@ -51,10 +57,10 @@
       var text = orderIdEl ? orderIdEl.textContent : "";
       var showCheck = function () {
         if (!buttonEl) return;
-        buttonEl.textContent = "✅";
+        buttonEl.classList.add("copied");
         if (resetTimeoutId) clearTimeout(resetTimeoutId);
         resetTimeoutId = setTimeout(function () {
-          if (buttonEl) buttonEl.textContent = "📋";
+          if (buttonEl) buttonEl.classList.remove("copied");
         }, 1800);
       };
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -79,7 +85,6 @@
       buttonEl.className = "owlpark-feat-copy-order-id-button";
       buttonEl.setAttribute("data-owlpark-feature", FEATURE_ID);
       buttonEl.setAttribute("aria-label", "Copy order id");
-      buttonEl.textContent = "📋";
       buttonEl.addEventListener("click", copyOrderId);
       orderIdEl.appendChild(buttonEl);
     }
