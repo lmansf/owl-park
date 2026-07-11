@@ -170,7 +170,7 @@ function setupCheckout() {
       summaryHtml +
       `<div class="modal-summary-line" style="font-weight:700;border-top:1px solid #e4ddca;margin-top:0.4rem;padding-top:0.4rem;"><span>Total</span><span>${formatPrice(total)}</span></div>`;
 
-    const orderId = `CC-${Math.floor(100000 + Math.random() * 900000)}`;
+    const orderId = `OP-${Math.floor(100000 + Math.random() * 900000)}`;
     document.getElementById("order-id").textContent =
       `Order ${orderId} · ${new Date().toLocaleDateString()}`;
 
