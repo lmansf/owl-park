@@ -15,8 +15,12 @@
   font-weight: 600;
 }
 
-.event-countdown-icon { font-size: 1.1rem; }
-.event-countdown-label { opacity: 0.85; }
+.event-countdown-icon {
+  font-size: 1.1rem;
+}
+.event-countdown-label {
+  opacity: 0.85;
+}
 .event-countdown-time {
   font-variant-numeric: tabular-nums;
   font-weight: 800;

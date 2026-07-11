@@ -18,18 +18,21 @@ const activeState = new Map(); // feature id -> { styleEl, mountEl }
 
 export async function discoverFeatures() {
   const res = await fetch(`${FEATURES_BASE}/index.json`);
-  if (!res.ok) throw new Error(`Failed to load features/index.json: ${res.status}`);
+  if (!res.ok)
+    throw new Error(`Failed to load features/index.json: ${res.status}`);
   const folders = await res.json();
   const manifests = await Promise.all(
     folders.map(async (folder) => {
-      const manifestRes = await fetch(`${FEATURES_BASE}/${folder}/manifest.json`);
+      const manifestRes = await fetch(
+        `${FEATURES_BASE}/${folder}/manifest.json`,
+      );
       if (!manifestRes.ok) {
         console.warn(`Skipping feature "${folder}": manifest not found`);
         return null;
       }
       const manifest = await manifestRes.json();
       return { ...manifest, folder };
-    })
+    }),
   );
   return manifests.filter(Boolean);
 }
@@ -65,7 +68,9 @@ export function setEnabledPersisted(featureId, enabled) {
 async function getModule(feature) {
   if (!feature.files || !feature.files.js) return null;
   if (moduleCache.has(feature.id)) return moduleCache.get(feature.id);
-  const mod = await import(`../${FEATURES_BASE}/${feature.folder}/${feature.files.js}`);
+  const mod = await import(
+    `../${FEATURES_BASE}/${feature.folder}/${feature.files.js}`
+  );
   moduleCache.set(feature.id, mod);
   return mod;
 }
@@ -77,7 +82,9 @@ export async function activateFeature(feature) {
   let mountEl = null;
 
   if (feature.files && feature.files.css) {
-    const cssRes = await fetch(`${FEATURES_BASE}/${feature.folder}/${feature.files.css}`);
+    const cssRes = await fetch(
+      `${FEATURES_BASE}/${feature.folder}/${feature.files.css}`,
+    );
     const cssText = await cssRes.text();
     styleEl = document.createElement("style");
     styleEl.setAttribute("data-feature", feature.id);
@@ -86,7 +93,9 @@ export async function activateFeature(feature) {
   }
 
   if (feature.files && feature.files.html) {
-    const htmlRes = await fetch(`${FEATURES_BASE}/${feature.folder}/${feature.files.html}`);
+    const htmlRes = await fetch(
+      `${FEATURES_BASE}/${feature.folder}/${feature.files.html}`,
+    );
     const htmlText = await htmlRes.text();
     mountEl = document.createElement("div");
     mountEl.className = "feature-mount";
@@ -121,7 +130,9 @@ export async function deactivateFeature(feature) {
   if (state.mountEl) state.mountEl.remove();
 
   // Belt-and-suspenders: strip any other stray nodes the feature tagged.
-  document.querySelectorAll(`[data-feature="${feature.id}"]`).forEach((el) => el.remove());
+  document
+    .querySelectorAll(`[data-feature="${feature.id}"]`)
+    .forEach((el) => el.remove());
 
   activeState.delete(feature.id);
 }

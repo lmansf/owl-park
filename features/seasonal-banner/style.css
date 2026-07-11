@@ -10,4 +10,6 @@
   justify-content: center;
   gap: 0.5rem;
 }
-.seasonal-banner-icon { font-size: 1.05rem; }
+.seasonal-banner-icon {
+  font-size: 1.05rem;
+}

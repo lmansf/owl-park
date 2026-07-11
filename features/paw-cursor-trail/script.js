@@ -29,5 +29,7 @@ export function deactivate() {
     document.removeEventListener("mousemove", handler);
     handler = null;
   }
-  document.querySelectorAll('[data-feature="paw-cursor-trail"]').forEach((el) => el.remove());
+  document
+    .querySelectorAll('[data-feature="paw-cursor-trail"]')
+    .forEach((el) => el.remove());
 }

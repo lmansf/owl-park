@@ -10,8 +10,12 @@
 }
 
 @keyframes membership-upsell-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .membership-upsell-card {
@@ -21,12 +25,21 @@
   max-width: 380px;
   width: 90vw;
   text-align: center;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
 }
 
-.membership-upsell-icon { font-size: 2.4rem; }
-.membership-upsell-card h3 { margin: 0.5rem 0 0.4rem; color: var(--cove-teal-dark); }
-.membership-upsell-card p { margin: 0 0 1.2rem; color: #4a5657; font-size: 0.92rem; }
+.membership-upsell-icon {
+  font-size: 2.4rem;
+}
+.membership-upsell-card h3 {
+  margin: 0.5rem 0 0.4rem;
+  color: var(--cove-teal-dark);
+}
+.membership-upsell-card p {
+  margin: 0 0 1.2rem;
+  color: #4a5657;
+  font-size: 0.92rem;
+}
 
 .membership-upsell-dismiss {
   background: var(--cove-teal);

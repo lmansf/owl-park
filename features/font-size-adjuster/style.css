@@ -8,7 +8,7 @@
   border: 1px solid #e4ddca;
   border-radius: 999px;
   padding: 0.4rem;
-  box-shadow: 0 8px 24px rgba(15,60,65,0.18);
+  box-shadow: 0 8px 24px rgba(15, 60, 65, 0.18);
   z-index: 45;
 }
 .fsa-btn {
@@ -22,4 +22,7 @@
   font-size: 0.8rem;
   cursor: pointer;
 }
-.fsa-btn:hover { background: var(--cove-teal, #0f6f7a); color: white; }
+.fsa-btn:hover {
+  background: var(--cove-teal, #0f6f7a);
+  color: white;
+}

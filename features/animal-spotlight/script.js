@@ -1,8 +1,24 @@
 const ANIMALS = [
-  { emoji: "🐼", name: "Red Panda", fact: "Red pandas use their bushy tails as blankets in cold weather." },
-  { emoji: "🦦", name: "River Otter", fact: "Otters hold hands while sleeping so they don't drift apart." },
-  { emoji: "🦩", name: "Flamingo", fact: "Flamingos are born gray — their pink color comes from their diet." },
-  { emoji: "🦁", name: "African Lion", fact: "A lion's roar can be heard from up to 5 miles away." },
+  {
+    emoji: "🐼",
+    name: "Red Panda",
+    fact: "Red pandas use their bushy tails as blankets in cold weather.",
+  },
+  {
+    emoji: "🦦",
+    name: "River Otter",
+    fact: "Otters hold hands while sleeping so they don't drift apart.",
+  },
+  {
+    emoji: "🦩",
+    name: "Flamingo",
+    fact: "Flamingos are born gray — their pink color comes from their diet.",
+  },
+  {
+    emoji: "🦁",
+    name: "African Lion",
+    fact: "A lion's roar can be heard from up to 5 miles away.",
+  },
 ];
 
 let intervalId = null;

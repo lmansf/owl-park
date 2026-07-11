@@ -56,7 +56,9 @@ export async function activate() {
   // mouseenter doesn't bubble, but a capturing listener on document still
   // observes it as the event travels down to the actual target.
   mouseEnterHandler = (event) => {
-    const card = event.target.closest && event.target.closest(".product-card[data-product-id]");
+    const card =
+      event.target.closest &&
+      event.target.closest(".product-card[data-product-id]");
     if (card) recordView(card.getAttribute("data-product-id"));
   };
   document.addEventListener("mouseenter", mouseEnterHandler, true);

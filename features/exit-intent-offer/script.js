@@ -4,7 +4,11 @@ let leaveHandler = null;
 let shownThisSession = false;
 
 function showOffer() {
-  if (shownThisSession || document.querySelector(`[data-feature="${FEATURE_ID}"]`)) return;
+  if (
+    shownThisSession ||
+    document.querySelector(`[data-feature="${FEATURE_ID}"]`)
+  )
+    return;
   shownThisSession = true;
 
   const overlay = document.createElement("div");
@@ -20,7 +24,9 @@ function showOffer() {
   `;
 
   const close = () => overlay.remove();
-  overlay.querySelector(".exit-intent-close-btn").addEventListener("click", close);
+  overlay
+    .querySelector(".exit-intent-close-btn")
+    .addEventListener("click", close);
   overlay.addEventListener("click", (e) => {
     if (e.target === overlay) close();
   });
@@ -41,5 +47,7 @@ export function deactivate() {
     document.documentElement.removeEventListener("mouseleave", leaveHandler);
     leaveHandler = null;
   }
-  document.querySelectorAll(`[data-feature="${FEATURE_ID}"]`).forEach((el) => el.remove());
+  document
+    .querySelectorAll(`[data-feature="${FEATURE_ID}"]`)
+    .forEach((el) => el.remove());
 }

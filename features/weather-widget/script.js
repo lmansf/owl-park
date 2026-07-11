@@ -2,7 +2,10 @@ const FORECASTS = [
   { icon: "☀️", text: "72°F and sunny — perfect zoo weather!" },
   { icon: "⛅", text: "68°F with light clouds — great day to visit!" },
   { icon: "🌤️", text: "75°F, mild breeze — the otters approve." },
-  { icon: "🌈", text: "70°F after a morning shower — rainbows over the aviary!" },
+  {
+    icon: "🌈",
+    text: "70°F after a morning shower — rainbows over the aviary!",
+  },
 ];
 
 let intervalId = null;

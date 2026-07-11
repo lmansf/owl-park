@@ -72,9 +72,15 @@ async function init() {
   await applyEnabledFeatures();
   render();
 
-  document.getElementById("enable-all-btn").addEventListener("click", () => setAll(true));
-  document.getElementById("disable-all-btn").addEventListener("click", () => setAll(false));
-  document.getElementById("reset-defaults-btn").addEventListener("click", resetDefaults);
+  document
+    .getElementById("enable-all-btn")
+    .addEventListener("click", () => setAll(true));
+  document
+    .getElementById("disable-all-btn")
+    .addEventListener("click", () => setAll(false));
+  document
+    .getElementById("reset-defaults-btn")
+    .addEventListener("click", resetDefaults);
 }
 
 init();

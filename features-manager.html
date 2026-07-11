@@ -1,45 +1,51 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Critter Cove — Enhancement Manager</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧩</text></svg>" />
-<link rel="stylesheet" href="css/storefront.css" />
-<link rel="stylesheet" href="css/manager.css" />
-</head>
-<body>
-<div id="feature-root"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Critter Cove — Enhancement Manager</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧩</text></svg>"
+    />
+    <link rel="stylesheet" href="css/storefront.css" />
+    <link rel="stylesheet" href="css/manager.css" />
+  </head>
+  <body>
+    <div id="feature-root"></div>
 
-<header class="site-header">
-  <a class="brand" href="index.html">
-    <span class="brand-mark">🐾</span>
-    <span>Critter Cove</span>
-  </a>
-  <div class="header-actions">
-    <a class="header-link" href="index.html">&larr; Back to Shop</a>
-  </div>
-</header>
+    <header class="site-header">
+      <a class="brand" href="index.html">
+        <span class="brand-mark">🐾</span>
+        <span>Critter Cove</span>
+      </a>
+      <div class="header-actions">
+        <a class="header-link" href="index.html">&larr; Back to Shop</a>
+      </div>
+    </header>
 
-<main class="manager-main">
-  <div class="manager-intro">
-    <h1>🧩 Enhancement Manager</h1>
-    <p>Every module here lives in its own folder under <code>features/</code> and can be plugged in
-      or unplugged live, without reloading the page. Toggle a few on, then hop back to the shop to
-      see them in action. Your choices are saved in this browser.</p>
-  </div>
+    <main class="manager-main">
+      <div class="manager-intro">
+        <h1>🧩 Enhancement Manager</h1>
+        <p>
+          Every module here lives in its own folder under
+          <code>features/</code> and can be plugged in or unplugged live,
+          without reloading the page. Toggle a few on, then hop back to the shop
+          to see them in action. Your choices are saved in this browser.
+        </p>
+      </div>
 
-  <div class="manager-toolbar">
-    <button type="button" id="enable-all-btn">Enable All</button>
-    <button type="button" id="disable-all-btn">Disable All</button>
-    <button type="button" id="reset-defaults-btn">Reset to Defaults</button>
-  </div>
+      <div class="manager-toolbar">
+        <button type="button" id="enable-all-btn">Enable All</button>
+        <button type="button" id="disable-all-btn">Disable All</button>
+        <button type="button" id="reset-defaults-btn">Reset to Defaults</button>
+      </div>
 
-  <div class="feature-list" id="feature-list">
-    <!-- rendered by js/manager.js -->
-  </div>
-</main>
+      <div class="feature-list" id="feature-list">
+        <!-- rendered by js/manager.js -->
+      </div>
+    </main>
 
-<script type="module" src="js/manager.js"></script>
-</body>
+    <script type="module" src="js/manager.js"></script>
+  </body>
 </html>

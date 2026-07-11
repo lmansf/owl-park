@@ -29,7 +29,9 @@ function showModal() {
     </div>
   `;
   document.body.appendChild(modalEl);
-  modalEl.querySelector(".membership-upsell-dismiss").addEventListener("click", removeModal);
+  modalEl
+    .querySelector(".membership-upsell-dismiss")
+    .addEventListener("click", removeModal);
   modalEl.addEventListener("click", (e) => {
     if (e.target === modalEl) removeModal();
   });

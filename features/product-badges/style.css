@@ -9,9 +9,15 @@
   padding: 0.28rem 0.6rem;
   border-radius: 999px;
   color: white;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   z-index: 3;
 }
-.pb-ribbon.popular { background: #e2662d; }
-.pb-ribbon.best-value { background: #2f8f4e; }
-.pb-ribbon.members-pick { background: #a8321f; }
+.pb-ribbon.popular {
+  background: #e2662d;
+}
+.pb-ribbon.best-value {
+  background: #2f8f4e;
+}
+.pb-ribbon.members-pick {
+  background: #a8321f;
+}

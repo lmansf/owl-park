@@ -9,4 +9,6 @@
   font-weight: 700;
   cursor: pointer;
 }
-.pr-print-btn:hover { background: var(--cove-sand, #faf3e6); }
+.pr-print-btn:hover {
+  background: var(--cove-sand, #faf3e6);
+}

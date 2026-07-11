@@ -6,7 +6,8 @@ function randomCount() {
 }
 
 function injectInto(card) {
-  if (card.querySelector(`.${FEATURE_ID.replace(/[^a-z-]/g, "")}-marker`)) return;
+  if (card.querySelector(`.${FEATURE_ID.replace(/[^a-z-]/g, "")}-marker`))
+    return;
   const line = document.createElement("div");
   line.className = "urgency-stock-line";
   line.setAttribute("data-feature", FEATURE_ID);
@@ -22,7 +23,9 @@ function injectInto(card) {
 
 function applyToCards() {
   TARGET_PRODUCT_IDS.forEach((id) => {
-    const card = document.querySelector(`.product-card[data-product-id="${id}"]`);
+    const card = document.querySelector(
+      `.product-card[data-product-id="${id}"]`,
+    );
     if (card) injectInto(card);
   });
 }
@@ -45,5 +48,7 @@ export function deactivate() {
     observer.disconnect();
     observer = null;
   }
-  document.querySelectorAll(`[data-feature="${FEATURE_ID}"]`).forEach((el) => el.remove());
+  document
+    .querySelectorAll(`[data-feature="${FEATURE_ID}"]`)
+    .forEach((el) => el.remove());
 }

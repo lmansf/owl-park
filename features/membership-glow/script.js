@@ -4,10 +4,14 @@ let ribbonEl = null;
 export async function activate() {
   const res = await fetch("data/products.json");
   const products = await res.json();
-  const featured = products.find((p) => p.category === "membership" && p.featured);
+  const featured = products.find(
+    (p) => p.category === "membership" && p.featured,
+  );
   if (!featured) return;
 
-  const card = document.querySelector(`.product-card[data-product-id="${featured.id}"]`);
+  const card = document.querySelector(
+    `.product-card[data-product-id="${featured.id}"]`,
+  );
   if (!card) return;
 
   // Note: intentionally NOT tagging the pre-existing card with data-feature —

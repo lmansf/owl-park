@@ -49,5 +49,7 @@ export function deactivate() {
     observer.disconnect();
     observer = null;
   }
-  document.querySelectorAll(`[data-feature="${FEATURE_ID}"]`).forEach((el) => el.remove());
+  document
+    .querySelectorAll(`[data-feature="${FEATURE_ID}"]`)
+    .forEach((el) => el.remove());
 }

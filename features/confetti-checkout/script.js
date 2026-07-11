@@ -5,7 +5,9 @@ let observer = null;
 
 function burst() {
   const modal = document.getElementById("checkout-modal");
-  const rect = modal ? modal.getBoundingClientRect() : { left: window.innerWidth / 2, width: 0 };
+  const rect = modal
+    ? modal.getBoundingClientRect()
+    : { left: window.innerWidth / 2, width: 0 };
   const centerX = rect.left + rect.width / 2;
 
   for (let i = 0; i < PIECE_COUNT; i++) {
@@ -42,5 +44,7 @@ export function deactivate() {
     observer.disconnect();
     observer = null;
   }
-  document.querySelectorAll('[data-feature="confetti-checkout"]').forEach((el) => el.remove());
+  document
+    .querySelectorAll('[data-feature="confetti-checkout"]')
+    .forEach((el) => el.remove());
 }

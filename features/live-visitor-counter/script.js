@@ -10,7 +10,8 @@ function randomStart() {
 
 function injectInto(card) {
   const productId = card.getAttribute("data-product-id");
-  if (!productId || card.querySelector(`[data-feature="${FEATURE_ID}"]`)) return;
+  if (!productId || card.querySelector(`[data-feature="${FEATURE_ID}"]`))
+    return;
 
   if (!counts.has(productId)) counts.set(productId, randomStart());
 
@@ -29,19 +30,23 @@ function injectInto(card) {
 }
 
 function applyToCards() {
-  document.querySelectorAll(".product-card[data-product-id]").forEach(injectInto);
+  document
+    .querySelectorAll(".product-card[data-product-id]")
+    .forEach(injectInto);
 }
 
 function tick() {
-  document.querySelectorAll(`.live-visitor-line[data-feature="${FEATURE_ID}"]`).forEach((line) => {
-    const productId = line.getAttribute("data-product-id");
-    let count = counts.get(productId) || randomStart();
-    const delta = Math.random() < 0.5 ? -1 : 1;
-    count = Math.max(1, count + delta);
-    counts.set(productId, count);
-    const countEl = line.querySelector(".lv-count");
-    if (countEl) countEl.textContent = String(count);
-  });
+  document
+    .querySelectorAll(`.live-visitor-line[data-feature="${FEATURE_ID}"]`)
+    .forEach((line) => {
+      const productId = line.getAttribute("data-product-id");
+      let count = counts.get(productId) || randomStart();
+      const delta = Math.random() < 0.5 ? -1 : 1;
+      count = Math.max(1, count + delta);
+      counts.set(productId, count);
+      const countEl = line.querySelector(".lv-count");
+      if (countEl) countEl.textContent = String(count);
+    });
 }
 
 export function activate() {
@@ -64,5 +69,7 @@ export function deactivate() {
     observer = null;
   }
   counts.clear();
-  document.querySelectorAll(`[data-feature="${FEATURE_ID}"]`).forEach((el) => el.remove());
+  document
+    .querySelectorAll(`[data-feature="${FEATURE_ID}"]`)
+    .forEach((el) => el.remove());
 }

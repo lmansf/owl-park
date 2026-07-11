@@ -30,13 +30,17 @@ function showToast() {
     }
   };
 
-  toastEl.querySelector(".cart-reminder-toast-dismiss").addEventListener("click", remove);
+  toastEl
+    .querySelector(".cart-reminder-toast-dismiss")
+    .addEventListener("click", remove);
   dismissTimeoutId = setTimeout(remove, AUTO_DISMISS_MS);
 }
 
 export function activate() {
   reminderTimeoutId = setTimeout(() => {
-    const cartOpen = document.getElementById("cart-drawer")?.classList.contains("open");
+    const cartOpen = document
+      .getElementById("cart-drawer")
+      ?.classList.contains("open");
     if (Cart.getLines().length > 0 && !cartOpen) {
       showToast();
     }

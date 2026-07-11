@@ -11,7 +11,9 @@ function productById(id) {
 
 function renderCatalog() {
   const grid = document.getElementById("catalog-grid");
-  const visible = products.filter((p) => activeFilter === "all" || p.category === activeFilter);
+  const visible = products.filter(
+    (p) => activeFilter === "all" || p.category === activeFilter,
+  );
   grid.innerHTML = visible
     .map(
       (p) => `
@@ -34,12 +36,14 @@ function renderCatalog() {
         <button class="add-to-cart-btn" data-add-id="${p.id}" type="button">Add to Cart</button>
       </div>
     </article>
-  `
+  `,
     )
     .join("");
 
   grid.querySelectorAll("[data-add-id]").forEach((btn) => {
-    btn.addEventListener("click", () => Cart.addItem(btn.getAttribute("data-add-id")));
+    btn.addEventListener("click", () =>
+      Cart.addItem(btn.getAttribute("data-add-id")),
+    );
   });
 }
 
@@ -103,14 +107,18 @@ function renderCart() {
     });
   });
   itemsEl.querySelectorAll("[data-remove]").forEach((btn) => {
-    btn.addEventListener("click", () => Cart.removeItem(btn.getAttribute("data-remove")));
+    btn.addEventListener("click", () =>
+      Cart.removeItem(btn.getAttribute("data-remove")),
+    );
   });
 }
 
 function setupTabs() {
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+      document
+        .querySelectorAll(".tab-btn")
+        .forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       activeFilter = btn.getAttribute("data-filter");
       renderCatalog();
@@ -152,10 +160,12 @@ function setupCheckout() {
       .join("");
 
     document.getElementById("order-summary").innerHTML =
-      summaryHtml + `<div class="modal-summary-line" style="font-weight:700;border-top:1px solid #e4ddca;margin-top:0.4rem;padding-top:0.4rem;"><span>Total</span><span>${formatPrice(total)}</span></div>`;
+      summaryHtml +
+      `<div class="modal-summary-line" style="font-weight:700;border-top:1px solid #e4ddca;margin-top:0.4rem;padding-top:0.4rem;"><span>Total</span><span>${formatPrice(total)}</span></div>`;
 
     const orderId = `CC-${Math.floor(100000 + Math.random() * 900000)}`;
-    document.getElementById("order-id").textContent = `Order ${orderId} · ${new Date().toLocaleDateString()}`;
+    document.getElementById("order-id").textContent =
+      `Order ${orderId} · ${new Date().toLocaleDateString()}`;
 
     modal.classList.remove("hidden");
     Cart.clear();

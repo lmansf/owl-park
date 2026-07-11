@@ -1,34 +1,52 @@
 .dark-mode-btn {
-  background: rgba(255,255,255,0.15);
+  background: rgba(255, 255, 255, 0.15);
   color: white;
-  border: 1px solid rgba(255,255,255,0.5);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   padding: 0.4rem 0.7rem;
   border-radius: 8px;
   font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
 }
-.dark-mode-btn:hover { background: rgba(255,255,255,0.28); }
+.dark-mode-btn:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
 
 body.dark-mode-active {
   background: #12181a;
   color: #e6ece9;
 }
 body.dark-mode-active .hero {
-  background: radial-gradient(circle at top, rgba(15,111,122,0.25), transparent 60%);
+  background: radial-gradient(
+    circle at top,
+    rgba(15, 111, 122, 0.25),
+    transparent 60%
+  );
 }
-body.dark-mode-active .hero h1 { color: #7fd8d8; }
-body.dark-mode-active .hero p { color: #b7c2c1; }
+body.dark-mode-active .hero h1 {
+  color: #7fd8d8;
+}
+body.dark-mode-active .hero p {
+  color: #b7c2c1;
+}
 body.dark-mode-active .product-card {
   background: #1b2426;
   border-color: #2c3638;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
 }
 body.dark-mode-active .product-desc,
-body.dark-mode-active .price-unit { color: #b7c2c1; }
-body.dark-mode-active .product-tagline { color: #8a9694; }
-body.dark-mode-active .product-plu { color: #6d7876; }
-body.dark-mode-active .price-amount { color: #7fd8d8; }
+body.dark-mode-active .price-unit {
+  color: #b7c2c1;
+}
+body.dark-mode-active .product-tagline {
+  color: #8a9694;
+}
+body.dark-mode-active .product-plu {
+  color: #6d7876;
+}
+body.dark-mode-active .price-amount {
+  color: #7fd8d8;
+}
 body.dark-mode-active .tab-btn {
   background: #1b2426;
   border-color: #2c3638;
@@ -47,8 +65,12 @@ body.dark-mode-active .cart-header,
 body.dark-mode-active .cart-footer {
   border-color: #2c3638;
 }
-body.dark-mode-active .cart-line { border-color: #2c3638; }
-body.dark-mode-active .cart-line-emoji { background: #12181a; }
+body.dark-mode-active .cart-line {
+  border-color: #2c3638;
+}
+body.dark-mode-active .cart-line-emoji {
+  background: #12181a;
+}
 body.dark-mode-active .qty-btn {
   background: #12181a;
   border-color: #2c3638;
@@ -57,4 +79,6 @@ body.dark-mode-active .qty-btn {
 body.dark-mode-active .modal-summary {
   background: #12181a;
 }
-body.dark-mode-active .site-footer { color: #6d7876; }
+body.dark-mode-active .site-footer {
+  color: #6d7876;
+}

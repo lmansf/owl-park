@@ -1,14 +1,16 @@
 .a11y-contrast-btn {
-  background: rgba(255,255,255,0.15);
+  background: rgba(255, 255, 255, 0.15);
   color: white;
-  border: 1px solid rgba(255,255,255,0.5);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   padding: 0.4rem 0.7rem;
   border-radius: 8px;
   font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
 }
-.a11y-contrast-btn:hover { background: rgba(255,255,255,0.28); }
+.a11y-contrast-btn:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
 
 body.high-contrast-active {
   background: #ffffff !important;
