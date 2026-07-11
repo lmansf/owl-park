@@ -106,7 +106,7 @@ the feature's tagged node) so it doesn't double-inject.
 
 | Feature                 | Category   | Description                                                                                     |
 | ----------------------- | ---------- | ----------------------------------------------------------------------------------------------- |
-| Seasonal Banner         | visual     | Rotating seasonal promo banner (Summer Safari, Winter Lights) across the top of the storefront. |
+| Seasonal Banner         | visual     | Rotating seasonal promo banner (Summer Nights, Winter Roost) across the top of the storefront. |
 | Owl Spotlight           | visual     | "Owl of the Day" spotlight card featuring an Owl Park resident, rotating every few seconds.     |
 | Confetti Checkout       | visual     | Confetti burst animation on the checkout confirmation screen.                                   |
 | Dark Mode               | visual     | Dark/light theme toggle in the header.                                                          |
