@@ -1,0 +1,12 @@
+{
+  "id": "confetti-checkout",
+  "name": "Confetti Checkout",
+  "description": "Confetti burst animation on the checkout confirmation screen.",
+  "category": "visual",
+  "enabledByDefault": true,
+  "requiresReload": false,
+  "files": {
+    "css": "style.css",
+    "js": "script.js"
+  }
+}

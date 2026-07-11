@@ -1,0 +1,12 @@
+{
+  "id": "printable-receipt",
+  "name": "Printable Receipt",
+  "description": "Adds a print/download receipt button to the checkout confirmation.",
+  "category": "utility",
+  "enabledByDefault": true,
+  "requiresReload": false,
+  "files": {
+    "css": "style.css",
+    "js": "script.js"
+  }
+}

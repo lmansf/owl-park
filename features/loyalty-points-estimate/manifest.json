@@ -1,0 +1,12 @@
+{
+  "id": "loyalty-points-estimate",
+  "name": "Loyalty Points Estimate",
+  "description": "Estimated loyalty points earned, shown at checkout.",
+  "category": "behavioral",
+  "enabledByDefault": false,
+  "requiresReload": false,
+  "files": {
+    "css": "style.css",
+    "js": "script.js"
+  }
+}

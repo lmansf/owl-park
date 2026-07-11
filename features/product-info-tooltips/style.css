@@ -1,0 +1,43 @@
+.pit-info-wrap {
+  position: absolute;
+  top: 0.9rem;
+  left: 0.9rem;
+  z-index: 3;
+}
+.pit-info-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--cove-teal-dark, #0a4d55);
+  color: white;
+  border: none;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: help;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pit-tooltip {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  top: 1.9rem;
+  left: 0;
+  width: 15rem;
+  max-width: 60vw;
+  background: var(--cove-ink, #1e2a2b);
+  color: white;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  box-shadow: 0 8px 22px rgba(0,0,0,0.25);
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+.pit-info-wrap:hover .pit-tooltip,
+.pit-info-icon:focus + .pit-tooltip {
+  visibility: visible;
+  opacity: 1;
+}

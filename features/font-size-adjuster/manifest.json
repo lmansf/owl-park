@@ -1,0 +1,13 @@
+{
+  "id": "font-size-adjuster",
+  "name": "Font Size Adjuster",
+  "description": "Floating control to increase or decrease site-wide font size.",
+  "category": "utility",
+  "enabledByDefault": false,
+  "requiresReload": false,
+  "files": {
+    "css": "style.css",
+    "html": "fragment.html",
+    "js": "script.js"
+  }
+}

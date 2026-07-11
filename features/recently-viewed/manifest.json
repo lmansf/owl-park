@@ -1,0 +1,13 @@
+{
+  "id": "recently-viewed",
+  "name": "Recently Viewed",
+  "description": "Strip tracking and displaying recently viewed products.",
+  "category": "behavioral",
+  "enabledByDefault": false,
+  "requiresReload": false,
+  "files": {
+    "css": "style.css",
+    "html": "fragment.html",
+    "js": "script.js"
+  }
+}

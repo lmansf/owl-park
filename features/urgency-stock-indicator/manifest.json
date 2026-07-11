@@ -1,0 +1,12 @@
+{
+  "id": "urgency-stock-indicator",
+  "name": "Urgency Stock Indicator",
+  "description": "\"Only a few left today\" urgency messaging on limited passes.",
+  "category": "behavioral",
+  "enabledByDefault": false,
+  "requiresReload": false,
+  "files": {
+    "css": "style.css",
+    "js": "script.js"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "id": "dark-mode",
+  "name": "Dark Mode",
+  "description": "Dark/light theme toggle in the header.",
+  "category": "visual",
+  "enabledByDefault": false,
+  "requiresReload": false,
+  "files": {
+    "css": "style.css",
+    "js": "script.js"
+  }
+}

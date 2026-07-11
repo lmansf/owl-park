@@ -1,0 +1,12 @@
+{
+  "id": "membership-glow",
+  "name": "Membership Glow",
+  "description": "Glowing highlight and ribbon on the recommended membership tier.",
+  "category": "visual",
+  "enabledByDefault": false,
+  "requiresReload": false,
+  "files": {
+    "css": "style.css",
+    "js": "script.js"
+  }
+}

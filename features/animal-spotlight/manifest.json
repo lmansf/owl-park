@@ -1,0 +1,13 @@
+{
+  "id": "animal-spotlight",
+  "name": "Animal Spotlight",
+  "description": "\"Animal of the Day\" spotlight card featuring a zoo resident.",
+  "category": "visual",
+  "enabledByDefault": true,
+  "requiresReload": false,
+  "files": {
+    "css": "style.css",
+    "html": "fragment.html",
+    "js": "script.js"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "seasonal-banner",
+  "name": "Seasonal Banner",
+  "description": "Rotating seasonal promo banner (Summer Safari, Winter Lights) across the top of the storefront.",
+  "category": "visual",
+  "enabledByDefault": true,
+  "requiresReload": false,
+  "files": {
+    "css": "style.css",
+    "html": "fragment.html",
+    "js": "script.js"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "id": "product-badges",
+  "name": "Product Badges",
+  "description": "\"New\" / \"Best Value\" / \"Popular\" ribbon badges on product cards.",
+  "category": "visual",
+  "enabledByDefault": true,
+  "requiresReload": false,
+  "files": {
+    "css": "style.css",
+    "js": "script.js"
+  }
+}

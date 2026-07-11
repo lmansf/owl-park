@@ -1,0 +1,12 @@
+{
+  "id": "live-visitor-counter",
+  "name": "Live Visitor Counter",
+  "description": "Simulated \"N people are looking at this\" counter on product cards.",
+  "category": "behavioral",
+  "enabledByDefault": false,
+  "requiresReload": false,
+  "files": {
+    "css": "style.css",
+    "js": "script.js"
+  }
+}

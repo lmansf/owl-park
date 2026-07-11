@@ -1,0 +1,63 @@
+[
+  {
+    "id": "prod-ga-ticket",
+    "plu": "4011",
+    "category": "ticket",
+    "name": "General Admission",
+    "tagline": "One day, every habitat",
+    "description": "A full day of access to every exhibit at Critter Cove, from the Red Panda Ridge to the Coral Cove aquarium.",
+    "price": 34.00,
+    "unit": "per adult",
+    "emoji": "🎟️",
+    "accent": "#2f8f4e"
+  },
+  {
+    "id": "prod-family-day-pass",
+    "plu": "4092",
+    "category": "ticket",
+    "name": "Family Day Pass",
+    "tagline": "Two adults, up to three kids",
+    "description": "Skip the per-person math: a single-day pass covering two adults and up to three children (ages 3-12).",
+    "price": 99.00,
+    "unit": "per family (5)",
+    "emoji": "🐘",
+    "accent": "#e2662d"
+  },
+  {
+    "id": "prod-twilight-ticket",
+    "plu": "4157",
+    "category": "ticket",
+    "name": "Twilight Explorer Ticket",
+    "tagline": "Evening hours, nocturnal habitats",
+    "description": "Entry from 4pm to close, when the nocturnal house and after-dark keeper talks come alive.",
+    "price": 22.00,
+    "unit": "per adult",
+    "emoji": "🌙",
+    "accent": "#3a4d8f"
+  },
+  {
+    "id": "prod-individual-membership",
+    "plu": "M100",
+    "category": "membership",
+    "name": "Individual Membership",
+    "tagline": "Unlimited visits, one name on the card",
+    "description": "12 months of unlimited general admission for one member, plus member pricing on keeper experiences.",
+    "price": 89.00,
+    "unit": "per year",
+    "emoji": "🦦",
+    "accent": "#0f9aa8"
+  },
+  {
+    "id": "prod-household-membership",
+    "plu": "M250",
+    "category": "membership",
+    "name": "Family & Household Membership",
+    "tagline": "Unlimited visits for your whole crew",
+    "description": "12 months of unlimited admission for 2 adults and up to 4 dependents at the same address, plus guest passes.",
+    "price": 179.00,
+    "unit": "per year",
+    "emoji": "🦁",
+    "accent": "#a8321f",
+    "featured": true
+  }
+]

@@ -1,0 +1,12 @@
+.pr-print-btn {
+  width: 100%;
+  margin-top: 0.6rem;
+  background: white;
+  color: var(--cove-teal-dark, #0a4d55);
+  border: 2px solid var(--cove-teal, #0f6f7a);
+  padding: 0.6rem;
+  border-radius: 999px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pr-print-btn:hover { background: var(--cove-sand, #faf3e6); }

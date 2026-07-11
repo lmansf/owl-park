@@ -1,0 +1,14 @@
+.loyalty-points-line {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed #d8cfae;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #9a6a1a;
+}
+.loyalty-points-line .lp-icon {
+  font-size: 1rem;
+}

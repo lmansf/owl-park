@@ -1,0 +1,12 @@
+{
+  "id": "membership-upsell-modal",
+  "name": "Membership Upsell Modal",
+  "description": "Suggests a membership upgrade when a ticket-only cart builds up.",
+  "category": "behavioral",
+  "enabledByDefault": false,
+  "requiresReload": false,
+  "files": {
+    "css": "style.css",
+    "js": "script.js"
+  }
+}

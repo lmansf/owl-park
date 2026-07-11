@@ -1,0 +1,31 @@
+.weather-widget {
+  position: fixed;
+  top: 5.4rem;
+  right: 1.2rem;
+  z-index: 30;
+  background: white;
+  border: 1px solid var(--cove-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 0.55rem 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--cove-teal-dark);
+  max-width: 240px;
+}
+
+.weather-widget-icon { font-size: 1.15rem; }
+
+@media (max-width: 700px) {
+  .weather-widget {
+    top: auto;
+    bottom: 1.2rem;
+    right: 1rem;
+    left: 1rem;
+    max-width: none;
+    justify-content: center;
+  }
+}

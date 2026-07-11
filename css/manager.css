@@ -1,0 +1,126 @@
+.manager-main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.manager-intro {
+  margin-bottom: 1.6rem;
+}
+.manager-intro h1 {
+  margin: 0 0 0.4rem;
+  color: var(--cove-teal-dark);
+}
+.manager-intro p {
+  margin: 0;
+  color: #4a5657;
+  max-width: 44rem;
+}
+
+.manager-toolbar {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 1.2rem;
+}
+.manager-toolbar button {
+  border: 1px solid var(--cove-border);
+  background: white;
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: var(--cove-teal-dark);
+}
+.manager-toolbar button:hover { background: var(--cove-sand); }
+
+.feature-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.feature-row {
+  background: var(--cove-card);
+  border: 1px solid var(--cove-border);
+  border-radius: var(--radius-md);
+  padding: 0.9rem 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: var(--shadow-card);
+}
+
+.feature-row-info { flex-grow: 1; min-width: 0; }
+.feature-row-name {
+  font-weight: 700;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.feature-tag {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  background: var(--cove-sand);
+  color: var(--cove-teal-dark);
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  font-weight: 700;
+}
+.feature-tag.reload {
+  background: #fde3d0;
+  color: #9a4a1a;
+}
+.feature-row-desc {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  color: #62706f;
+}
+
+.feature-status {
+  font-size: 0.75rem;
+  font-weight: 700;
+  min-width: 3.6rem;
+  text-align: right;
+}
+.feature-status.on { color: var(--cove-green); }
+.feature-status.off { color: #9a9384; }
+
+/* Toggle switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+.switch input { opacity: 0; width: 0; height: 0; }
+.switch-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #ccc;
+  transition: 0.2s;
+  border-radius: 999px;
+}
+.switch-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.2s;
+  border-radius: 50%;
+}
+.switch input:checked + .switch-slider { background-color: var(--cove-green); }
+.switch input:checked + .switch-slider:before { transform: translateX(20px); }
+
+.manager-empty {
+  text-align: center;
+  color: #8a9091;
+  padding: 3rem 0;
+}

@@ -1,0 +1,12 @@
+{
+  "id": "paw-cursor-trail",
+  "name": "Paw Print Cursor Trail",
+  "description": "Decorative paw-print trail that follows the mouse cursor.",
+  "category": "visual",
+  "enabledByDefault": false,
+  "requiresReload": false,
+  "files": {
+    "css": "style.css",
+    "js": "script.js"
+  }
+}

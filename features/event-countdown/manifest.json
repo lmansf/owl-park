@@ -1,0 +1,13 @@
+{
+  "id": "event-countdown",
+  "name": "Feeding Time Countdown",
+  "description": "Live countdown timer to the next keeper feeding or special event.",
+  "category": "behavioral",
+  "enabledByDefault": false,
+  "requiresReload": false,
+  "files": {
+    "css": "style.css",
+    "html": "fragment.html",
+    "js": "script.js"
+  }
+}

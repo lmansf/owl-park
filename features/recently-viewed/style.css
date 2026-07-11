@@ -1,0 +1,37 @@
+.recently-viewed-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  background: var(--cove-sand, #faf3e6);
+  border-bottom: 1px solid #e4ddca;
+  padding: 0.5rem 1.2rem;
+  font-size: 0.82rem;
+  flex-wrap: wrap;
+}
+.recently-viewed-strip[hidden] {
+  display: none;
+}
+.rv-label {
+  font-weight: 700;
+  color: var(--cove-teal-dark, #0a4d55);
+  white-space: nowrap;
+}
+.rv-chips {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.rv-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: white;
+  border: 1px solid #e4ddca;
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem 0.2rem 0.35rem;
+  font-size: 0.78rem;
+  color: #3c4849;
+}
+.rv-chip-emoji {
+  font-size: 0.9rem;
+}

@@ -1,0 +1,17 @@
+.urgency-stock-line {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #b23b1f;
+  background: #fdecdf;
+  border: 1px solid #f3c9ab;
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  margin-top: 0.4rem;
+  width: fit-content;
+}
+.urgency-stock-line .urgency-icon {
+  font-size: 0.85rem;
+}
