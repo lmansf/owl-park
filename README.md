@@ -47,48 +47,59 @@ generated order id, then clears the cart. There's no real payment backend — th
 
 ## The `features/` plugin system
 
-Each enhancement lives in its own folder under `features/<feature-id>/`:
+Each enhancement is ONE self-contained file, `features/<feature-id>.html` — no separate manifest,
+CSS, or JS files, and no build step. This mirrors a real constraint of third-party webstores (see
+the [Layout inspiration](#layout-inspiration) section below): a site owner is often only allowed to
+paste a single code snippet into a page body, with no separate assets and no import graph. Each
+file contains, in order:
 
-- `manifest.json` — required. Declares `id`, `name`, `description`, `category`
-  (`visual`/`behavioral`/`utility`), `enabledByDefault`, `requiresReload`, and a `files` map naming
-  the feature's `css`, `html`, and `js` assets (css/html are optional; `js` is required).
-- `style.css` — optional. Plain CSS, injected as a `<style data-feature="...">` tag in `<head>`
-  when the feature activates, removed on deactivate.
-- `fragment.html` — optional. A raw HTML snippet. The loader wraps it in a tagged container and
-  appends it to `#feature-root` (a slot at the top of `<body>`, before the header, on every page).
-  Fixed/absolutely-positioned content can appear anywhere on screen regardless of that DOM
-  position — only features that want inline top-of-page placement (like a banner) rely on the
-  order.
-- `script.js` — required. An ES module exporting `activate(ctx)` and `deactivate(ctx)`, where
-  `ctx` is `{ mount, featureId }`. `activate` wires up the feature's behavior (DOM injection into
-  the rest of the page, event listeners, timers). `deactivate` must undo all of it — clear
-  timers/listeners and remove any DOM nodes the feature created outside of `mount` (tag those with
-  `data-feature="<id>"` so the loader's cleanup pass can catch anything a feature's own teardown
-  misses).
+- `<script type="application/json" data-owlpark-manifest>` — required. A JSON object with `id`,
+  `name`, `description`, `category` (`visual`/`behavioral`/`utility`), `enabledByDefault`,
+  `requiresReload`. This block is only ever parsed for metadata — the loader never executes or
+  re-injects it live.
+- an optional `<style>` block — scoped to a `.owlpark-feat-<id>` class to avoid leaking onto the
+  host page.
+- optional static markup — wrapped in an element carrying that same `.owlpark-feat-<id>` class,
+  for features that need an always-present container (a banner, a floating widget).
+- a single plain `<script>` (no `type="module"`, no `import`/`export`) — an IIFE that defines
+  `activate()`/`deactivate()`, calls `activate()` itself immediately (so the snippet works if
+  pasted standalone into any page, no orchestration required), and registers itself:
+  `window.__owlParkFeatures["<id>"] = { activate, deactivate }`, so the Owl Park loader can call
+  `deactivate()`/`activate()` again later without re-injecting the whole snippet.
 
-`features/index.json` is the registry: a flat JSON array of feature folder names. The runtime
-loader (`js/feature-loader.js`) reads it, fetches each folder's manifest, and can `activateFeature`
-/ `deactivateFeature` any of them without a page reload. All 20 shipped features toggle live; none
-require a reload, though the manifest/manager UI support a `requiresReload` escape hatch for a
-future feature that genuinely needs one.
+`features/index.json` is the registry: a flat JSON array of feature filenames. The runtime loader
+(`js/feature-loader.js`) fetches each file's raw text once, parses out the manifest for discovery,
+and on activate re-creates every non-manifest element and appends it live — creating a *new*
+`<script>` element and appending it (rather than setting `innerHTML`) is what makes the browser
+execute it. All 20 shipped features toggle live with zero page reloads; the manifest/manager UI
+still support a `requiresReload` escape hatch for a future feature that genuinely needs one.
+
+Because features can't `import` anything (including each other, or `js/cart.js`), any feature that
+needs cart contents reads `localStorage.getItem("owl-park-cart")` directly (a JSON array of
+`{ id, qty }` objects) and polls on an interval to react to changes, rather than subscribing to a
+callback. `fetch("data/products.json")` remains fine to call from a feature — that's a data fetch,
+not a code import.
 
 ### Authoring a new feature
 
-1. Create `features/my-feature/` with a `manifest.json`, plus whichever of `style.css`,
-   `fragment.html`, `script.js` you need (js is mandatory).
-2. In `script.js`, export `activate({ mount, featureId })` and `deactivate({ mount, featureId })`.
-   Keep them symmetric: whatever `activate` adds to the page (beyond `mount`, which the loader
-   cleans up automatically), `deactivate` must remove.
-3. Add `"my-feature"` to the array in `features/index.json`.
+1. Create `features/my-feature.html` with the four parts above: a `data-owlpark-manifest` script
+   block, optional `<style>`, optional static markup, and a plain `<script>` IIFE.
+2. In that script, define `activate()`/`deactivate()`, call `activate()` yourself at the bottom,
+   and register into `window.__owlParkFeatures["my-feature"]`. Keep them symmetric: whatever
+   `activate()` creates, `deactivate()` must remove — and tag anything you create *dynamically*
+   (e.g. a badge appended onto an existing `.product-row`) with `data-owlpark-feature="my-feature"`
+   yourself, since the loader only auto-tags the file's own top-level elements, not nodes your
+   script creates elsewhere on the page.
+3. Add `"my-feature.html"` to the array in `features/index.json`.
 4. Reload the storefront or manager UI — your feature now shows up in the Enhancement Manager and
    can be toggled like any other.
 
-**Gotcha for per-product-card features:** `renderCatalog()` in `js/main.js` replaces
+**Gotcha for per-product-row features:** `renderCatalog()` in `js/main.js` replaces
 `#catalog-grid`'s `innerHTML` wholesale on every tab switch, which wipes out any DOM nodes a
-feature appended directly onto a `.product-card`. Features that decorate product cards (see
+feature appended directly onto a `.product-row`. Features that decorate product rows (see
 `product-badges`, `product-info-tooltips`, `urgency-stock-indicator`, `live-visitor-counter`, and
 `membership-glow`) work around this with a `MutationObserver` on `#catalog-grid` that re-applies
-the injection after each re-render, guarded by an idempotency check (skip a card that already has
+the injection after each re-render, guarded by an idempotency check (skip a row that already has
 the feature's tagged node) so it doesn't double-inject.
 
 ## The 20 enhancements
@@ -96,28 +107,36 @@ the feature's tagged node) so it doesn't double-inject.
 | Feature | Category | Description |
 |---|---|---|
 | Seasonal Banner | visual | Rotating seasonal promo banner (Summer Safari, Winter Lights) across the top of the storefront. |
-| Animal Spotlight | visual | "Animal of the Day" spotlight card featuring a zoo resident, rotating every few seconds. |
+| Owl Spotlight | visual | "Owl of the Day" spotlight card featuring an Owl Park resident, rotating every few seconds. |
 | Confetti Checkout | visual | Confetti burst animation on the checkout confirmation screen. |
-| Dark Mode | utility/visual | Adds a dark/light theme toggle to the header. |
-| Paw Cursor Trail | visual | Decorative paw-print trail that follows the mouse cursor. |
-| Product Badges | visual | "Popular" / "Best Value" / "Members' Pick" ribbon badges on product cards. |
-| Membership Glow | visual | Highlights the recommended membership tier with a glowing border and ribbon. |
-| Weather Widget | visual | Fun mocked "zoo weather" badge encouraging visits on nice days. |
-| Event Countdown | behavioral | Live countdown timer to the next feeding time / special event. |
+| Dark Mode | visual | Dark/light theme toggle in the header. |
+| Feather Cursor Trail | visual | Decorative feather trail that follows the mouse cursor. |
+| Product Badges | visual | "Popular" / "Best Value" / "Members' Pick" ribbon badges on product rows. |
+| Membership Glow | visual | Glowing highlight and ribbon on the recommended membership tier. |
+| Park Weather Widget | visual | Fun mocked "park weather" badge encouraging visits on nice days. |
+| Feeding Time Countdown | behavioral | Live countdown timer to the next keeper feeding or special event. |
 | Cart Reminder Toast | behavioral | Gentle toast reminder if items sit in the cart without checking out. |
-| Membership Upsell Modal | behavioral | Modal suggesting a membership upgrade when a ticket-only cart is detected. |
+| Membership Upsell Modal | behavioral | Suggests a membership upgrade when a ticket-only cart builds up. |
 | Urgency Stock Indicator | behavioral | "Only a few left today" urgency messaging on limited passes. |
-| Recently Viewed | behavioral | Tracks and displays recently viewed products in a strip. |
-| Exit Intent Offer | behavioral | Detects exit intent and offers a one-time discount nudge. |
+| Recently Viewed | behavioral | Strip tracking and displaying recently viewed products. |
+| Exit Intent Offer | behavioral | Exit-intent detection with a one-time discount nudge. |
 | Live Visitor Counter | behavioral | Simulated "N people are looking at this" counter on product cards. |
-| Loyalty Points Estimate | behavioral | Shows estimated loyalty points earned at checkout. |
-| Accessibility Contrast | utility | High-contrast accessibility mode toggle. |
-| Font Size Adjuster | utility | Floating control to increase/decrease site font size. |
-| Product Info Tooltips | utility | Info icons on product cards with detailed inclusion tooltips. |
-| Printable Receipt | utility | Adds a "print/download receipt" button to the checkout confirmation. |
+| Loyalty Points Estimate | behavioral | Estimated loyalty points earned, shown at checkout. |
+| High-Contrast Mode | utility | High-contrast accessibility mode toggle for improved readability. |
+| Font Size Adjuster | utility | Floating control to increase or decrease site-wide font size. |
+| Product Info Tooltips | utility | Info icons on product rows with detailed inclusion tooltips. |
+| Printable Receipt | utility | Adds a print/download receipt button to the checkout confirmation. |
 
-(Each feature also has a `description` in its `manifest.json`, shown live in the Feature Manager
-UI; this table summarizes the same feature set but doesn't guarantee word-for-word matching text.)
+(Each feature also has a `description` in its own `data-owlpark-manifest` block, shown live in the
+Feature Manager UI; this table mirrors the same feature set.)
+
+## Layout inspiration
+
+The catalog's list-row layout (title/tagline/price/button up top, a divider, then
+description/fine-print below) and the full-width hero image band were adapted from the structural
+patterns of a real aquarium webstore, for a design-review comparison — see
+`openspec/changes/critter-cove-shop/design.md` for the specific reference and what was and wasn't
+carried over (structure only; no branding, copy, or images were reused).
 
 ## Feature Manager UI
 
@@ -142,8 +161,8 @@ js/cart.js                 cart state module (localStorage-backed)
 js/feature-loader.js       runtime feature discovery/activate/deactivate
 js/main.js                 storefront page glue
 js/manager.js              manager page glue
-features/index.json        registry of feature folder names
-features/<feature-id>/     one folder per enhancement (manifest + assets)
+features/index.json        registry of feature filenames
+features/<feature-id>.html one self-contained file per enhancement
 openspec/                  OpenSpec proposal/specs/design/tasks for this project
 ```
 
@@ -157,7 +176,8 @@ capability specs, and task breakdown.
 
 `.github/workflows/ci.yml` runs on every push and pull request. Since there's no build step and no
 test suite, the checks are static/structural: JSON validity for every `.json` file, `node --check`
-syntax validation for every file under `js/` and `features/`, a consistency check that every folder
-in `features/` is registered in `features/index.json` (and vice versa) with a matching manifest,
-and an HTTP smoke test that serves the site with `python3 -m http.server` and fetches the key pages
-and assets.
+syntax validation for every file under `js/` plus every feature's embedded behavior script, a
+consistency check that every `features/*.html` file is registered in `features/index.json` (and
+vice versa) with a valid manifest whose `id` matches its filename and no `import`/`export`/
+`type="module"` anywhere, and an HTTP smoke test that serves the site with `python3 -m http.server`
+and fetches the key pages and assets.

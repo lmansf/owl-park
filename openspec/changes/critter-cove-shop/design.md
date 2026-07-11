@@ -48,6 +48,27 @@ constraint (no build step) shapes every other decision below.
 - **Enablement persisted in `localStorage`** under a single key mapping feature id -> boolean,
   separate from cart storage.
 
+## Follow-up updates (post-launch)
+
+- **Rebrand to Owl Park.** The project (and its GitHub repo) was renamed from "Critter Cove Shop"
+  to "Owl Park" shortly after the initial build; copy, icons, and storage keys were updated to
+  match, and the catalog's zoo-variety animal references were narrowed to an owl theme.
+- **Layout restyle.** The storefront's catalog layout was adapted to follow the structural pattern
+  of the National Aquarium's webstore (`cart.aqua.org`) — a full-width hero image band, a labeled
+  section header, and single-column bordered rows (title/price/action up top, a divider, then
+  description/fine print below) instead of a card grid. Only structure was referenced; no
+  branding, copy, or images from that site were reused — Owl Park kept its own colors, artwork
+  (an original CSS/SVG night-sky hero), and content.
+- **Single-file feature format.** The `features/` plugin format changed from a folder per feature
+  (`manifest.json` + `style.css` + `fragment.html` + `script.js`, loaded as an ES module) to one
+  self-contained `features/<id>.html` file per feature, with no ES module imports anywhere. This
+  mirrors a real constraint of third-party webstores (including the aquarium reference above),
+  which typically only allow a site owner to paste a single code snippet into a page body — no
+  separate assets, no build step, no import graph. See `README.md`'s "The `features/` plugin
+  system" section for the current file format; the "ADDED Requirements" in
+  `specs/features-plugin-system/spec.md` describe the original folder-based contract and were not
+  revised for this change (deferred until a broader spec update alongside further follow-up work).
+
 ## Risks / Trade-offs
 
 - [Two pages (storefront, manager) both need feature state applied on load] → Mitigation: a shared

@@ -1,0 +1,67 @@
+<script type="application/json" data-owlpark-manifest>
+{
+  "id": "seasonal-banner",
+  "name": "Seasonal Banner",
+  "description": "Rotating seasonal promo banner (Summer Safari, Winter Lights) across the top of the storefront.",
+  "category": "visual",
+  "enabledByDefault": true,
+  "requiresReload": false
+}
+</script>
+
+<style>
+.owlpark-feat-seasonal-banner {
+  background: linear-gradient(90deg, #e2662d, #f0a02f);
+  color: white;
+  text-align: center;
+  padding: 0.55rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.owlpark-feat-seasonal-banner .sb-icon {
+  font-size: 1.05rem;
+}
+</style>
+
+<div class="owlpark-feat-seasonal-banner">
+  <span class="sb-icon">🦉</span>
+  <span class="sb-text">Summer Safari is here — extended evening hours through August!</span>
+</div>
+
+<script>
+(function () {
+  var MESSAGES = [
+    "Summer Safari is here — extended evening hours through August!",
+    "Weekend Wild Nights — keeper talks under the stars, Fri & Sat.",
+    "Members save 15% on Twilight Explorer tickets this month.",
+  ];
+
+  var intervalId = null;
+
+  function activate() {
+    var el = document.querySelector(".owlpark-feat-seasonal-banner .sb-text");
+    if (!el) return;
+    var i = 0;
+    intervalId = setInterval(function () {
+      i = (i + 1) % MESSAGES.length;
+      el.textContent = MESSAGES[i];
+    }, 4000);
+  }
+
+  function deactivate() {
+    if (intervalId) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+  }
+
+  activate();
+
+  window.__owlParkFeatures = window.__owlParkFeatures || {};
+  window.__owlParkFeatures["seasonal-banner"] = { activate: activate, deactivate: deactivate };
+})();
+</script>

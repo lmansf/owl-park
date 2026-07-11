@@ -23,19 +23,39 @@ jobs:
             python3 -m json.tool "$f" > /dev/null
           done
 
-      - name: Check JS syntax
+      - name: Check JS syntax (js/ files and each feature's embedded script)
         run: |
           set -e
-          for f in $(find js features -name "*.js"); do
+          for f in $(find js -name "*.js"); do
             echo "Checking $f"
             node --check "$f"
           done
+          python3 - <<'EOF'
+          import re, subprocess, sys, glob, tempfile, os
 
-      - name: Verify every features/ manifest matches its folder and files
+          for path in sorted(glob.glob("features/*.html")):
+              text = open(path).read()
+              scripts = re.findall(r'<script(?![^>]*application/json)[^>]*>(.*?)</script>', text, re.S)
+              if not scripts:
+                  print(f"{path}: no behavior <script> block found")
+                  sys.exit(1)
+              body = scripts[-1]
+              with tempfile.NamedTemporaryFile(mode="w", suffix=".js", delete=False) as tf:
+                  tf.write(body)
+                  tmp_path = tf.name
+              proc = subprocess.run(["node", "--check", tmp_path], capture_output=True, text=True)
+              os.unlink(tmp_path)
+              if proc.returncode != 0:
+                  print(f"{path}: syntax error\n{proc.stderr}")
+                  sys.exit(1)
+              print(f"{path}: behavior script OK")
+          EOF
+
+      - name: Verify every features/*.html is registered with a valid manifest
         run: |
           set -e
           python3 - <<'EOF'
-          import json, os, sys
+          import json, os, re, sys
 
           base = "features"
           problems = []
@@ -44,28 +64,28 @@ jobs:
 
           for entry in registered:
               path = os.path.join(base, entry)
-              if not os.path.isdir(path):
-                  problems.append(f"{entry}: listed in index.json but no such folder")
+              if not os.path.isfile(path):
+                  problems.append(f"{entry}: listed in index.json but no such file")
                   continue
-              manifest_path = os.path.join(path, "manifest.json")
-              if not os.path.isfile(manifest_path):
-                  problems.append(f"{entry}: missing manifest.json")
+              text = open(path).read()
+              m = re.search(r'data-owlpark-manifest>(.*?)</script>', text, re.S)
+              if not m:
+                  problems.append(f"{entry}: no data-owlpark-manifest block found")
                   continue
-              with open(manifest_path) as f:
-                  manifest = json.load(f)
-              if manifest.get("id") != entry:
-                  problems.append(f"{entry}: manifest id '{manifest.get('id')}' != folder name")
-              files = manifest.get("files", {})
-              if "js" not in files:
-                  problems.append(f"{entry}: manifest.files has no js entry")
-              for kind, fname in files.items():
-                  fpath = os.path.join(path, fname)
-                  if not os.path.isfile(fpath):
-                      problems.append(f"{entry}: manifest references missing {kind} file '{fname}'")
+              try:
+                  manifest = json.loads(m.group(1))
+              except json.JSONDecodeError as e:
+                  problems.append(f"{entry}: manifest block is not valid JSON ({e})")
+                  continue
+              expected_id = entry[:-len(".html")] if entry.endswith(".html") else entry
+              if manifest.get("id") != expected_id:
+                  problems.append(f"{entry}: manifest id '{manifest.get('id')}' != filename '{expected_id}'")
+              if "import " in text or "export " in text or 'type="module"' in text:
+                  problems.append(f"{entry}: contains import/export or type=module (features must be plain scripts)")
 
-          for d in sorted(os.listdir(base)):
-              if os.path.isdir(os.path.join(base, d)) and d not in registered:
-                  problems.append(f"{d}: folder exists but not listed in features/index.json")
+          for f in sorted(os.listdir(base)):
+              if f.endswith(".html") and f not in registered:
+                  problems.append(f"{f}: file exists but not listed in features/index.json")
 
           if problems:
               print("Feature registry problems found:")

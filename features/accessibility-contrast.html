@@ -1,0 +1,132 @@
+<script type="application/json" data-owlpark-manifest>
+{
+  "id": "accessibility-contrast",
+  "name": "High-Contrast Mode",
+  "description": "High-contrast accessibility mode toggle for improved readability.",
+  "category": "utility",
+  "enabledByDefault": false,
+  "requiresReload": false
+}
+</script>
+
+<style>
+.owlpark-feat-accessibility-contrast {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  padding: 0.4rem 0.7rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.owlpark-feat-accessibility-contrast:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+body.high-contrast-active {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+body.high-contrast-active .site-header {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+body.high-contrast-active .hero {
+  background: none !important;
+}
+body.high-contrast-active .hero h1,
+body.high-contrast-active .hero p {
+  color: #000000 !important;
+}
+body.high-contrast-active .product-row {
+  background: #ffffff !important;
+  border: 3px solid #000000 !important;
+  box-shadow: none !important;
+}
+body.high-contrast-active .product-desc,
+body.high-contrast-active .product-tagline,
+body.high-contrast-active .product-plu,
+body.high-contrast-active .price-unit {
+  color: #000000 !important;
+}
+body.high-contrast-active .price-amount {
+  color: #000000 !important;
+}
+body.high-contrast-active .add-to-cart-btn {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #000000 !important;
+}
+body.high-contrast-active .category-pill {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 1px solid #ffffff;
+}
+body.high-contrast-active .tab-btn {
+  border: 2px solid #000000 !important;
+  color: #000000 !important;
+  background: #ffffff !important;
+}
+body.high-contrast-active .tab-btn.active {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+body.high-contrast-active .cart-drawer,
+body.high-contrast-active .modal-card {
+  background: #ffffff !important;
+  border-left: 3px solid #000000;
+}
+body.high-contrast-active .checkout-btn,
+body.high-contrast-active .modal-close-btn {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+body.high-contrast-active a,
+body.high-contrast-active .header-link {
+  color: #ffff00 !important;
+  text-decoration: underline !important;
+}
+</style>
+
+<script>
+(function () {
+  var buttonEl = null;
+
+  function updateLabel() {
+    if (!buttonEl) return;
+    var active = document.body.classList.contains("high-contrast-active");
+    buttonEl.textContent = active ? "◐ Standard Contrast" : "◐ High Contrast";
+  }
+
+  function activate() {
+    var actions = document.querySelector(".header-actions");
+    if (!actions) return;
+
+    buttonEl = document.createElement("button");
+    buttonEl.type = "button";
+    buttonEl.className = "owlpark-feat-accessibility-contrast";
+    buttonEl.setAttribute("data-owlpark-feature", "accessibility-contrast");
+    actions.prepend(buttonEl);
+    updateLabel();
+
+    buttonEl.addEventListener("click", function () {
+      document.body.classList.toggle("high-contrast-active");
+      updateLabel();
+    });
+  }
+
+  function deactivate() {
+    document.body.classList.remove("high-contrast-active");
+    if (buttonEl) {
+      buttonEl.remove();
+      buttonEl = null;
+    }
+  }
+
+  activate();
+
+  window.__owlParkFeatures = window.__owlParkFeatures || {};
+  window.__owlParkFeatures["accessibility-contrast"] = { activate: activate, deactivate: deactivate };
+})();
+</script>

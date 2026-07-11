@@ -1,0 +1,132 @@
+<script type="application/json" data-owlpark-manifest>
+{
+  "id": "cart-reminder-toast",
+  "name": "Cart Reminder Toast",
+  "description": "Gentle toast reminder if items sit in the cart without checking out.",
+  "category": "behavioral",
+  "enabledByDefault": false,
+  "requiresReload": false
+}
+</script>
+
+<style>
+.owlpark-feat-cart-reminder-toast {
+  position: fixed;
+  bottom: 1.4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--cove-ink);
+  color: white;
+  padding: 0.75rem 1.3rem;
+  border-radius: 999px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  font-size: 0.9rem;
+  font-weight: 600;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  animation: owlpark-cart-reminder-toast-in 0.25s ease;
+}
+
+@keyframes owlpark-cart-reminder-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.owlpark-feat-cart-reminder-toast .crt-dismiss {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: white;
+  border-radius: 999px;
+  width: 1.4rem;
+  height: 1.4rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  line-height: 1;
+}
+</style>
+
+<script>
+(function () {
+  var FEATURE_ID = "cart-reminder-toast";
+  var CART_STORAGE_KEY = "owl-park-cart";
+  var REMINDER_DELAY_MS = 20000;
+  var AUTO_DISMISS_MS = 6000;
+
+  var reminderTimeoutId = null;
+  var dismissTimeoutId = null;
+  var toastEl = null;
+
+  function readCartLines() {
+    try {
+      var raw = localStorage.getItem(CART_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function showToast() {
+    if (toastEl) return;
+
+    toastEl = document.createElement("div");
+    toastEl.className = "owlpark-feat-cart-reminder-toast";
+    toastEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+    toastEl.innerHTML =
+      '<span>🦉 Your cart is waiting — ready to checkout?</span>' +
+      '<button class="crt-dismiss" type="button" aria-label="Dismiss">&times;</button>';
+    document.body.appendChild(toastEl);
+
+    function remove() {
+      if (toastEl) {
+        toastEl.remove();
+        toastEl = null;
+      }
+      if (dismissTimeoutId) {
+        clearTimeout(dismissTimeoutId);
+        dismissTimeoutId = null;
+      }
+    }
+
+    toastEl.querySelector(".crt-dismiss").addEventListener("click", remove);
+    dismissTimeoutId = setTimeout(remove, AUTO_DISMISS_MS);
+  }
+
+  function activate() {
+    reminderTimeoutId = setTimeout(function () {
+      var drawer = document.getElementById("cart-drawer");
+      var cartOpen = drawer && drawer.classList.contains("open");
+      if (readCartLines().length > 0 && !cartOpen) {
+        showToast();
+      }
+    }, REMINDER_DELAY_MS);
+  }
+
+  function deactivate() {
+    if (reminderTimeoutId) {
+      clearTimeout(reminderTimeoutId);
+      reminderTimeoutId = null;
+    }
+    if (dismissTimeoutId) {
+      clearTimeout(dismissTimeoutId);
+      dismissTimeoutId = null;
+    }
+    if (toastEl) {
+      toastEl.remove();
+      toastEl = null;
+    }
+  }
+
+  activate();
+
+  window.__owlParkFeatures = window.__owlParkFeatures || {};
+  window.__owlParkFeatures[FEATURE_ID] = { activate: activate, deactivate: deactivate };
+})();
+</script>

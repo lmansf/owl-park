@@ -1,37 +1,63 @@
 /**
- * Runtime loader for features/. Each feature folder has a manifest.json and,
- * per its "files" entry, optional css/html assets plus a required js entry
- * point exporting `activate(ctx)` / `deactivate(ctx)`.
+ * Runtime loader for features/. Each feature is ONE self-contained HTML file
+ * (features/<id>.html) mirroring a real constraint of third-party webstores
+ * that only let a site owner paste a single code snippet into a page body:
+ * no separate files, no ES module imports, no build step.
  *
- * Loader responsibilities: fetch + inject/remove the feature's <style> tag
- * and HTML fragment container, dynamically import its JS module once, and
- * call activate/deactivate on toggle. Everything the loader injects is
- * tagged with data-feature="<id>" so deactivate can always find and strip it,
- * even if a feature's own teardown misses something.
+ * A feature file contains, in any order:
+ *   - `<script type="application/json" data-owlpark-manifest>` — metadata
+ *     (id, name, description, category, enabledByDefault, requiresReload).
+ *     Never executed or re-injected into the live page; parsed once at
+ *     discovery time.
+ *   - an optional `<style>` block, scoped to a `.owlpark-feat-<id>` class.
+ *   - optional markup, wrapped in an element carrying that same class.
+ *   - a plain (non-module) `<script>` — an IIFE that defines `activate()`/
+ *     `deactivate()`, calls `activate()` itself immediately (so the snippet
+ *     works if pasted standalone into any page, with no orchestration), and
+ *     registers `{ activate, deactivate }` on `window.__owlParkFeatures[id]`
+ *     so this loader can later call `deactivate()`/`activate()` again
+ *     without re-injecting the whole snippet.
+ *
+ * Activating a feature re-creates its non-manifest elements (style, markup,
+ * behavior script) fresh and appends them to the document — appending a
+ * freshly created <script> element (as opposed to setting innerHTML) is
+ * what makes the browser execute it. Deactivating calls the registered
+ * `deactivate()` first, then removes every element tagged
+ * `data-owlpark-feature="<id>"` as a safety net.
  */
 
 const ENABLED_STORAGE_KEY = "owl-park-enabled-features";
 const FEATURES_BASE = "features";
+const REGISTRY_KEY = "__owlParkFeatures";
 
-const moduleCache = new Map(); // feature id -> imported module
-const activeState = new Map(); // feature id -> { styleEl, mountEl }
+const activeState = new Map(); // feature id -> injected element[]
+
+function registry() {
+  window[REGISTRY_KEY] = window[REGISTRY_KEY] || {};
+  return window[REGISTRY_KEY];
+}
 
 export async function discoverFeatures() {
   const res = await fetch(`${FEATURES_BASE}/index.json`);
   if (!res.ok)
     throw new Error(`Failed to load features/index.json: ${res.status}`);
-  const folders = await res.json();
+  const files = await res.json();
   const manifests = await Promise.all(
-    folders.map(async (folder) => {
-      const manifestRes = await fetch(
-        `${FEATURES_BASE}/${folder}/manifest.json`,
-      );
-      if (!manifestRes.ok) {
-        console.warn(`Skipping feature "${folder}": manifest not found`);
+    files.map(async (file) => {
+      const res = await fetch(`${FEATURES_BASE}/${file}`);
+      if (!res.ok) {
+        console.warn(`Skipping feature file "${file}": not found`);
         return null;
       }
-      const manifest = await manifestRes.json();
-      return { ...manifest, folder };
+      const rawText = await res.text();
+      const doc = new DOMParser().parseFromString(rawText, "text/html");
+      const manifestEl = doc.querySelector("[data-owlpark-manifest]");
+      if (!manifestEl) {
+        console.warn(`Skipping feature file "${file}": no manifest block`);
+        return null;
+      }
+      const manifest = JSON.parse(manifestEl.textContent);
+      return { ...manifest, file, rawText };
     }),
   );
   return manifests.filter(Boolean);
@@ -65,73 +91,69 @@ export function setEnabledPersisted(featureId, enabled) {
   writeEnabledMap(map);
 }
 
-async function getModule(feature) {
-  if (!feature.files || !feature.files.js) return null;
-  if (moduleCache.has(feature.id)) return moduleCache.get(feature.id);
-  const mod = await import(
-    `../${FEATURES_BASE}/${feature.folder}/${feature.files.js}`
+/** Re-creates every non-manifest node from a feature's snippet and appends it, live. */
+function injectSnippet(feature) {
+  // Force everything into a known <body>: a fragment that starts with
+  // <script>/<style> and has no markup would otherwise get silently
+  // classified as <head> content by the HTML parsing algorithm, which
+  // means plain `parsed.body.childNodes` would miss it entirely.
+  const parsed = new DOMParser().parseFromString(
+    "<!doctype html><html><body>" + feature.rawText + "</body></html>",
+    "text/html",
   );
-  moduleCache.set(feature.id, mod);
-  return mod;
+  const nodes = Array.from(parsed.body.childNodes).filter(
+    (n) => n.nodeType === Node.ELEMENT_NODE,
+  );
+  const root = document.getElementById("feature-root") || document.body;
+  const appended = [];
+
+  for (const node of nodes) {
+    if (node.hasAttribute && node.hasAttribute("data-owlpark-manifest")) {
+      continue; // metadata only, never live-injected
+    }
+    if (node.tagName === "SCRIPT") {
+      const script = document.createElement("script");
+      for (const attr of node.attributes) {
+        script.setAttribute(attr.name, attr.value);
+      }
+      script.textContent = node.textContent;
+      script.setAttribute("data-owlpark-feature", feature.id);
+      document.body.appendChild(script); // creating+appending (not innerHTML) triggers execution
+      appended.push(script);
+    } else if (node.tagName === "STYLE") {
+      node.setAttribute("data-owlpark-feature", feature.id);
+      document.head.appendChild(node);
+      appended.push(node);
+    } else {
+      node.setAttribute("data-owlpark-feature", feature.id);
+      root.appendChild(node);
+      appended.push(node);
+    }
+  }
+  return appended;
 }
 
 export async function activateFeature(feature) {
   if (activeState.has(feature.id)) return; // already on
-
-  let styleEl = null;
-  let mountEl = null;
-
-  if (feature.files && feature.files.css) {
-    const cssRes = await fetch(
-      `${FEATURES_BASE}/${feature.folder}/${feature.files.css}`,
-    );
-    const cssText = await cssRes.text();
-    styleEl = document.createElement("style");
-    styleEl.setAttribute("data-feature", feature.id);
-    styleEl.textContent = cssText;
-    document.head.appendChild(styleEl);
-  }
-
-  if (feature.files && feature.files.html) {
-    const htmlRes = await fetch(
-      `${FEATURES_BASE}/${feature.folder}/${feature.files.html}`,
-    );
-    const htmlText = await htmlRes.text();
-    mountEl = document.createElement("div");
-    mountEl.className = "feature-mount";
-    mountEl.setAttribute("data-feature", feature.id);
-    mountEl.innerHTML = htmlText;
-    const root = document.getElementById("feature-root") || document.body;
-    root.appendChild(mountEl);
-  }
-
-  activeState.set(feature.id, { styleEl, mountEl });
-
-  const mod = await getModule(feature);
-  if (mod && typeof mod.activate === "function") {
-    await mod.activate({ mount: mountEl, featureId: feature.id });
-  }
+  const appended = injectSnippet(feature);
+  activeState.set(feature.id, appended);
 }
 
 export async function deactivateFeature(feature) {
-  const state = activeState.get(feature.id);
-  if (!state) return; // already off
+  if (!activeState.has(feature.id)) return; // already off
 
-  const mod = await getModule(feature);
-  if (mod && typeof mod.deactivate === "function") {
+  const entry = registry()[feature.id];
+  if (entry && typeof entry.deactivate === "function") {
     try {
-      await mod.deactivate({ mount: state.mountEl, featureId: feature.id });
+      entry.deactivate();
     } catch (err) {
       console.error(`Feature "${feature.id}" threw during deactivate`, err);
     }
   }
+  delete registry()[feature.id];
 
-  if (state.styleEl) state.styleEl.remove();
-  if (state.mountEl) state.mountEl.remove();
-
-  // Belt-and-suspenders: strip any other stray nodes the feature tagged.
   document
-    .querySelectorAll(`[data-feature="${feature.id}"]`)
+    .querySelectorAll(`[data-owlpark-feature="${feature.id}"]`)
     .forEach((el) => el.remove());
 
   activeState.delete(feature.id);
