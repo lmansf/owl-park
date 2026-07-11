@@ -28,6 +28,29 @@
       </div>
     </header>
 
+    <div class="hero-banner" aria-hidden="true">
+      <span class="hb-moon"></span>
+      <span class="hb-star" style="top: 20px; left: 12%"></span>
+      <span class="hb-star" style="top: 55px; left: 22%"></span>
+      <span class="hb-star" style="top: 34px; left: 60%"></span>
+      <span class="hb-star" style="top: 70px; left: 78%"></span>
+      <span class="hb-star" style="top: 18px; left: 88%"></span>
+      <span class="hb-owl" style="bottom: 46px; left: 18%">🦉</span>
+      <span class="hb-owl" style="bottom: 58px; left: 47%">🦉</span>
+      <span class="hb-owl" style="bottom: 40px; left: 74%">🦉</span>
+      <svg
+        class="hb-branches"
+        viewBox="0 0 1400 120"
+        preserveAspectRatio="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M0,60 C120,20 260,80 400,40 C560,-5 640,55 800,30 C960,5 1080,70 1220,35 C1320,12 1380,45 1400,40 L1400,120 L0,120 Z"
+          fill="#0a2a30"
+        />
+      </svg>
+    </div>
+
     <section class="hero">
       <h1>Plan your visit to Owl Park</h1>
       <p>
@@ -38,6 +61,11 @@
     </section>
 
     <main>
+      <div class="catalog-heading">
+        <h2>Select Tickets &amp; Memberships</h2>
+        <span class="catalog-heading-icon">🦉</span>
+      </div>
+
       <div class="section-tabs">
         <button class="tab-btn active" data-filter="all" type="button">
           All
@@ -50,8 +78,8 @@
         </button>
       </div>
 
-      <div class="catalog-grid" id="catalog-grid">
-        <!-- product cards rendered by js/main.js -->
+      <div class="catalog-list" id="catalog-grid">
+        <!-- product rows rendered by js/main.js -->
       </div>
     </main>
 

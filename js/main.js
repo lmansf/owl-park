@@ -17,23 +17,30 @@ function renderCatalog() {
   grid.innerHTML = visible
     .map(
       (p) => `
-    <article class="product-card" style="--accent: ${p.accent}" data-product-id="${p.id}">
-      <span class="category-pill">${p.category}</span>
-      <div class="card-top">
-        <div class="product-emoji">${p.emoji}</div>
-        <div>
-          <h3>${p.name}</h3>
-          <p class="product-tagline">${p.tagline}</p>
+    <article class="product-row" style="--accent: ${p.accent}" data-product-id="${p.id}">
+      <div class="row-header">
+        <div class="row-title-group">
+          <div class="product-emoji">${p.emoji}</div>
+          <div>
+            <div class="row-title-line">
+              <h3>${p.name}</h3>
+              <span class="category-pill">${p.category}</span>
+            </div>
+            <p class="product-tagline">${p.tagline}</p>
+          </div>
+        </div>
+        <div class="row-actions">
+          <div>
+            <span class="price-amount">${formatPrice(p.price)}</span>
+            <span class="price-unit">${p.unit}</span>
+          </div>
+          <button class="add-to-cart-btn" data-add-id="${p.id}" type="button">Add to Cart</button>
         </div>
       </div>
-      <p class="product-desc">${p.description}</p>
-      <div class="product-plu">PLU ${p.plu}</div>
-      <div class="product-footer">
-        <div class="product-price">
-          <span class="price-amount">${formatPrice(p.price)}</span>
-          <span class="price-unit">${p.unit}</span>
-        </div>
-        <button class="add-to-cart-btn" data-add-id="${p.id}" type="button">Add to Cart</button>
+      <div class="row-divider"></div>
+      <div class="row-body">
+        <p class="product-desc">${p.description}</p>
+        <div class="product-plu">PLU ${p.plu}</div>
       </div>
     </article>
   `,
