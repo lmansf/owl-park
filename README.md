@@ -97,10 +97,17 @@ not a code import.
 **Gotcha for per-product-row features:** `renderCatalog()` in `js/main.js` replaces
 `#catalog-grid`'s `innerHTML` wholesale on every tab switch, which wipes out any DOM nodes a
 feature appended directly onto a `.product-row`. Features that decorate product rows (see
-`product-badges`, `product-info-tooltips`, `urgency-stock-indicator`, `live-visitor-counter`, and
-`membership-glow`) work around this with a `MutationObserver` on `#catalog-grid` that re-applies
-the injection after each re-render, guarded by an idempotency check (skip a row that already has
-the feature's tagged node) so it doesn't double-inject.
+`product-badges`, `product-info-tooltips`, `urgency-stock-indicator`, `live-visitor-counter`,
+`membership-glow`, `wishlist-favorites`, and `discount-badge-strikethrough`) work around this with
+a `MutationObserver` on `#catalog-grid` that re-applies the injection after each re-render, guarded
+by an idempotency check (skip a row that already has the feature's tagged node) so it doesn't
+double-inject.
+
+**Gotcha for checkout-confirmation features:** similarly, `js/main.js` overwrites `#order-id`'s
+`textContent` wholesale on every checkout, wiping any node a feature appended inside it. Features
+that decorate the confirmation (see `copy-order-id-button` and `order-history-log`) use a
+`MutationObserver` on the checkout modal / order-id element to re-apply (or react) after each
+checkout, with the same idempotency guard.
 
 ## The 35 enhancements
 
@@ -185,7 +192,8 @@ openspec/                  OpenSpec proposal/specs/design/tasks for this project
 
 The product/PLU model, cart, features plugin system, and manager UI were specced before
 implementation — see `openspec/changes/critter-cove-shop/` for the proposal, design doc, per-
-capability specs, and task breakdown.
+capability specs, and task breakdown. The 15 round-2 enhancement modules were specced the same
+way — see `openspec/changes/owlpark-feat15-round2/`.
 
 ## Continuous Integration
 

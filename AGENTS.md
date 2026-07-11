@@ -6,8 +6,9 @@ This file is the project's committed home for project-intrinsic agent knowledge:
   server works, but `fetch()` for feature assets/product data requires real HTTP — `file://` won't work).
   See README.md for the product/PLU model, the `features/` plugin contract, and how to author a new
   feature module.
-- OpenSpec proposal/specs/design/tasks for this project's initial build live under
-  `openspec/changes/critter-cove-shop/`.
+- OpenSpec proposals/specs/designs/tasks live under `openspec/changes/` —
+  `critter-cove-shop/` for the initial build, `owlpark-feat15-round2/` for the 15 round-2
+  enhancement modules.
 - `chrome-devtools-axi` is not installed in this environment. For browser verification/screenshots, use
   `google-chrome --headless --no-sandbox` directly, or `npm install puppeteer-core` pointed at
   `executablePath: "/usr/bin/google-chrome"` for anything needing DOM interaction (clicks, toggles).
@@ -31,8 +32,10 @@ This file is the project's committed home for project-intrinsic agent knowledge:
 - `renderCatalog()` (`js/main.js`) replaces `#catalog-grid`'s `innerHTML` on every tab switch, wiping
   out anything a feature appended onto a `.product-row`. Features that decorate product rows
   (`product-badges`, `product-info-tooltips`, `urgency-stock-indicator`, `live-visitor-counter`,
-  `membership-glow`) re-apply via a `MutationObserver` on `#catalog-grid` guarded by an idempotency
-  check — see README.md's "Authoring a new feature" section.
+  `membership-glow`, `wishlist-favorites`, `discount-badge-strikethrough`) re-apply via a
+  `MutationObserver` on `#catalog-grid` guarded by an idempotency check. `js/main.js` likewise
+  overwrites `#order-id`'s `textContent` on every checkout (`copy-order-id-button` and
+  `order-history-log` observe and re-apply) — see README.md's "Authoring a new feature" section.
 - CI (`.github/workflows/ci.yml`) runs on every push/PR: JSON validity, `node --check` on `js/` and
   on each feature's extracted behavior script, a `features/index.json` <-> `features/*.html`
   consistency check, and an HTTP smoke test of key pages/assets over `python3 -m http.server`.
