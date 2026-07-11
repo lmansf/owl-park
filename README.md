@@ -116,8 +116,8 @@ the feature's tagged node) so it doesn't double-inject.
 | Product Info Tooltips | utility | Info icons on product cards with detailed inclusion tooltips. |
 | Printable Receipt | utility | Adds a "print/download receipt" button to the checkout confirmation. |
 
-(Each row's exact wording also lives in that feature's `manifest.json` `description` field — this
-table mirrors it for convenience.)
+(Each feature also has a `description` in its `manifest.json`, shown live in the Feature Manager
+UI; this table summarizes the same feature set but doesn't guarantee word-for-word matching text.)
 
 ## Feature Manager UI
 
