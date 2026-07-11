@@ -1,0 +1,210 @@
+<script type="application/json" data-owlpark-manifest>
+  {
+    "id": "park-guide-tour",
+    "name": "Park Guide Tour",
+    "description": "Guided walkthrough tooltip tour of the storefront's key sections.",
+    "category": "behavioral",
+    "enabledByDefault": false,
+    "requiresReload": false
+  }
+</script>
+
+<style>
+  .owlpark-feat-park-guide-tour-btn {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    padding: 0.4rem 0.7rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .owlpark-feat-park-guide-tour-btn:hover {
+    background: rgba(255, 255, 255, 0.28);
+  }
+  .owlpark-feat-park-guide-tour-highlight {
+    position: fixed;
+    border-radius: 10px;
+    box-shadow: 0 0 0 9999px rgba(10, 30, 32, 0.55);
+    z-index: 90;
+    pointer-events: none;
+    transition:
+      top 0.25s ease,
+      left 0.25s ease,
+      width 0.25s ease,
+      height 0.25s ease;
+  }
+  .owlpark-feat-park-guide-tour-tooltip {
+    position: fixed;
+    z-index: 91;
+    background: white;
+    color: var(--cove-ink, #1e2a2b);
+    border-radius: var(--radius-md, 10px);
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.3);
+    padding: 0.9rem 1rem;
+    max-width: 260px;
+    font-size: 0.85rem;
+  }
+  .owlpark-feat-park-guide-tour-tooltip .pgt-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.7rem;
+    gap: 0.5rem;
+  }
+  .owlpark-feat-park-guide-tour-tooltip button {
+    border: none;
+    border-radius: 999px;
+    padding: 0.35rem 0.8rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .owlpark-feat-park-guide-tour-tooltip .pgt-next {
+    background: var(--cove-teal, #0f6f7a);
+    color: white;
+  }
+  .owlpark-feat-park-guide-tour-tooltip .pgt-skip {
+    background: transparent;
+    color: #6b7677;
+  }
+</style>
+
+<script>
+  (function () {
+    var FEATURE_ID = "park-guide-tour";
+    var STEPS = [
+      {
+        selector: ".catalog-heading",
+        text: "Browse tickets and memberships here, and use the tabs below to filter.",
+      },
+      {
+        selector: "#open-cart-btn",
+        text: "Your cart lives here. Add a ticket or membership, then check out when ready.",
+      },
+      {
+        selector: '.header-link[href="features-manager.html"]',
+        text: "Toggle enhancements like this tour from the Enhancement Manager.",
+      },
+    ];
+
+    var tourBtn = null;
+    var highlightEl = null;
+    var tooltipEl = null;
+    var stepIndex = -1;
+
+    function positionOn(el, target) {
+      var rect = target.getBoundingClientRect();
+      el.style.top = rect.top - 6 + "px";
+      el.style.left = rect.left - 6 + "px";
+      el.style.width = rect.width + 12 + "px";
+      el.style.height = rect.height + 12 + "px";
+    }
+
+    function positionTooltip(target) {
+      var rect = target.getBoundingClientRect();
+      var top = rect.bottom + 12;
+      var left = Math.min(
+        Math.max(rect.left, 12),
+        window.innerWidth - 280,
+      );
+      if (top + 140 > window.innerHeight) {
+        top = Math.max(12, rect.top - 150);
+      }
+      tooltipEl.style.top = top + "px";
+      tooltipEl.style.left = left + "px";
+    }
+
+    function endTour() {
+      stepIndex = -1;
+      if (highlightEl) {
+        highlightEl.remove();
+        highlightEl = null;
+      }
+      if (tooltipEl) {
+        tooltipEl.remove();
+        tooltipEl = null;
+      }
+    }
+
+    function showStep(i) {
+      if (i >= STEPS.length) {
+        endTour();
+        return;
+      }
+      var step = STEPS[i];
+      var target = document.querySelector(step.selector);
+      if (!target) {
+        showStep(i + 1);
+        return;
+      }
+      stepIndex = i;
+
+      if (!highlightEl) {
+        highlightEl = document.createElement("div");
+        highlightEl.className = "owlpark-feat-park-guide-tour-highlight";
+        highlightEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+        document.body.appendChild(highlightEl);
+      }
+      if (!tooltipEl) {
+        tooltipEl = document.createElement("div");
+        tooltipEl.className = "owlpark-feat-park-guide-tour-tooltip";
+        tooltipEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+        document.body.appendChild(tooltipEl);
+      }
+
+      positionOn(highlightEl, target);
+      var isLast = i === STEPS.length - 1;
+      tooltipEl.innerHTML =
+        "<div>" +
+        step.text +
+        '</div><div class="pgt-actions">' +
+        '<button type="button" class="pgt-skip">Skip tour</button>' +
+        '<button type="button" class="pgt-next">' +
+        (isLast ? "Done" : "Next") +
+        "</button>" +
+        "</div>";
+      positionTooltip(target);
+
+      tooltipEl.querySelector(".pgt-skip").addEventListener("click", endTour);
+      tooltipEl.querySelector(".pgt-next").addEventListener("click", function () {
+        showStep(i + 1);
+      });
+    }
+
+    function startTour() {
+      endTour();
+      showStep(0);
+    }
+
+    function activate() {
+      var actions = document.querySelector(".header-actions");
+      if (!actions) return;
+
+      tourBtn = document.createElement("button");
+      tourBtn.type = "button";
+      tourBtn.className = "owlpark-feat-park-guide-tour-btn";
+      tourBtn.setAttribute("data-owlpark-feature", FEATURE_ID);
+      tourBtn.textContent = "🧭 Take a Tour";
+      tourBtn.addEventListener("click", startTour);
+      actions.prepend(tourBtn);
+    }
+
+    function deactivate() {
+      endTour();
+      if (tourBtn) {
+        tourBtn.removeEventListener("click", startTour);
+        tourBtn.remove();
+        tourBtn = null;
+      }
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures[FEATURE_ID] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
+</script>

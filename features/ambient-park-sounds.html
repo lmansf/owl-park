@@ -1,0 +1,139 @@
+<script type="application/json" data-owlpark-manifest>
+  {
+    "id": "ambient-park-sounds",
+    "name": "Ambient Park Sounds",
+    "description": "Toggle a synthesized looping ambient park soundscape.",
+    "category": "utility",
+    "enabledByDefault": false,
+    "requiresReload": false
+  }
+</script>
+
+<style>
+  .owlpark-feat-ambient-park-sounds-btn {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    padding: 0.4rem 0.7rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .owlpark-feat-ambient-park-sounds-btn:hover {
+    background: rgba(255, 255, 255, 0.28);
+  }
+</style>
+
+<script>
+  (function () {
+    var FEATURE_ID = "ambient-park-sounds";
+    var buttonEl = null;
+    var audioCtx = null;
+    var nodes = [];
+    var chirpIntervalId = null;
+    var playing = false;
+
+    function updateLabel() {
+      if (!buttonEl) return;
+      buttonEl.textContent = playing ? "🔇 Stop Ambience" : "🔊 Park Sounds";
+    }
+
+    function scheduleChirp() {
+      if (!audioCtx) return;
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = 900 + Math.random() * 500;
+      gain.gain.setValueAtTime(0, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.05, audioCtx.currentTime + 0.05);
+      gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.3);
+    }
+
+    function startAmbience() {
+      if (playing) return;
+      var AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextCtor) return;
+      audioCtx = new AudioContextCtor();
+
+      var breeze = audioCtx.createOscillator();
+      var breezeGain = audioCtx.createGain();
+      breeze.type = "sine";
+      breeze.frequency.value = 110;
+      breezeGain.gain.value = 0.02;
+      breeze.connect(breezeGain).connect(audioCtx.destination);
+      breeze.start();
+      nodes.push(breeze, breezeGain);
+
+      chirpIntervalId = setInterval(scheduleChirp, 1500);
+      playing = true;
+      updateLabel();
+    }
+
+    function stopAmbience() {
+      if (chirpIntervalId) {
+        clearInterval(chirpIntervalId);
+        chirpIntervalId = null;
+      }
+      nodes.forEach(function (node) {
+        if (typeof node.stop === "function") {
+          try {
+            node.stop();
+          } catch (e) {
+            /* already stopped */
+          }
+        }
+        if (typeof node.disconnect === "function") node.disconnect();
+      });
+      nodes = [];
+      if (audioCtx) {
+        audioCtx.close();
+        audioCtx = null;
+      }
+      playing = false;
+      updateLabel();
+    }
+
+    function onClick() {
+      if (playing) {
+        stopAmbience();
+      } else {
+        startAmbience();
+      }
+    }
+
+    function activate() {
+      var actions = document.querySelector(".header-actions");
+      if (!actions) return;
+
+      buttonEl = document.createElement("button");
+      buttonEl.type = "button";
+      buttonEl.className = "owlpark-feat-ambient-park-sounds-btn";
+      buttonEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+      playing = false;
+      updateLabel();
+      actions.prepend(buttonEl);
+      buttonEl.addEventListener("click", onClick);
+    }
+
+    function deactivate() {
+      stopAmbience();
+      if (buttonEl) {
+        buttonEl.removeEventListener("click", onClick);
+        buttonEl.remove();
+        buttonEl = null;
+      }
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures[FEATURE_ID] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
+</script>

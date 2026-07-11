@@ -1,0 +1,99 @@
+<script type="application/json" data-owlpark-manifest>
+  {
+    "id": "flash-sale-timer",
+    "name": "Flash Sale Timer",
+    "description": "Limited-time flash-sale countdown banner with an expiring mock discount.",
+    "category": "behavioral",
+    "enabledByDefault": false,
+    "requiresReload": false
+  }
+</script>
+
+<style>
+  .owlpark-feat-flash-sale-timer {
+    background: linear-gradient(90deg, #a8321f, #e2662d);
+    color: white;
+    text-align: center;
+    padding: 0.55rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .owlpark-feat-flash-sale-timer .fst-time {
+    font-variant-numeric: tabular-nums;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.1rem 0.5rem;
+    border-radius: 6px;
+  }
+</style>
+
+<div class="owlpark-feat-flash-sale-timer">
+  <span>⚡ Flash Sale: 15% off memberships — ends in</span>
+  <span class="fst-time">--:--:--</span>
+</div>
+
+<script>
+  (function () {
+    var FEATURE_ID = "flash-sale-timer";
+    var STORAGE_KEY = "owl-park-flash-sale-end";
+    var DURATION_MS = 3 * 60 * 60 * 1000; // 3 hours
+
+    var intervalId = null;
+
+    function getEndTime() {
+      var stored = sessionStorage.getItem(STORAGE_KEY);
+      var end = stored ? parseInt(stored, 10) : NaN;
+      if (!end || end <= Date.now()) {
+        end = Date.now() + DURATION_MS;
+        sessionStorage.setItem(STORAGE_KEY, String(end));
+      }
+      return end;
+    }
+
+    function formatRemaining(ms) {
+      var totalSeconds = Math.max(0, Math.floor(ms / 1000));
+      var hh = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
+      var mm = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
+      var ss = String(totalSeconds % 60).padStart(2, "0");
+      return hh + ":" + mm + ":" + ss;
+    }
+
+    function activate() {
+      var timeEl = document.querySelector(".owlpark-feat-flash-sale-timer .fst-time");
+      if (!timeEl) return;
+      var end = getEndTime();
+
+      function tick() {
+        var remaining = end - Date.now();
+        if (remaining <= 0) {
+          sessionStorage.removeItem(STORAGE_KEY);
+          end = getEndTime();
+          remaining = end - Date.now();
+        }
+        timeEl.textContent = formatRemaining(remaining);
+      }
+
+      tick();
+      intervalId = setInterval(tick, 1000);
+    }
+
+    function deactivate() {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures[FEATURE_ID] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
+</script>

@@ -1,0 +1,147 @@
+<script type="application/json" data-owlpark-manifest>
+  {
+    "id": "sticky-mini-cart-bar",
+    "name": "Sticky Mini Cart Bar",
+    "description": "Persistent floating mini-cart bar showing live item count and total.",
+    "category": "visual",
+    "enabledByDefault": true,
+    "requiresReload": false
+  }
+</script>
+
+<style>
+  .owlpark-feat-sticky-mini-cart-bar {
+    position: fixed;
+    left: 50%;
+    bottom: 1.2rem;
+    transform: translate(-50%, 0);
+    background: var(--cove-ink, #1e2a2b);
+    color: white;
+    border-radius: 999px;
+    padding: 0.6rem 0.6rem 0.6rem 1.1rem;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 0.86rem;
+    font-weight: 600;
+    z-index: 40;
+  }
+  .owlpark-feat-sticky-mini-cart-bar[hidden] {
+    display: none;
+  }
+  .owlpark-feat-sticky-mini-cart-bar .smcb-view-btn {
+    background: white;
+    color: var(--cove-teal-dark, #0a4d55);
+    border: none;
+    border-radius: 999px;
+    padding: 0.4rem 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+</style>
+
+<div class="owlpark-feat-sticky-mini-cart-bar" id="smcb-bar" hidden>
+  <span id="smcb-summary">0 items · $0.00</span>
+  <button type="button" class="smcb-view-btn" id="smcb-view-btn">View Cart</button>
+</div>
+
+<script>
+  (function () {
+    var FEATURE_ID = "sticky-mini-cart-bar";
+    var CART_STORAGE_KEY = "owl-park-cart";
+    var POLL_MS = 800;
+
+    var pollIntervalId = null;
+    var viewClickHandler = null;
+    var products = [];
+    var lastSnapshot = null;
+
+    function readCartLines() {
+      try {
+        var raw = localStorage.getItem(CART_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function render() {
+      var bar = document.getElementById("smcb-bar");
+      var summary = document.getElementById("smcb-summary");
+      if (!bar || !summary) return;
+
+      var lines = readCartLines();
+      if (lines.length === 0) {
+        bar.hidden = true;
+        return;
+      }
+
+      var count = 0;
+      var total = 0;
+      lines.forEach(function (line) {
+        var p = products.find(function (prod) {
+          return prod.id === line.id;
+        });
+        count += line.qty;
+        if (p) total += p.price * line.qty;
+      });
+
+      summary.textContent = count + (count === 1 ? " item · $" : " items · $") + total.toFixed(2);
+      bar.hidden = false;
+    }
+
+    function pollCart() {
+      var snapshot = localStorage.getItem(CART_STORAGE_KEY) || "";
+      if (snapshot !== lastSnapshot) {
+        lastSnapshot = snapshot;
+        render();
+      }
+    }
+
+    function openCart() {
+      var cartBtn = document.getElementById("open-cart-btn");
+      if (cartBtn) cartBtn.click();
+    }
+
+    function activate() {
+      lastSnapshot = null;
+      fetch("data/products.json")
+        .then(function (res) {
+          return res.json();
+        })
+        .then(function (data) {
+          products = data;
+          render();
+        });
+
+      var viewBtn = document.getElementById("smcb-view-btn");
+      if (viewBtn) {
+        viewClickHandler = openCart;
+        viewBtn.addEventListener("click", viewClickHandler);
+      }
+
+      pollIntervalId = setInterval(pollCart, POLL_MS);
+    }
+
+    function deactivate() {
+      if (pollIntervalId) {
+        clearInterval(pollIntervalId);
+        pollIntervalId = null;
+      }
+      var viewBtn = document.getElementById("smcb-view-btn");
+      if (viewBtn && viewClickHandler) {
+        viewBtn.removeEventListener("click", viewClickHandler);
+      }
+      viewClickHandler = null;
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures[FEATURE_ID] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
+</script>

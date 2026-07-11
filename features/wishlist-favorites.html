@@ -1,0 +1,132 @@
+<script type="application/json" data-owlpark-manifest>
+  {
+    "id": "wishlist-favorites",
+    "name": "Wishlist Favorites",
+    "description": "Heart icon on product rows to save favorites, persisted across visits.",
+    "category": "behavioral",
+    "enabledByDefault": false,
+    "requiresReload": false
+  }
+</script>
+
+<style>
+  .owlpark-feat-wishlist-favorites {
+    position: absolute;
+    top: 0.7rem;
+    right: 0.9rem;
+    background: white;
+    border: 1px solid var(--cove-border, #e4ddca);
+    border-radius: 50%;
+    width: 2.1rem;
+    height: 2.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 3;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+    color: #9aa5a4;
+  }
+  .owlpark-feat-wishlist-favorites.is-favorited {
+    color: #a8321f;
+  }
+  .owlpark-feat-wishlist-favorites:hover {
+    transform: scale(1.08);
+  }
+</style>
+
+<script>
+  (function () {
+    var FEATURE_ID = "wishlist-favorites";
+    var STORAGE_KEY = "owl-park-wishlist";
+    var observer = null;
+
+    function readWishlist() {
+      try {
+        var raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function writeWishlist(ids) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+    }
+
+    function updateButton(btn, favorited) {
+      btn.classList.toggle("is-favorited", favorited);
+      btn.textContent = favorited ? "♥" : "♡";
+      btn.setAttribute(
+        "aria-label",
+        favorited ? "Remove from favorites" : "Add to favorites",
+      );
+    }
+
+    function toggle(productId, btn) {
+      var ids = readWishlist();
+      var idx = ids.indexOf(productId);
+      if (idx === -1) {
+        ids.push(productId);
+      } else {
+        ids.splice(idx, 1);
+      }
+      writeWishlist(ids);
+      updateButton(btn, ids.indexOf(productId) !== -1);
+    }
+
+    function injectInto(row) {
+      if (row.querySelector('[data-owlpark-feature="' + FEATURE_ID + '"]'))
+        return;
+      var productId = row.getAttribute("data-product-id");
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "owlpark-feat-wishlist-favorites";
+      btn.setAttribute("data-owlpark-feature", FEATURE_ID);
+      updateButton(btn, readWishlist().indexOf(productId) !== -1);
+      btn.addEventListener("click", function () {
+        toggle(productId, btn);
+      });
+      row.appendChild(btn);
+    }
+
+    function applyToRows() {
+      document
+        .querySelectorAll(".product-row[data-product-id]")
+        .forEach(injectInto);
+    }
+
+    function activate() {
+      applyToRows();
+      var grid = document.getElementById("catalog-grid");
+      if (grid) {
+        observer = new MutationObserver(function () {
+          applyToRows();
+        });
+        observer.observe(grid, { childList: true });
+      }
+    }
+
+    function deactivate() {
+      if (observer) {
+        observer.disconnect();
+        observer = null;
+      }
+      document
+        .querySelectorAll('[data-owlpark-feature="' + FEATURE_ID + '"]')
+        .forEach(function (el) {
+          el.remove();
+        });
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures[FEATURE_ID] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
+</script>

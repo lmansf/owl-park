@@ -1,0 +1,123 @@
+<script type="application/json" data-owlpark-manifest>
+  {
+    "id": "copy-order-id-button",
+    "name": "Copy Order ID Button",
+    "description": "One-click copy button for the order id on the checkout confirmation.",
+    "category": "utility",
+    "enabledByDefault": false,
+    "requiresReload": false
+  }
+</script>
+
+<style>
+  .owlpark-feat-copy-order-id-button {
+    background: transparent;
+    border: none;
+    color: var(--cove-teal, #0f6f7a);
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-left: 0.35rem;
+    vertical-align: middle;
+  }
+  .owlpark-feat-copy-order-id-button:hover {
+    color: var(--cove-teal-dark, #0a4d55);
+  }
+</style>
+
+<script>
+  (function () {
+    var FEATURE_ID = "copy-order-id-button";
+    var buttonEl = null;
+    var resetTimeoutId = null;
+    var observer = null;
+
+    function fallbackCopy(text) {
+      var textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand("copy");
+      } catch (e) {
+        /* no-op: clipboard unavailable */
+      }
+      textarea.remove();
+    }
+
+    function copyOrderId() {
+      var orderIdEl = document.getElementById("order-id");
+      var text = orderIdEl ? orderIdEl.textContent : "";
+      var showCheck = function () {
+        if (!buttonEl) return;
+        buttonEl.textContent = "✅";
+        if (resetTimeoutId) clearTimeout(resetTimeoutId);
+        resetTimeoutId = setTimeout(function () {
+          if (buttonEl) buttonEl.textContent = "📋";
+        }, 1800);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(showCheck, function () {
+          fallbackCopy(text);
+          showCheck();
+        });
+      } else {
+        fallbackCopy(text);
+        showCheck();
+      }
+    }
+
+    function ensureButton() {
+      var orderIdEl = document.getElementById("order-id");
+      if (!orderIdEl) return;
+      if (orderIdEl.querySelector('[data-owlpark-feature="' + FEATURE_ID + '"]'))
+        return;
+
+      buttonEl = document.createElement("button");
+      buttonEl.type = "button";
+      buttonEl.className = "owlpark-feat-copy-order-id-button";
+      buttonEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+      buttonEl.setAttribute("aria-label", "Copy order id");
+      buttonEl.textContent = "📋";
+      buttonEl.addEventListener("click", copyOrderId);
+      orderIdEl.appendChild(buttonEl);
+    }
+
+    function activate() {
+      ensureButton();
+      var orderIdEl = document.getElementById("order-id");
+      if (orderIdEl) {
+        observer = new MutationObserver(function () {
+          ensureButton();
+        });
+        observer.observe(orderIdEl, { childList: true, characterData: true, subtree: true });
+      }
+    }
+
+    function deactivate() {
+      if (observer) {
+        observer.disconnect();
+        observer = null;
+      }
+      if (resetTimeoutId) {
+        clearTimeout(resetTimeoutId);
+        resetTimeoutId = null;
+      }
+      document
+        .querySelectorAll('[data-owlpark-feature="' + FEATURE_ID + '"]')
+        .forEach(function (el) {
+          el.remove();
+        });
+      buttonEl = null;
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures[FEATURE_ID] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
+</script>

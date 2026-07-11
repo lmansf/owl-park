@@ -1,0 +1,123 @@
+<script type="application/json" data-owlpark-manifest>
+  {
+    "id": "share-your-visit",
+    "name": "Share Your Visit",
+    "description": "Copies a shareable blurb about your order to the clipboard at checkout.",
+    "category": "behavioral",
+    "enabledByDefault": false,
+    "requiresReload": false
+  }
+</script>
+
+<style>
+  .owlpark-feat-share-your-visit {
+    width: 100%;
+    margin-top: 0.6rem;
+    background: var(--cove-teal, #0f6f7a);
+    color: white;
+    border: none;
+    padding: 0.6rem;
+    border-radius: 999px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .owlpark-feat-share-your-visit:hover {
+    background: var(--cove-teal-dark, #0a4d55);
+  }
+  .owlpark-feat-share-your-visit.sv-copied {
+    background: var(--cove-green, #2f8f4e);
+  }
+</style>
+
+<script>
+  (function () {
+    var FEATURE_ID = "share-your-visit";
+    var buttonEl = null;
+    var resetTimeoutId = null;
+
+    function buildBlurb() {
+      var orderIdEl = document.getElementById("order-id");
+      var orderId = orderIdEl ? orderIdEl.textContent : "";
+      return (
+        "I just booked my visit to Owl Park \u{1F989}\u{1F319} — " +
+        orderId
+      );
+    }
+
+    function fallbackCopy(text) {
+      var textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand("copy");
+      } catch (e) {
+        /* no-op: clipboard unavailable */
+      }
+      textarea.remove();
+    }
+
+    function showCopied() {
+      if (!buttonEl) return;
+      var original = "📣 Share Your Visit";
+      buttonEl.textContent = "✅ Copied to clipboard!";
+      buttonEl.classList.add("sv-copied");
+      if (resetTimeoutId) clearTimeout(resetTimeoutId);
+      resetTimeoutId = setTimeout(function () {
+        if (buttonEl) {
+          buttonEl.textContent = original;
+          buttonEl.classList.remove("sv-copied");
+        }
+      }, 2200);
+    }
+
+    function share() {
+      var text = buildBlurb();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(showCopied, function () {
+          fallbackCopy(text);
+          showCopied();
+        });
+      } else {
+        fallbackCopy(text);
+        showCopied();
+      }
+    }
+
+    function activate() {
+      var closeBtn = document.getElementById("close-modal-btn");
+      if (!closeBtn || !closeBtn.parentElement) return;
+
+      buttonEl = document.createElement("button");
+      buttonEl.type = "button";
+      buttonEl.className = "owlpark-feat-share-your-visit";
+      buttonEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+      buttonEl.textContent = "📣 Share Your Visit";
+      buttonEl.addEventListener("click", share);
+
+      closeBtn.parentElement.insertBefore(buttonEl, closeBtn);
+    }
+
+    function deactivate() {
+      if (resetTimeoutId) {
+        clearTimeout(resetTimeoutId);
+        resetTimeoutId = null;
+      }
+      if (buttonEl) {
+        buttonEl.removeEventListener("click", share);
+        buttonEl.remove();
+        buttonEl = null;
+      }
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures[FEATURE_ID] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
+</script>

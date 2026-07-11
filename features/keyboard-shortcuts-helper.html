@@ -1,0 +1,186 @@
+<script type="application/json" data-owlpark-manifest>
+  {
+    "id": "keyboard-shortcuts-helper",
+    "name": "Keyboard Shortcuts Helper",
+    "description": "Floating shortcuts cheat-sheet plus working keyboard shortcuts.",
+    "category": "utility",
+    "enabledByDefault": false,
+    "requiresReload": false
+  }
+</script>
+
+<style>
+  .owlpark-feat-keyboard-shortcuts-helper-btn {
+    position: fixed;
+    left: 1.2rem;
+    bottom: 1.2rem;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 50%;
+    border: none;
+    background: var(--cove-teal, #0f6f7a);
+    color: white;
+    font-weight: 800;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(15, 60, 65, 0.3);
+    z-index: 45;
+  }
+  .owlpark-feat-keyboard-shortcuts-helper-panel {
+    position: fixed;
+    left: 1.2rem;
+    bottom: 4.1rem;
+    background: white;
+    border: 1px solid var(--cove-border, #e4ddca);
+    border-radius: var(--radius-md, 10px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+    padding: 0.8rem 1rem;
+    font-size: 0.82rem;
+    z-index: 45;
+    min-width: 210px;
+  }
+  .owlpark-feat-keyboard-shortcuts-helper-panel h4 {
+    margin: 0 0 0.5rem;
+    color: var(--cove-teal-dark, #0a4d55);
+  }
+  .owlpark-feat-keyboard-shortcuts-helper-panel dl {
+    margin: 0;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.25rem 0.6rem;
+  }
+  .owlpark-feat-keyboard-shortcuts-helper-panel dt {
+    font-family: monospace;
+    background: var(--cove-sand, #faf3e6);
+    border-radius: 4px;
+    padding: 0.05rem 0.4rem;
+    text-align: center;
+  }
+  .owlpark-feat-keyboard-shortcuts-helper-panel dd {
+    margin: 0;
+    color: #4a5657;
+  }
+</style>
+
+<script>
+  (function () {
+    var FEATURE_ID = "keyboard-shortcuts-helper";
+    var helpBtn = null;
+    var panelEl = null;
+    var keydownHandler = null;
+
+    function isTypingTarget(target) {
+      if (!target) return false;
+      var tag = target.tagName;
+      return (
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        target.isContentEditable
+      );
+    }
+
+    function togglePanel() {
+      if (panelEl) {
+        panelEl.remove();
+        panelEl = null;
+        return;
+      }
+      panelEl = document.createElement("div");
+      panelEl.className = "owlpark-feat-keyboard-shortcuts-helper-panel";
+      panelEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+      panelEl.innerHTML =
+        "<h4>Keyboard Shortcuts</h4><dl>" +
+        "<dt>c</dt><dd>Open cart</dd>" +
+        "<dt>t</dt><dd>Tickets tab</dd>" +
+        "<dt>m</dt><dd>Memberships tab</dd>" +
+        "<dt>a</dt><dd>All tab</dd>" +
+        "<dt>Esc</dt><dd>Close cart / modal</dd>" +
+        "</dl>";
+      document.body.appendChild(panelEl);
+    }
+
+    function clickTab(filter) {
+      var btn = document.querySelector('.tab-btn[data-filter="' + filter + '"]');
+      if (btn) btn.click();
+    }
+
+    function onKeydown(event) {
+      if (isTypingTarget(event.target)) return;
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+
+      switch (event.key) {
+        case "c":
+        case "C": {
+          var cartBtn = document.getElementById("open-cart-btn");
+          if (cartBtn) cartBtn.click();
+          break;
+        }
+        case "t":
+        case "T":
+          clickTab("ticket");
+          break;
+        case "m":
+        case "M":
+          clickTab("membership");
+          break;
+        case "a":
+        case "A":
+          clickTab("all");
+          break;
+        case "Escape": {
+          var drawer = document.getElementById("cart-drawer");
+          if (drawer && drawer.classList.contains("open")) {
+            var closeBtn = document.getElementById("close-cart-btn");
+            if (closeBtn) closeBtn.click();
+          }
+          var modal = document.getElementById("checkout-modal");
+          if (modal && !modal.classList.contains("hidden")) {
+            var closeModalBtn = document.getElementById("close-modal-btn");
+            if (closeModalBtn) closeModalBtn.click();
+          }
+          break;
+        }
+        default:
+          return;
+      }
+    }
+
+    function activate() {
+      helpBtn = document.createElement("button");
+      helpBtn.type = "button";
+      helpBtn.className = "owlpark-feat-keyboard-shortcuts-helper-btn";
+      helpBtn.setAttribute("data-owlpark-feature", FEATURE_ID);
+      helpBtn.setAttribute("aria-label", "Show keyboard shortcuts");
+      helpBtn.textContent = "?";
+      helpBtn.addEventListener("click", togglePanel);
+      document.body.appendChild(helpBtn);
+
+      keydownHandler = onKeydown;
+      document.addEventListener("keydown", keydownHandler);
+    }
+
+    function deactivate() {
+      if (keydownHandler) {
+        document.removeEventListener("keydown", keydownHandler);
+        keydownHandler = null;
+      }
+      if (panelEl) {
+        panelEl.remove();
+        panelEl = null;
+      }
+      if (helpBtn) {
+        helpBtn.removeEventListener("click", togglePanel);
+        helpBtn.remove();
+        helpBtn = null;
+      }
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures[FEATURE_ID] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
+</script>

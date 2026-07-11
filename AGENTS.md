@@ -37,6 +37,11 @@ This file is the project's committed home for project-intrinsic agent knowledge:
   on each feature's extracted behavior script, a `features/index.json` <-> `features/*.html`
   consistency check, and an HTTP smoke test of key pages/assets over `python3 -m http.server`.
   There's no separate test suite — this is the whole automated check surface.
+- When driving Puppeteer against real coordinates (`page.click(selector)`, not `page.evaluate`),
+  close the cart drawer (`#close-cart-btn`) before clicking anything else on the page: the drawer's
+  full-viewport `#cart-overlay` sits on top and silently absorbs clicks meant for buttons underneath
+  it (no error — the click just lands on the overlay instead), which looks like a feature's button
+  handler never fired.
 
 ## Maintaining this file
 

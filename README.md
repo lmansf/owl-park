@@ -71,7 +71,7 @@ file contains, in order:
 (`js/feature-loader.js`) fetches each file's raw text once, parses out the manifest for discovery,
 and on activate re-creates every non-manifest element and appends it live — creating a _new_
 `<script>` element and appending it (rather than setting `innerHTML`) is what makes the browser
-execute it. All 20 shipped features toggle live with zero page reloads; the manifest/manager UI
+execute it. All 35 shipped features toggle live with zero page reloads; the manifest/manager UI
 still support a `requiresReload` escape hatch for a future feature that genuinely needs one.
 
 Because features can't `import` anything (including each other, or `js/cart.js`), any feature that
@@ -102,7 +102,7 @@ feature appended directly onto a `.product-row`. Features that decorate product 
 the injection after each re-render, guarded by an idempotency check (skip a row that already has
 the feature's tagged node) so it doesn't double-inject.
 
-## The 20 enhancements
+## The 35 enhancements
 
 | Feature                 | Category   | Description                                                                                    |
 | ----------------------- | ---------- | ---------------------------------------------------------------------------------------------- |
@@ -126,6 +126,21 @@ the feature's tagged node) so it doesn't double-inject.
 | Font Size Adjuster      | utility    | Floating control to increase or decrease site-wide font size.                                  |
 | Product Info Tooltips   | utility    | Info icons on product rows with detailed inclusion tooltips.                                   |
 | Printable Receipt       | utility    | Adds a print/download receipt button to the checkout confirmation.                             |
+| Wishlist Favorites      | behavioral | Heart icon on product rows to save favorites, persisted across visits.                         |
+| Promo Code Field        | behavioral | Promo code field in the cart that applies a mock percentage discount.                          |
+| Flash Sale Timer        | behavioral | Limited-time flash-sale countdown banner with an expiring mock discount.                        |
+| Park Guide Tour         | behavioral | Guided walkthrough tooltip tour of the storefront's key sections.                               |
+| Share Your Visit        | behavioral | Copies a shareable blurb about your order to the clipboard at checkout.                         |
+| Ticket Comparison Table | utility    | Side-by-side comparison table of every ticket and membership.                                  |
+| Add to Calendar Button  | utility    | Downloads an .ics calendar file for your visit from the checkout confirmation.                 |
+| Copy Order ID Button    | utility    | One-click copy button for the order id on the checkout confirmation.                            |
+| Ambient Park Sounds     | utility    | Toggle a synthesized looping ambient park soundscape.                                          |
+| Order History Log       | utility    | Keeps a running local log of past mock orders, viewable anytime.                                |
+| Keyboard Shortcuts Helper | utility  | Floating shortcuts cheat-sheet plus working keyboard shortcuts.                                 |
+| Sticky Mini Cart Bar    | visual     | Persistent floating mini-cart bar showing live item count and total.                            |
+| Species Fact Ticker     | visual     | Scrolling marquee ticker of rotating owl facts below the hero.                                  |
+| Discount Badge Strikethrough | visual | "Was $X" strikethrough pricing with a sale-percent badge on select rows.                    |
+| Park Map Modal          | visual     | Opens a simple illustrated park map in a modal.                                                |
 
 (Each feature also has a `description` in its own `data-owlpark-manifest` block, shown live in the
 Feature Manager UI; this table mirrors the same feature set.)
