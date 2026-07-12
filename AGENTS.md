@@ -9,9 +9,17 @@ This file is the project's committed home for project-intrinsic agent knowledge:
 - OpenSpec proposals/specs/designs/tasks live under `openspec/changes/` —
   `critter-cove-shop/` for the initial build, `owlpark-feat15-round2/` for the 15 round-2
   enhancement modules.
-- `chrome-devtools-axi` is not installed in this environment. For browser verification/screenshots, use
-  `google-chrome --headless --no-sandbox` directly, or `npm install puppeteer-core` pointed at
-  `executablePath: "/usr/bin/google-chrome"` for anything needing DOM interaction (clicks, toggles).
+- `chrome-devtools-axi` is installed — prefer it for browser verification. On index.html its
+  snapshot refs go stale within seconds (the rotating owl-fact ticker mutates the DOM), so drive
+  interactions with `eval "() => { document.querySelector(...).click(); ... }"` instead of
+  `click @uid`. Chrome serves `data/products.json` from HTTP cache across reloads (python
+  http.server sends Last-Modified), so to test fetch-failure paths either restart the browser
+  (`chrome-devtools-axi stop` — also wipes localStorage) or monkeypatch `window.fetch`.
+- `js/main.js`'s `init()` awaits `loadProducts()` before `applyEnabledFeatures()`, so if the
+  products fetch fails NO feature is injected at all — a feature's own products-fetch error
+  handling only runs when its independent request fails. To exercise that (or any live toggle)
+  in-page: `const l = await import('./js/feature-loader.js')`, then `l.deactivateFeature(f)` /
+  `l.activateFeature(f)` on an entry from `l.discoverFeatures()`.
 - Each `features/<id>.html` is ONE self-contained file (manifest + style + markup + a plain,
   non-module `<script>` IIFE) — no separate files, no `import`/`export` anywhere, per README.md's
   "The `features/` plugin system" section. The loader re-creates and appends the file's non-manifest
