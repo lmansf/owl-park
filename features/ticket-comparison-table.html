@@ -89,48 +89,51 @@
       }
     }
 
-    function renderRows(list) {
-      return list
-        .map(function (p) {
-          return (
-            "<tr><td>" +
-            p.emoji +
-            " " +
-            p.name +
-            "</td><td>" +
-            p.category +
-            "</td><td>$" +
-            p.price.toFixed(2) +
-            "</td><td>" +
-            p.unit +
-            "</td><td>" +
-            p.plu +
-            "</td></tr>"
-          );
-        })
-        .join("");
+    function formatPrice(price) {
+      return typeof price === "number" && isFinite(price)
+        ? "$" + price.toFixed(2)
+        : "—";
+    }
+
+    function buildRow(p) {
+      var tr = document.createElement("tr");
+      [
+        (p.emoji || "") + " " + (p.name || ""),
+        p.category,
+        formatPrice(p.price),
+        p.unit,
+        p.plu,
+      ].forEach(function (value) {
+        var td = document.createElement("td");
+        td.textContent = value == null ? "" : value;
+        tr.appendChild(td);
+      });
+      return tr;
     }
 
     function showOverlay(list) {
-      overlayEl = document.createElement("div");
-      overlayEl.className = "owlpark-feat-ticket-comparison-table-overlay";
-      overlayEl.setAttribute("data-owlpark-feature", FEATURE_ID);
-      overlayEl.innerHTML =
+      var overlay = document.createElement("div");
+      overlay.className = "owlpark-feat-ticket-comparison-table-overlay";
+      overlay.setAttribute("data-owlpark-feature", FEATURE_ID);
+      overlay.innerHTML =
         '<div class="owlpark-feat-ticket-comparison-table-card">' +
         "<h3>⚖️ Compare Tickets &amp; Memberships</h3>" +
         "<table><thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Unit</th><th>PLU</th></tr></thead>" +
-        "<tbody>" +
-        renderRows(list) +
-        "</tbody></table>" +
+        "<tbody></tbody></table>" +
         '<button type="button" class="owlpark-feat-ticket-comparison-table-close">Close</button>' +
         "</div>";
-      document.body.appendChild(overlayEl);
-      overlayEl
+      var tbody = overlay.querySelector("tbody");
+      (Array.isArray(list) ? list : []).forEach(function (p) {
+        if (p && typeof p === "object") tbody.appendChild(buildRow(p));
+      });
+      document.body.appendChild(overlay);
+      overlay
         .querySelector(".owlpark-feat-ticket-comparison-table-close")
         .addEventListener("click", removeOverlay);
-      overlayEl.addEventListener("click", function (e) {
-        if (e.target === overlayEl) removeOverlay();
+      overlay.addEventListener("click", function (e) {
+        if (e.target === overlay) removeOverlay();
       });
+      overlayEl = overlay;
     }
 
     function openCompare() {

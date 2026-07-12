@@ -35,6 +35,9 @@
       width 0.25s ease,
       height 0.25s ease;
   }
+  .owlpark-feat-park-guide-tour-highlight.pgt-instant {
+    transition: none;
+  }
   .owlpark-feat-park-guide-tour-tooltip {
     position: fixed;
     z-index: 91;
@@ -92,6 +95,19 @@
     var highlightEl = null;
     var tooltipEl = null;
     var stepIndex = -1;
+    var repositionFrame = 0;
+    var anchoredGeometry = "";
+
+    function geometryKey(rect) {
+      return [
+        rect.top,
+        rect.left,
+        rect.width,
+        rect.height,
+        window.innerWidth,
+        window.innerHeight,
+      ].join("|");
+    }
 
     function positionOn(el, target) {
       var rect = target.getBoundingClientRect();
@@ -99,6 +115,7 @@
       el.style.left = rect.left - 6 + "px";
       el.style.width = rect.width + 12 + "px";
       el.style.height = rect.height + 12 + "px";
+      if (el === highlightEl) anchoredGeometry = geometryKey(rect);
     }
 
     function positionTooltip(target) {
@@ -115,8 +132,31 @@
       tooltipEl.style.left = left + "px";
     }
 
+    function applyReposition() {
+      repositionFrame = 0;
+      if (stepIndex < 0 || !highlightEl || !tooltipEl) return;
+      var target = document.querySelector(STEPS[stepIndex].selector);
+      if (!target) return;
+      if (geometryKey(target.getBoundingClientRect()) === anchoredGeometry) return;
+      highlightEl.classList.add("pgt-instant");
+      positionOn(highlightEl, target);
+      positionTooltip(target);
+    }
+
+    function repositionStep() {
+      if (repositionFrame) return;
+      repositionFrame = window.requestAnimationFrame(applyReposition);
+    }
+
     function endTour() {
       stepIndex = -1;
+      anchoredGeometry = "";
+      if (repositionFrame) {
+        window.cancelAnimationFrame(repositionFrame);
+        repositionFrame = 0;
+      }
+      window.removeEventListener("scroll", repositionStep);
+      window.removeEventListener("resize", repositionStep);
       if (highlightEl) {
         highlightEl.remove();
         highlightEl = null;
@@ -140,6 +180,11 @@
       }
       stepIndex = i;
 
+      var rect = target.getBoundingClientRect();
+      if (rect.top < 0 || rect.bottom > window.innerHeight) {
+        target.scrollIntoView({ block: "center" });
+      }
+
       if (!highlightEl) {
         highlightEl = document.createElement("div");
         highlightEl.className = "owlpark-feat-park-guide-tour-highlight";
@@ -153,6 +198,7 @@
         document.body.appendChild(tooltipEl);
       }
 
+      highlightEl.classList.remove("pgt-instant");
       positionOn(highlightEl, target);
       var isLast = i === STEPS.length - 1;
       tooltipEl.innerHTML =
@@ -174,6 +220,8 @@
 
     function startTour() {
       endTour();
+      window.addEventListener("scroll", repositionStep, { passive: true });
+      window.addEventListener("resize", repositionStep);
       showStep(0);
     }
 

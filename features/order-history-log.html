@@ -84,7 +84,11 @@
     function readHistory() {
       try {
         var raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? JSON.parse(raw) : [];
+        var parsed = raw ? JSON.parse(raw) : [];
+        if (!Array.isArray(parsed)) return [];
+        return parsed.filter(function (e) {
+          return e && typeof e === "object" && !Array.isArray(e);
+        });
       } catch (e) {
         return [];
       }
@@ -119,22 +123,21 @@
       }
     }
 
+    function buildEntry(e) {
+      var row = document.createElement("div");
+      row.className = "ohl-entry";
+      var orderSpan = document.createElement("span");
+      orderSpan.textContent = e.orderText || "";
+      var totalSpan = document.createElement("span");
+      totalSpan.textContent = e.total || "";
+      row.appendChild(orderSpan);
+      row.appendChild(totalSpan);
+      return row;
+    }
+
     function openHistory() {
       if (overlayEl) return;
       var entries = readHistory();
-      var listHtml = entries.length
-        ? entries
-            .map(function (e) {
-              return (
-                '<div class="ohl-entry"><span>' +
-                e.orderText +
-                "</span><span>" +
-                (e.total || "") +
-                "</span></div>"
-              );
-            })
-            .join("")
-        : '<div class="ohl-empty">No orders yet — complete a checkout to see it here.</div>';
 
       overlayEl = document.createElement("div");
       overlayEl.className = "owlpark-feat-order-history-log-overlay";
@@ -142,13 +145,22 @@
       overlayEl.innerHTML =
         '<div class="owlpark-feat-order-history-log-card">' +
         "<h3>🧾 My Orders</h3>" +
-        listHtml +
         '<button type="button" class="owlpark-feat-order-history-log-close">Close</button>' +
         "</div>";
+      var card = overlayEl.querySelector(".owlpark-feat-order-history-log-card");
+      var closeBtn = overlayEl.querySelector(".owlpark-feat-order-history-log-close");
+      if (entries.length) {
+        entries.forEach(function (e) {
+          card.insertBefore(buildEntry(e), closeBtn);
+        });
+      } else {
+        var empty = document.createElement("div");
+        empty.className = "ohl-empty";
+        empty.textContent = "No orders yet — complete a checkout to see it here.";
+        card.insertBefore(empty, closeBtn);
+      }
       document.body.appendChild(overlayEl);
-      overlayEl
-        .querySelector(".owlpark-feat-order-history-log-close")
-        .addEventListener("click", removeOverlay);
+      closeBtn.addEventListener("click", removeOverlay);
       overlayEl.addEventListener("click", function (e) {
         if (e.target === overlayEl) removeOverlay();
       });
