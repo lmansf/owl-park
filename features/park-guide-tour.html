@@ -35,6 +35,9 @@
       width 0.25s ease,
       height 0.25s ease;
   }
+  .owlpark-feat-park-guide-tour-highlight.pgt-instant {
+    transition: none;
+  }
   .owlpark-feat-park-guide-tour-tooltip {
     position: fixed;
     z-index: 91;
@@ -92,6 +95,9 @@
     var highlightEl = null;
     var tooltipEl = null;
     var stepIndex = -1;
+    var repositionFrame = 0;
+    var anchoredTop = null;
+    var anchoredLeft = null;
 
     function positionOn(el, target) {
       var rect = target.getBoundingClientRect();
@@ -99,6 +105,10 @@
       el.style.left = rect.left - 6 + "px";
       el.style.width = rect.width + 12 + "px";
       el.style.height = rect.height + 12 + "px";
+      if (el === highlightEl) {
+        anchoredTop = rect.top;
+        anchoredLeft = rect.left;
+      }
     }
 
     function positionTooltip(target) {
@@ -115,16 +125,31 @@
       tooltipEl.style.left = left + "px";
     }
 
-    function repositionStep() {
+    function applyReposition() {
+      repositionFrame = 0;
       if (stepIndex < 0 || !highlightEl || !tooltipEl) return;
       var target = document.querySelector(STEPS[stepIndex].selector);
       if (!target) return;
+      var rect = target.getBoundingClientRect();
+      if (rect.top === anchoredTop && rect.left === anchoredLeft) return;
+      highlightEl.classList.add("pgt-instant");
       positionOn(highlightEl, target);
       positionTooltip(target);
     }
 
+    function repositionStep() {
+      if (repositionFrame) return;
+      repositionFrame = window.requestAnimationFrame(applyReposition);
+    }
+
     function endTour() {
       stepIndex = -1;
+      anchoredTop = null;
+      anchoredLeft = null;
+      if (repositionFrame) {
+        window.cancelAnimationFrame(repositionFrame);
+        repositionFrame = 0;
+      }
       window.removeEventListener("scroll", repositionStep);
       window.removeEventListener("resize", repositionStep);
       if (highlightEl) {
@@ -168,6 +193,7 @@
         document.body.appendChild(tooltipEl);
       }
 
+      highlightEl.classList.remove("pgt-instant");
       positionOn(highlightEl, target);
       var isLast = i === STEPS.length - 1;
       tooltipEl.innerHTML =
