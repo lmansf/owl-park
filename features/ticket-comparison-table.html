@@ -90,8 +90,9 @@
     }
 
     function formatPrice(price) {
-      var n = Number(price);
-      return isFinite(n) ? "$" + n.toFixed(2) : "—";
+      return typeof price === "number" && isFinite(price)
+        ? "$" + price.toFixed(2)
+        : "—";
     }
 
     function buildRow(p) {

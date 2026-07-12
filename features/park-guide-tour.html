@@ -96,8 +96,18 @@
     var tooltipEl = null;
     var stepIndex = -1;
     var repositionFrame = 0;
-    var anchoredTop = null;
-    var anchoredLeft = null;
+    var anchoredGeometry = "";
+
+    function geometryKey(rect) {
+      return [
+        rect.top,
+        rect.left,
+        rect.width,
+        rect.height,
+        window.innerWidth,
+        window.innerHeight,
+      ].join("|");
+    }
 
     function positionOn(el, target) {
       var rect = target.getBoundingClientRect();
@@ -105,10 +115,7 @@
       el.style.left = rect.left - 6 + "px";
       el.style.width = rect.width + 12 + "px";
       el.style.height = rect.height + 12 + "px";
-      if (el === highlightEl) {
-        anchoredTop = rect.top;
-        anchoredLeft = rect.left;
-      }
+      if (el === highlightEl) anchoredGeometry = geometryKey(rect);
     }
 
     function positionTooltip(target) {
@@ -130,8 +137,7 @@
       if (stepIndex < 0 || !highlightEl || !tooltipEl) return;
       var target = document.querySelector(STEPS[stepIndex].selector);
       if (!target) return;
-      var rect = target.getBoundingClientRect();
-      if (rect.top === anchoredTop && rect.left === anchoredLeft) return;
+      if (geometryKey(target.getBoundingClientRect()) === anchoredGeometry) return;
       highlightEl.classList.add("pgt-instant");
       positionOn(highlightEl, target);
       positionTooltip(target);
@@ -144,8 +150,7 @@
 
     function endTour() {
       stepIndex = -1;
-      anchoredTop = null;
-      anchoredLeft = null;
+      anchoredGeometry = "";
       if (repositionFrame) {
         window.cancelAnimationFrame(repositionFrame);
         repositionFrame = 0;

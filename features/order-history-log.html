@@ -127,7 +127,7 @@
       var row = document.createElement("div");
       row.className = "ohl-entry";
       var orderSpan = document.createElement("span");
-      orderSpan.textContent = e.orderText;
+      orderSpan.textContent = e.orderText || "";
       var totalSpan = document.createElement("span");
       totalSpan.textContent = e.total || "";
       row.appendChild(orderSpan);
