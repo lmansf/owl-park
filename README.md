@@ -109,6 +109,12 @@ that decorate the confirmation (see `copy-order-id-button` and `order-history-lo
 `MutationObserver` on the checkout modal / order-id element to re-apply (or react) after each
 checkout, with the same idempotency guard.
 
+**Gotcha for rendering dynamic strings:** build any DOM whose text comes from `localStorage` (or
+any other value your file doesn't hardcode) with `createElement` + `textContent`, never by
+concatenating the value into an `innerHTML` string — a corrupted or hand-edited stored value must
+render as literal text, not as markup (see `order-history-log` and `ticket-comparison-table`).
+Purely static shells (headings, close buttons) can keep using `innerHTML`.
+
 ## The 35 enhancements
 
 | Feature                 | Category   | Description                                                                                    |
