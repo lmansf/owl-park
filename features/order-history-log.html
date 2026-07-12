@@ -84,7 +84,11 @@
     function readHistory() {
       try {
         var raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? JSON.parse(raw) : [];
+        var parsed = raw ? JSON.parse(raw) : [];
+        if (!Array.isArray(parsed)) return [];
+        return parsed.filter(function (e) {
+          return e && typeof e === "object" && !Array.isArray(e);
+        });
       } catch (e) {
         return [];
       }
