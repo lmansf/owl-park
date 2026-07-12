@@ -200,7 +200,8 @@ a {
 }
 
 .hero {
-  padding: 2.2rem 1.5rem 2rem;
+  padding: 2.2rem calc(1.5rem + var(--safe-right)) 2rem
+    calc(1.5rem + var(--safe-left));
   text-align: center;
   background: var(--cove-sand);
 }
@@ -769,7 +770,8 @@ main {
     top: 18px;
   }
   .hero {
-    padding: 1.6rem 1.25rem 1.4rem;
+    padding: 1.6rem calc(1.25rem + var(--safe-right)) 1.4rem
+      calc(1.25rem + var(--safe-left));
   }
   .site-header {
     padding-left: calc(1rem + var(--safe-left));
@@ -799,6 +801,7 @@ main {
     height: 120px;
   }
   .hero {
-    padding: 1.2rem 1.25rem 1rem;
+    padding: 1.2rem calc(1.25rem + var(--safe-right)) 1rem
+      calc(1.25rem + var(--safe-left));
   }
 }

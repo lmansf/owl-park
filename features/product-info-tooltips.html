@@ -18,10 +18,12 @@
     vertical-align: middle;
   }
   /* The *visible* dot stays 21px so the product title line still looks like a
-     title line. The 44pt thumb target is a centred ::before expander rather than
-     an oversized button box: a 44px button would overhang the wrapper and, being
-     positioned, paint over the neighbouring title and description text — making
-     that text unselectable and part of this button's hit area. */
+     title line, and the 44pt thumb target is a transparent centred ::before
+     expander. The expander still overhangs the 21px icon by ~11px a side, so the
+     text it overlaps is part of this button's hit area and is not selectable —
+     that is inherent to a 44pt target on an inline icon. Keeping the expander
+     transparent and separate from the button box at least stops it painting over
+     the neighbouring title and description text. */
   .owlpark-feat-product-info-tooltips .pit-info-icon {
     position: relative;
     width: 21px;
@@ -79,13 +81,20 @@
   }
 
   @media (max-width: 560px) {
-    /* The icon can sit anywhere along the title line, so a left-anchored 15rem
-       panel would hang off the right edge on a phone. Grow leftwards instead. */
+    /* The title line wraps, so the icon can sit anywhere along the row and any
+       anchor relative to it runs off one edge or the other on a phone. Drop the
+       wrapper out of the positioning chain so the tooltip resolves against the
+       .product-row instead, gutter to gutter: its width no longer depends on
+       where the icon landed. */
+    .owlpark-feat-product-info-tooltips.pit-info-wrap {
+      position: static;
+    }
     .owlpark-feat-product-info-tooltips .pit-tooltip {
-      left: auto;
-      right: 0;
-      width: max-content;
-      max-width: min(17rem, calc(100vw - 3.5rem));
+      top: calc(100% - 0.6rem);
+      left: 1rem;
+      right: 1rem;
+      width: auto;
+      max-width: none;
     }
   }
 </style>
