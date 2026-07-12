@@ -31,7 +31,10 @@
     position: fixed;
     left: calc(1.2rem + env(safe-area-inset-left, 0px));
     bottom: calc(4.9rem + env(safe-area-inset-bottom, 0px));
-    max-width: calc(100vw - 2.4rem);
+    max-width: calc(
+      100vw - 2.4rem - env(safe-area-inset-left, 0px) -
+        env(safe-area-inset-right, 0px)
+    );
     box-sizing: border-box;
     background: white;
     border: 1px solid var(--cove-border, #e4ddca);
