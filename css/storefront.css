@@ -224,7 +224,10 @@ a {
   justify-content: space-between;
   max-width: 1100px;
   margin: 0 auto;
-  padding: 0 1.5rem;
+  /* The notch insets are non-zero in landscape, where the viewport is far wider
+     than any phone breakpoint — so they belong on the base rule, not in a
+     max-width query. On a screen with no insets they resolve to 0px. */
+  padding: 0 calc(1.5rem + var(--safe-right)) 0 calc(1.5rem + var(--safe-left));
 }
 
 .catalog-heading h2 {
@@ -264,7 +267,8 @@ a {
 main {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 1.5rem 1.5rem 4rem;
+  padding: 1.5rem calc(1.5rem + var(--safe-right)) 4rem
+    calc(1.5rem + var(--safe-left));
 }
 
 .catalog-list {
@@ -744,8 +748,8 @@ main {
 
 .site-footer {
   text-align: center;
-  padding: 2rem calc(1rem + var(--safe-left)) calc(3rem + var(--safe-bottom))
-    calc(1rem + var(--safe-right));
+  padding: 2rem calc(1rem + var(--safe-right)) calc(3rem + var(--safe-bottom))
+    calc(1rem + var(--safe-left));
   color: #8a9091;
   font-size: 0.85rem;
 }

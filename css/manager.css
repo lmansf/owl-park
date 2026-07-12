@@ -1,7 +1,8 @@
 .manager-main {
   max-width: 900px;
   margin: 0 auto;
-  padding: 2rem 1.5rem 4rem;
+  padding: 2rem calc(1.5rem + var(--safe-right)) 4rem
+    calc(1.5rem + var(--safe-left));
 }
 
 .manager-intro {
@@ -148,8 +149,8 @@
 
 @media (max-width: 560px) {
   .manager-main {
-    padding: 1.5rem calc(1rem + var(--safe-left))
-      calc(3rem + var(--safe-bottom)) calc(1rem + var(--safe-right));
+    padding: 1.5rem calc(1rem + var(--safe-right))
+      calc(3rem + var(--safe-bottom)) calc(1rem + var(--safe-left));
   }
   /* The name/description column and the toggle fight for the same 343px.
      Drop the status word under the name and keep the switch on the right. */

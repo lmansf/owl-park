@@ -17,21 +17,18 @@
     margin-left: 0.3rem;
     vertical-align: middle;
   }
-  /* The button is a full 44pt thumb target; the *visible* dot stays 21px so the
-     product title line still looks like a title line. The circle is painted as
-     a centred radial-gradient rather than the button's own box, so the hit area
-     and the artwork can differ in size without extra markup. */
+  /* The *visible* dot stays 21px so the product title line still looks like a
+     title line. The 44pt thumb target is a centred ::before expander rather than
+     an oversized button box: a 44px button would overhang the wrapper and, being
+     positioned, paint over the neighbouring title and description text — making
+     that text unselectable and part of this button's hit area. */
   .owlpark-feat-product-info-tooltips .pit-info-icon {
     position: relative;
-    width: 44px;
-    height: 44px;
-    margin: -12px;
+    width: 21px;
+    height: 21px;
+    padding: 0;
     border-radius: 50%;
-    background: radial-gradient(
-      circle,
-      var(--cove-teal-dark, #0a4d55) 0 10.5px,
-      transparent 10.5px
-    );
+    background: var(--cove-teal-dark, #0a4d55);
     color: white;
     border: none;
     font-size: 0.72rem;
@@ -41,6 +38,16 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+  }
+  .owlpark-feat-product-info-tooltips .pit-info-icon::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
   }
   .owlpark-feat-product-info-tooltips .pit-tooltip {
     visibility: hidden;
