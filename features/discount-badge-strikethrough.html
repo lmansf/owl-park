@@ -1,0 +1,106 @@
+<script type="application/json" data-owlpark-manifest>
+  {
+    "id": "discount-badge-strikethrough",
+    "name": "Discount Badge Strikethrough",
+    "description": "\"Was $X\" strikethrough pricing with a sale-percent badge on select rows.",
+    "category": "visual",
+    "enabledByDefault": false,
+    "requiresReload": false
+  }
+</script>
+
+<style>
+  .owlpark-feat-discount-badge-strikethrough {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-right: 0.4rem;
+  }
+  .owlpark-feat-discount-badge-strikethrough .dbs-was {
+    text-decoration: line-through;
+    color: #9aa5a4;
+    font-size: 0.82rem;
+  }
+  .owlpark-feat-discount-badge-strikethrough .dbs-pct {
+    background: #a8321f;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 0.15rem 0.4rem;
+    border-radius: 999px;
+  }
+</style>
+
+<script>
+  (function () {
+    var FEATURE_ID = "discount-badge-strikethrough";
+    var DISCOUNTS = {
+      "prod-ga-ticket": 15,
+      "prod-individual-membership": 10,
+    };
+
+    var observer = null;
+
+    function injectInto(row) {
+      if (row.querySelector('[data-owlpark-feature="' + FEATURE_ID + '"]'))
+        return;
+      var productId = row.getAttribute("data-product-id");
+      var pct = DISCOUNTS[productId];
+      if (!pct) return;
+
+      var priceAmountEl = row.querySelector(".price-amount");
+      if (!priceAmountEl) return;
+      var currentPrice = parseFloat(priceAmountEl.textContent.replace(/[^0-9.]/g, ""));
+      if (!currentPrice) return;
+      var wasPrice = currentPrice / (1 - pct / 100);
+
+      var wrap = document.createElement("span");
+      wrap.className = "owlpark-feat-discount-badge-strikethrough";
+      wrap.setAttribute("data-owlpark-feature", FEATURE_ID);
+      wrap.innerHTML =
+        '<span class="dbs-was">$' +
+        wasPrice.toFixed(2) +
+        '</span><span class="dbs-pct">-' +
+        pct +
+        "%</span>";
+      priceAmountEl.insertAdjacentElement("beforebegin", wrap);
+    }
+
+    function applyToRows() {
+      document
+        .querySelectorAll(".product-row[data-product-id]")
+        .forEach(injectInto);
+    }
+
+    function activate() {
+      applyToRows();
+      var grid = document.getElementById("catalog-grid");
+      if (grid) {
+        observer = new MutationObserver(function () {
+          applyToRows();
+        });
+        observer.observe(grid, { childList: true });
+      }
+    }
+
+    function deactivate() {
+      if (observer) {
+        observer.disconnect();
+        observer = null;
+      }
+      document
+        .querySelectorAll('[data-owlpark-feature="' + FEATURE_ID + '"]')
+        .forEach(function (el) {
+          el.remove();
+        });
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures[FEATURE_ID] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
+</script>

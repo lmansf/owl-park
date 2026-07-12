@@ -1,0 +1,190 @@
+<script type="application/json" data-owlpark-manifest>
+  {
+    "id": "ticket-comparison-table",
+    "name": "Ticket Comparison Table",
+    "description": "Side-by-side comparison table of every ticket and membership.",
+    "category": "utility",
+    "enabledByDefault": false,
+    "requiresReload": false
+  }
+</script>
+
+<style>
+  .owlpark-feat-ticket-comparison-table-btn {
+    background: white;
+    border: 1px solid var(--cove-border, #e4ddca);
+    color: var(--cove-teal-dark, #0a4d55);
+    border-radius: 999px;
+    padding: 0.4rem 0.9rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-left: auto;
+  }
+  .owlpark-feat-ticket-comparison-table-btn:hover {
+    background: var(--cove-sand, #faf3e6);
+  }
+  .owlpark-feat-ticket-comparison-table-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 30, 32, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 65;
+    padding: 1rem;
+  }
+  .owlpark-feat-ticket-comparison-table-card {
+    background: white;
+    border-radius: var(--radius-lg, 14px);
+    padding: 1.4rem;
+    max-width: 720px;
+    width: 100%;
+    max-height: 80vh;
+    overflow: auto;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  }
+  .owlpark-feat-ticket-comparison-table-card h3 {
+    margin-top: 0;
+    color: var(--cove-teal-dark, #0a4d55);
+  }
+  .owlpark-feat-ticket-comparison-table-card table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+  .owlpark-feat-ticket-comparison-table-card th,
+  .owlpark-feat-ticket-comparison-table-card td {
+    text-align: left;
+    padding: 0.5rem 0.6rem;
+    border-bottom: 1px solid var(--cove-border, #e4ddca);
+    vertical-align: top;
+  }
+  .owlpark-feat-ticket-comparison-table-card th {
+    color: var(--cove-teal-dark, #0a4d55);
+  }
+  .owlpark-feat-ticket-comparison-table-close {
+    margin-top: 1rem;
+    background: var(--cove-teal, #0f6f7a);
+    color: white;
+    border: none;
+    padding: 0.5rem 1.1rem;
+    border-radius: 999px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+</style>
+
+<script>
+  (function () {
+    var FEATURE_ID = "ticket-comparison-table";
+    var compareBtn = null;
+    var overlayEl = null;
+    var products = null;
+
+    function removeOverlay() {
+      if (overlayEl) {
+        overlayEl.remove();
+        overlayEl = null;
+      }
+    }
+
+    function renderRows(list) {
+      return list
+        .map(function (p) {
+          return (
+            "<tr><td>" +
+            p.emoji +
+            " " +
+            p.name +
+            "</td><td>" +
+            p.category +
+            "</td><td>$" +
+            p.price.toFixed(2) +
+            "</td><td>" +
+            p.unit +
+            "</td><td>" +
+            p.plu +
+            "</td></tr>"
+          );
+        })
+        .join("");
+    }
+
+    function showOverlay(list) {
+      overlayEl = document.createElement("div");
+      overlayEl.className = "owlpark-feat-ticket-comparison-table-overlay";
+      overlayEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+      overlayEl.innerHTML =
+        '<div class="owlpark-feat-ticket-comparison-table-card">' +
+        "<h3>⚖️ Compare Tickets &amp; Memberships</h3>" +
+        "<table><thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Unit</th><th>PLU</th></tr></thead>" +
+        "<tbody>" +
+        renderRows(list) +
+        "</tbody></table>" +
+        '<button type="button" class="owlpark-feat-ticket-comparison-table-close">Close</button>' +
+        "</div>";
+      document.body.appendChild(overlayEl);
+      overlayEl
+        .querySelector(".owlpark-feat-ticket-comparison-table-close")
+        .addEventListener("click", removeOverlay);
+      overlayEl.addEventListener("click", function (e) {
+        if (e.target === overlayEl) removeOverlay();
+      });
+    }
+
+    function openCompare() {
+      if (overlayEl) return;
+      if (products) {
+        showOverlay(products);
+        return;
+      }
+      fetch("data/products.json")
+        .then(function (res) {
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          return res.json();
+        })
+        .then(function (data) {
+          products = data;
+          showOverlay(products);
+        })
+        .catch(function (err) {
+          console.error("[" + FEATURE_ID + "] failed to load products", err);
+          if (compareBtn) {
+            compareBtn.textContent = "⚖️ Compare unavailable";
+            compareBtn.disabled = true;
+          }
+        });
+    }
+
+    function activate() {
+      var heading = document.querySelector(".catalog-heading");
+      if (!heading) return;
+
+      compareBtn = document.createElement("button");
+      compareBtn.type = "button";
+      compareBtn.className = "owlpark-feat-ticket-comparison-table-btn";
+      compareBtn.setAttribute("data-owlpark-feature", FEATURE_ID);
+      compareBtn.textContent = "⚖️ Compare";
+      compareBtn.addEventListener("click", openCompare);
+      heading.appendChild(compareBtn);
+    }
+
+    function deactivate() {
+      removeOverlay();
+      if (compareBtn) {
+        compareBtn.removeEventListener("click", openCompare);
+        compareBtn.remove();
+        compareBtn = null;
+      }
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures[FEATURE_ID] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
+</script>

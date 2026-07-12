@@ -1,0 +1,156 @@
+<script type="application/json" data-owlpark-manifest>
+  {
+    "id": "promo-code-field",
+    "name": "Promo Code Field",
+    "description": "Promo code field in the cart that applies a mock percentage discount.",
+    "category": "behavioral",
+    "enabledByDefault": false,
+    "requiresReload": false
+  }
+</script>
+
+<style>
+  .owlpark-feat-promo-code-field {
+    margin-bottom: 0.7rem;
+  }
+  .owlpark-feat-promo-code-field .pcf-row {
+    display: flex;
+    gap: 0.4rem;
+  }
+  .owlpark-feat-promo-code-field .pcf-input {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid var(--cove-border, #e4ddca);
+    border-radius: 8px;
+    padding: 0.45rem 0.6rem;
+    font-size: 0.85rem;
+  }
+  .owlpark-feat-promo-code-field .pcf-apply-btn {
+    background: var(--cove-teal, #0f6f7a);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.45rem 0.9rem;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .owlpark-feat-promo-code-field .pcf-message {
+    margin-top: 0.4rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--cove-green, #2f8f4e);
+  }
+  .owlpark-feat-promo-code-field .pcf-message.pcf-error {
+    color: #a8321f;
+  }
+</style>
+
+<script>
+  (function () {
+    var FEATURE_ID = "promo-code-field";
+    var CODES = { OWL10: 10, NIGHTOWL: 15 };
+
+    var wrapEl = null;
+    var messageEl = null;
+    var observer = null;
+    var appliedCode = "";
+    var appliedPercent = 0;
+
+    function parsePrice(text) {
+      return parseFloat((text || "").replace(/[^0-9.]/g, "")) || 0;
+    }
+
+    function formatPrice(n) {
+      return "$" + n.toFixed(2);
+    }
+
+    function refreshMessage() {
+      if (!messageEl || !appliedCode) return;
+      var totalEl = document.getElementById("cart-total");
+      var raw = totalEl ? parsePrice(totalEl.textContent) : 0;
+      var discounted = raw * (1 - appliedPercent / 100);
+      messageEl.classList.remove("pcf-error");
+      messageEl.hidden = false;
+      messageEl.textContent =
+        "🎟️ " +
+        appliedCode +
+        " applied — new total " +
+        formatPrice(discounted) +
+        " (-" +
+        appliedPercent +
+        "%)";
+    }
+
+    function activate() {
+      var footer = document.querySelector(".cart-footer");
+      var totalRow = document.querySelector(".cart-total-row");
+      if (!footer || !totalRow) return;
+
+      wrapEl = document.createElement("div");
+      wrapEl.className = "owlpark-feat-promo-code-field";
+      wrapEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+      wrapEl.innerHTML =
+        '<div class="pcf-row">' +
+        '<input type="text" class="pcf-input" placeholder="Promo code" maxlength="20" />' +
+        '<button type="button" class="pcf-apply-btn">Apply</button>' +
+        "</div>" +
+        '<div class="pcf-message" hidden></div>';
+
+      totalRow.insertAdjacentElement("beforebegin", wrapEl);
+
+      messageEl = wrapEl.querySelector(".pcf-message");
+      var input = wrapEl.querySelector(".pcf-input");
+      var btn = wrapEl.querySelector(".pcf-apply-btn");
+
+      btn.addEventListener("click", function () {
+        var code = input.value.trim().toUpperCase();
+        var pct = CODES[code];
+        if (pct) {
+          appliedCode = code;
+          appliedPercent = pct;
+          refreshMessage();
+        } else {
+          appliedCode = "";
+          appliedPercent = 0;
+          messageEl.hidden = false;
+          messageEl.classList.add("pcf-error");
+          messageEl.textContent = "That code isn't valid. Try OWL10 or NIGHTOWL.";
+        }
+      });
+
+      var totalEl = document.getElementById("cart-total");
+      if (totalEl) {
+        observer = new MutationObserver(function () {
+          refreshMessage();
+        });
+        observer.observe(totalEl, { childList: true, characterData: true, subtree: true });
+      }
+    }
+
+    function deactivate() {
+      if (observer) {
+        observer.disconnect();
+        observer = null;
+      }
+      appliedCode = "";
+      appliedPercent = 0;
+      messageEl = null;
+      document
+        .querySelectorAll('[data-owlpark-feature="' + FEATURE_ID + '"]')
+        .forEach(function (el) {
+          el.remove();
+        });
+      wrapEl = null;
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures[FEATURE_ID] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
+</script>

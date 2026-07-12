@@ -1,0 +1,209 @@
+<script type="application/json" data-owlpark-manifest>
+  {
+    "id": "order-history-log",
+    "name": "Order History Log",
+    "description": "Keeps a running local log of past mock orders, viewable anytime.",
+    "category": "utility",
+    "enabledByDefault": false,
+    "requiresReload": false
+  }
+</script>
+
+<style>
+  .owlpark-feat-order-history-log-btn {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    padding: 0.4rem 0.7rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .owlpark-feat-order-history-log-btn:hover {
+    background: rgba(255, 255, 255, 0.28);
+  }
+  .owlpark-feat-order-history-log-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 30, 32, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 65;
+    padding: 1rem;
+  }
+  .owlpark-feat-order-history-log-card {
+    background: white;
+    border-radius: var(--radius-lg, 14px);
+    padding: 1.4rem;
+    max-width: 460px;
+    width: 100%;
+    max-height: 70vh;
+    overflow: auto;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  }
+  .owlpark-feat-order-history-log-card h3 {
+    margin-top: 0;
+    color: var(--cove-teal-dark, #0a4d55);
+  }
+  .owlpark-feat-order-history-log-card .ohl-entry {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--cove-border, #e4ddca);
+    font-size: 0.85rem;
+  }
+  .owlpark-feat-order-history-log-card .ohl-empty {
+    color: #6b7677;
+    font-size: 0.85rem;
+  }
+  .owlpark-feat-order-history-log-close {
+    margin-top: 1rem;
+    background: var(--cove-teal, #0f6f7a);
+    color: white;
+    border: none;
+    padding: 0.5rem 1.1rem;
+    border-radius: 999px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+</style>
+
+<script>
+  (function () {
+    var FEATURE_ID = "order-history-log";
+    var STORAGE_KEY = "owl-park-order-history";
+    var MAX_ENTRIES = 25;
+
+    var historyBtn = null;
+    var overlayEl = null;
+    var checkoutObserver = null;
+    var lastOrderId = "";
+
+    function readHistory() {
+      try {
+        var raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function writeHistory(entries) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries.slice(0, MAX_ENTRIES)));
+    }
+
+    function parseTotal(summaryEl) {
+      if (!summaryEl) return "";
+      var matches = summaryEl.textContent.match(/\$[\d,]+\.\d{2}/g);
+      return matches && matches.length ? matches[matches.length - 1] : "";
+    }
+
+    function recordOrder() {
+      var orderIdEl = document.getElementById("order-id");
+      var summaryEl = document.getElementById("order-summary");
+      var orderText = orderIdEl ? orderIdEl.textContent : "";
+      if (!orderText || orderText === lastOrderId) return;
+      lastOrderId = orderText;
+
+      var entries = readHistory();
+      entries.unshift({ orderText: orderText, total: parseTotal(summaryEl) });
+      writeHistory(entries);
+    }
+
+    function removeOverlay() {
+      if (overlayEl) {
+        overlayEl.remove();
+        overlayEl = null;
+      }
+    }
+
+    function openHistory() {
+      if (overlayEl) return;
+      var entries = readHistory();
+      var listHtml = entries.length
+        ? entries
+            .map(function (e) {
+              return (
+                '<div class="ohl-entry"><span>' +
+                e.orderText +
+                "</span><span>" +
+                (e.total || "") +
+                "</span></div>"
+              );
+            })
+            .join("")
+        : '<div class="ohl-empty">No orders yet — complete a checkout to see it here.</div>';
+
+      overlayEl = document.createElement("div");
+      overlayEl.className = "owlpark-feat-order-history-log-overlay";
+      overlayEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+      overlayEl.innerHTML =
+        '<div class="owlpark-feat-order-history-log-card">' +
+        "<h3>🧾 My Orders</h3>" +
+        listHtml +
+        '<button type="button" class="owlpark-feat-order-history-log-close">Close</button>' +
+        "</div>";
+      document.body.appendChild(overlayEl);
+      overlayEl
+        .querySelector(".owlpark-feat-order-history-log-close")
+        .addEventListener("click", removeOverlay);
+      overlayEl.addEventListener("click", function (e) {
+        if (e.target === overlayEl) removeOverlay();
+      });
+    }
+
+    function activate() {
+      var actions = document.querySelector(".header-actions");
+      if (actions) {
+        historyBtn = document.createElement("button");
+        historyBtn.type = "button";
+        historyBtn.className = "owlpark-feat-order-history-log-btn";
+        historyBtn.setAttribute("data-owlpark-feature", FEATURE_ID);
+        historyBtn.textContent = "🧾 My Orders";
+        historyBtn.addEventListener("click", openHistory);
+        actions.prepend(historyBtn);
+      }
+
+      var modal = document.getElementById("checkout-modal");
+      if (modal) {
+        checkoutObserver = new MutationObserver(function (mutations) {
+          for (var i = 0; i < mutations.length; i++) {
+            if (
+              mutations[i].attributeName === "class" &&
+              !modal.classList.contains("hidden")
+            ) {
+              recordOrder();
+            }
+          }
+        });
+        checkoutObserver.observe(modal, {
+          attributes: true,
+          attributeFilter: ["class"],
+        });
+      }
+    }
+
+    function deactivate() {
+      if (checkoutObserver) {
+        checkoutObserver.disconnect();
+        checkoutObserver = null;
+      }
+      removeOverlay();
+      if (historyBtn) {
+        historyBtn.removeEventListener("click", openHistory);
+        historyBtn.remove();
+        historyBtn = null;
+      }
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures[FEATURE_ID] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
+</script>
