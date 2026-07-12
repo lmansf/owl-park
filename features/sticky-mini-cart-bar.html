@@ -12,9 +12,16 @@
 <style>
   .owlpark-feat-sticky-mini-cart-bar {
     position: fixed;
-    left: 50%;
-    bottom: 1.2rem;
-    transform: translate(-50%, 0);
+    /* Centred via auto margins rather than left:50% + translate(-50%): with
+       left:50% the shrink-to-fit width is capped at *half* the viewport, which
+       on a phone squeezed the running total out of the bar entirely. */
+    left: 0;
+    right: 0;
+    margin-inline: auto;
+    width: fit-content;
+    /* Lift clear of the iPhone home indicator, which would otherwise sit on
+       top of this bar and swallow taps on "View Cart". */
+    bottom: calc(1.2rem + env(safe-area-inset-bottom, 0px));
     background: var(--cove-ink, #1e2a2b);
     color: white;
     border-radius: 999px;
@@ -26,9 +33,17 @@
     font-size: 0.86rem;
     font-weight: 600;
     z-index: 40;
+    /* Never let a long total push the bar past the screen edges on a phone. */
+    max-width: calc(100vw - 2rem);
+    box-sizing: border-box;
   }
   .owlpark-feat-sticky-mini-cart-bar[hidden] {
     display: none;
+  }
+  .owlpark-feat-sticky-mini-cart-bar #smcb-summary {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .owlpark-feat-sticky-mini-cart-bar .smcb-view-btn {
     background: white;
@@ -38,6 +53,8 @@
     padding: 0.4rem 0.9rem;
     font-weight: 700;
     cursor: pointer;
+    min-height: 44px;
+    flex-shrink: 0;
   }
 </style>
 

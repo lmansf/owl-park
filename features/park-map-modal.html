@@ -28,7 +28,10 @@
     align-items: center;
     justify-content: center;
     z-index: 65;
-    padding: 1rem;
+    padding: calc(1rem + env(safe-area-inset-top, 0px))
+      calc(1rem + env(safe-area-inset-right, 0px))
+      calc(1rem + env(safe-area-inset-bottom, 0px))
+      calc(1rem + env(safe-area-inset-left, 0px));
   }
   .owlpark-feat-park-map-modal-card {
     background: white;
@@ -58,6 +61,7 @@
     border-radius: 999px;
     font-weight: 700;
     cursor: pointer;
+    min-height: 44px;
   }
 </style>
 

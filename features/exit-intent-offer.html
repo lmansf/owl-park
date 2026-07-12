@@ -18,6 +18,10 @@
     align-items: center;
     justify-content: center;
     z-index: 80;
+    padding: calc(1rem + env(safe-area-inset-top, 0px))
+      calc(1rem + env(safe-area-inset-right, 0px))
+      calc(1rem + env(safe-area-inset-bottom, 0px))
+      calc(1rem + env(safe-area-inset-left, 0px));
     animation: exit-intent-fade-in 0.2s ease;
   }
   @keyframes exit-intent-fade-in {
@@ -33,9 +37,13 @@
     border-radius: var(--radius-lg, 18px);
     padding: 1.8rem 2rem;
     max-width: 380px;
-    width: 90vw;
+    width: 100%;
     text-align: center;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
+    /* Cap to the *visible* viewport (dvh, not vh) so a short phone screen can
+       still reach the buttons at the bottom of the card. */
+    max-height: 100%;
+    overflow-y: auto;
   }
   .owlpark-feat-exit-intent-offer .exit-intent-icon {
     font-size: 2.2rem;
@@ -68,6 +76,7 @@
     padding: 0.55rem 1.3rem;
     border-radius: 999px;
     font-weight: 700;
+    min-height: 44px;
     cursor: pointer;
   }
   .owlpark-feat-exit-intent-offer .exit-intent-close-btn:hover {

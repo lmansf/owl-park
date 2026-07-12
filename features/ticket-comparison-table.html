@@ -20,6 +20,7 @@
     font-weight: 700;
     cursor: pointer;
     margin-left: auto;
+    min-height: 44px;
   }
   .owlpark-feat-ticket-comparison-table-btn:hover {
     background: var(--cove-sand, #faf3e6);
@@ -32,7 +33,10 @@
     align-items: center;
     justify-content: center;
     z-index: 65;
-    padding: 1rem;
+    padding: calc(1rem + env(safe-area-inset-top, 0px))
+      calc(1rem + env(safe-area-inset-right, 0px))
+      calc(1rem + env(safe-area-inset-bottom, 0px))
+      calc(1rem + env(safe-area-inset-left, 0px));
   }
   .owlpark-feat-ticket-comparison-table-card {
     background: white;
@@ -40,7 +44,7 @@
     padding: 1.4rem;
     max-width: 720px;
     width: 100%;
-    max-height: 80vh;
+    max-height: 80dvh;
     overflow: auto;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
   }
@@ -52,6 +56,10 @@
     width: 100%;
     border-collapse: collapse;
     font-size: 0.85rem;
+    /* Five columns cannot be read in 340px. The card already scrolls
+       (overflow: auto), so let the table keep a legible width and pan inside
+       the card rather than crushing every column to unreadable slivers. */
+    min-width: 460px;
   }
   .owlpark-feat-ticket-comparison-table-card th,
   .owlpark-feat-ticket-comparison-table-card td {
@@ -72,6 +80,7 @@
     border-radius: 999px;
     font-weight: 700;
     cursor: pointer;
+    min-height: 44px;
   }
 </style>
 

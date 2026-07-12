@@ -23,7 +23,11 @@
     border: 1px solid var(--cove-border, #e4ddca);
     border-radius: 8px;
     padding: 0.45rem 0.6rem;
-    font-size: 0.85rem;
+    /* Must stay at 16px: iOS Safari zooms the whole page in on focus for any
+       field with a smaller font-size, and the shopper lands mid-checkout with
+       a zoomed, sideways-scrolling storefront. */
+    font-size: 16px;
+    min-height: 44px;
   }
   .owlpark-feat-promo-code-field .pcf-apply-btn {
     background: var(--cove-teal, #0f6f7a);
@@ -32,9 +36,11 @@
     border-radius: 8px;
     padding: 0.45rem 0.9rem;
     font-weight: 700;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     cursor: pointer;
     white-space: nowrap;
+    min-height: 44px;
+    flex-shrink: 0;
   }
   .owlpark-feat-promo-code-field .pcf-message {
     margin-top: 0.4rem;

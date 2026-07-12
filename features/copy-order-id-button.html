@@ -18,6 +18,9 @@
     font-size: 0.9rem;
     margin-left: 0.35rem;
     vertical-align: middle;
+    /* A bare 30x19 emoji is not a tappable control on a phone. */
+    min-width: 44px;
+    min-height: 44px;
   }
   .owlpark-feat-copy-order-id-button:hover {
     color: var(--cove-teal-dark, #0a4d55);
