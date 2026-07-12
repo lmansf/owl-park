@@ -115,6 +115,11 @@ concatenating the value into an `innerHTML` string — a corrupted or hand-edite
 render as literal text, not as markup (see `order-history-log` and `ticket-comparison-table`).
 Purely static shells (headings, close buttons) can keep using `innerHTML`.
 
+**Gotcha for features that fetch `data/products.json`:** cart lines in `localStorage` carry only
+`{ id, qty }`, so any price or total is derived from a product list your feature fetched itself.
+Don't render that derived value until the fetch resolves — show nothing rather than a wrong number
+(see `sticky-mini-cart-bar`, which stays hidden, and logs to the console, if its fetch fails).
+
 ## The 35 enhancements
 
 | Feature                 | Category   | Description                                                                                    |
