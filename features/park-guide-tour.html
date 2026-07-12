@@ -115,8 +115,18 @@
       tooltipEl.style.left = left + "px";
     }
 
+    function repositionStep() {
+      if (stepIndex < 0 || !highlightEl || !tooltipEl) return;
+      var target = document.querySelector(STEPS[stepIndex].selector);
+      if (!target) return;
+      positionOn(highlightEl, target);
+      positionTooltip(target);
+    }
+
     function endTour() {
       stepIndex = -1;
+      window.removeEventListener("scroll", repositionStep);
+      window.removeEventListener("resize", repositionStep);
       if (highlightEl) {
         highlightEl.remove();
         highlightEl = null;
@@ -139,6 +149,11 @@
         return;
       }
       stepIndex = i;
+
+      var rect = target.getBoundingClientRect();
+      if (rect.top < 0 || rect.bottom > window.innerHeight) {
+        target.scrollIntoView({ block: "center" });
+      }
 
       if (!highlightEl) {
         highlightEl = document.createElement("div");
@@ -174,6 +189,8 @@
 
     function startTour() {
       endTour();
+      window.addEventListener("scroll", repositionStep, { passive: true });
+      window.addEventListener("resize", repositionStep);
       showStep(0);
     }
 

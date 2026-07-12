@@ -55,6 +55,7 @@
     var pollIntervalId = null;
     var viewClickHandler = null;
     var products = [];
+    var productsLoaded = false;
     var lastSnapshot = null;
 
     function readCartLines() {
@@ -72,7 +73,7 @@
       if (!bar || !summary) return;
 
       var lines = readCartLines();
-      if (lines.length === 0) {
+      if (!productsLoaded || lines.length === 0) {
         bar.hidden = true;
         return;
       }
@@ -113,6 +114,7 @@
         })
         .then(function (data) {
           products = data;
+          productsLoaded = true;
           render();
         })
         .catch(function (err) {
