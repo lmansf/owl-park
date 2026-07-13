@@ -60,7 +60,13 @@ This file is the project's committed home for project-intrinsic agent knowledge:
   standalone), so they call `env(...)` and `44px` literally. `.header-actions` is the header's
   extension point — features `prepend()` buttons into it, so `css/storefront.css` sizes
   `.header-actions > button, > a` centrally, and below 560px the strip scrolls horizontally with
-  the cart pinned (otherwise the sticky header grows unbounded with each feature enabled).
+  the cart pinned (otherwise the sticky header grows unbounded with each feature enabled). So a
+  header/heading-docked utility still activates when pasted into a page that lacks that chrome (any
+  non-storefront body), five features (`dark-mode`, `accessibility-contrast`, `ambient-park-sounds`,
+  `park-map-modal`, `ticket-comparison-table`) resolve their mount as `anchor || owlparkFallbackBar()`
+  — an inline helper that builds one shared floating bar `#owlpark-fallback-actions` (created ONLY when
+  the anchor is absent, self-pruned when empty, so the storefront is untouched). Storefront-data
+  features (product-row/cart/checkout) intentionally keep no-opping where their data model is absent.
 - Verifying mobile with chrome-devtools-axi: `emulate --viewport "375x667x2,mobile,touch"` must be
   re-applied **after** every `open`/reload, and `window.innerWidth` lies under emulation — read
   `document.documentElement.clientWidth` instead. Chrome injects no real safe-area insets, so test
