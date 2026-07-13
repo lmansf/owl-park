@@ -140,6 +140,7 @@
     var generation = 0;
     var itemsObserver = null;
     var lastSerialized = null;
+    var dropId = null;
 
     function readCart() {
       try {
@@ -185,12 +186,25 @@
      * about a total — it is a deliberate standalone donation and stays. Dropping is not recomputing:
      * a pinned amount is still never quietly changed.
      */
-    function dropOrphanedRoundUp() {
+    function isOrphanedRoundUp() {
       var donation = currentDonation();
       if (!donation || donation.custom.source !== "roundup") return false;
-      if (hasPurchase()) return false;
-      clearDonation();
-      return true;
+      return !hasPurchase();
+    }
+
+    /**
+     * The drop is a cart write reacting to a cart change, and js/cart.js forbids a feature writing
+     * from its own `owl-park-cart-changed` handler — a write dispatched from inside the dispatch it is
+     * answering re-enters every listener, and the core restatement cap does not bound a feature that
+     * raises the event itself. So it is taken out of the dispatch and made on its own turn instead.
+     */
+    function scheduleOrphanDrop() {
+      if (dropId) return;
+      dropId = setTimeout(function () {
+        dropId = null;
+        if (!panelEl || !isOrphanedRoundUp()) return;
+        clearDonation();
+      }, 0);
     }
 
     /**
@@ -439,8 +453,7 @@
 
     function refresh() {
       lastSerialized = localStorage.getItem(CART_KEY);
-      // The write announces itself and re-enters here with the gift already gone, which renders.
-      if (dropOrphanedRoundUp()) return;
+      if (isOrphanedRoundUp()) scheduleOrphanDrop();
       render();
     }
 
@@ -502,6 +515,10 @@
       if (pollId) {
         clearInterval(pollId);
         pollId = null;
+      }
+      if (dropId) {
+        clearTimeout(dropId);
+        dropId = null;
       }
       if (itemsObserver) {
         itemsObserver.disconnect();

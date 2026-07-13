@@ -178,7 +178,14 @@
       // not publish that API cannot be priced honestly, so the bar stays hidden rather than guessing.
       var total = api.cartTotal(lines, products);
 
-      summary.textContent = count + (count === 1 ? " item · $" : " items · $") + total.toFixed(2);
+      // A cart holding only a gift carries money but no items, so name it rather than announce
+      // "0 items" beside a real total.
+      var giftOnly =
+        typeof api.isGiftOnly === "function" ? api.isGiftOnly(lines) : false;
+
+      summary.textContent = giftOnly
+        ? "Donation · $" + total.toFixed(2)
+        : count + (count === 1 ? " item · $" : " items · $") + total.toFixed(2);
       bar.hidden = false;
     }
 

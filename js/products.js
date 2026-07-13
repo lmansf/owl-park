@@ -85,6 +85,14 @@ export function itemCount(lines) {
 }
 
 /**
+ * A cart carrying a gift and nothing else. It holds no items, but it does hold money, so "0 items"
+ * beside a real total would be a small untruth — a caller shows the gift for what it is instead.
+ */
+export function isGiftOnly(lines) {
+  return lines.length > 0 && !lines.some(isPurchasedItem);
+}
+
+/**
  * Feature modules cannot `import` (see README, "The `features/` plugin system"), so the pricing rules
  * above are also published on `window.OwlPark` — a feature that prices cart lines must go through
  * these rather than re-deriving its own, or its numbers will drift from the drawer and checkout.
@@ -94,6 +102,7 @@ if (typeof window !== "undefined") {
     resolveLine,
     cartTotal,
     itemCount,
+    isGiftOnly,
     discountOf,
   });
 }

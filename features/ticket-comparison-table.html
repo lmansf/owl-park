@@ -174,7 +174,7 @@
         "</div>";
       var tbody = overlay.querySelector("tbody");
       comparable(list).forEach(function (p) {
-        if (typeof p === "object") tbody.appendChild(buildRow(p));
+        if (p && typeof p === "object") tbody.appendChild(buildRow(p));
       });
       document.body.appendChild(overlay);
       overlay
