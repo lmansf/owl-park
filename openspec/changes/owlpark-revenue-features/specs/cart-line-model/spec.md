@@ -130,3 +130,29 @@ break-even math is computed from catalog data rather than hardcoded in feature c
 - **WHEN** a product's `price` or `capacity` is edited in `data/products.json`
 - **THEN** every saving, break-even count, and coverage statement a shopper sees changes with it, with
   no code edit
+
+## MODIFIED Requirements
+
+### Requirement: Catalog covers both tickets and memberships
+
+The system SHALL include at least 3 sellable products (products a shopper can browse and buy from the
+storefront), covering at least one ticket-type product (e.g. general admission, family day pass) and
+at least one membership-type product (e.g. individual, family/household membership). The previous cap
+of at most 5 products no longer applies: the catalog also carries `addon` products, which are sellable
+catalog lines with their own PLUs but are deliberately not browsable from the storefront tabs (they are
+attached from the cart by the `visit-addons` feature), so the total record count is not a useful limit.
+
+As shipped by this change, `data/products.json` holds 9 products: 5 storefront products (3 tickets —
+general admission, family day pass, twilight — and 2 memberships — individual, household) plus 4
+`addon` products (parking, fast track, keeper experience, souvenir cup).
+
+#### Scenario: Storefront lists mixed product types
+
+- **WHEN** a shopper opens the storefront
+- **THEN** they see both ticket products and membership products, each showing name, price, and PLU
+
+#### Scenario: Add-on products do not count against the storefront catalog
+
+- **WHEN** `addon` products are added to or removed from `data/products.json`
+- **THEN** the storefront tabs (All, Tickets, Memberships) are unchanged, because only categories with
+  a filter tab are rendered
