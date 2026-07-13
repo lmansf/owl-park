@@ -4,6 +4,7 @@ import {
   resolveLine,
   lineNotes,
   isGiftOnly,
+  itemCount,
 } from "./products.js";
 import { Cart, lineKey } from "./cart.js";
 import { applyEnabledFeatures } from "./feature-loader.js";
@@ -172,7 +173,7 @@ function renderCart() {
   const totalEl = document.getElementById("cart-total");
   const checkoutBtn = document.getElementById("checkout-btn");
 
-  countEl.textContent = isGiftOnly(lines) ? "🎁" : String(Cart.totalItemCount());
+  countEl.textContent = isGiftOnly(lines) ? "🎁" : String(itemCount(lines));
 
   if (lines.length === 0) {
     itemsEl.innerHTML = `<div class="cart-empty">Your cart is empty. Add a ticket or membership to get started.</div>`;

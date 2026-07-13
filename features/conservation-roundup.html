@@ -140,7 +140,6 @@
     var generation = 0;
     var itemsObserver = null;
     var lastSerialized = null;
-    var dropId = null;
 
     function readCart() {
       try {
@@ -171,40 +170,6 @@
         if (isDonation(lines[i])) return lines[i];
       }
       return null;
-    }
-
-    function hasPurchase() {
-      return readCart().some(function (line) {
-        return !isDonation(line);
-      });
-    }
-
-    /**
-     * A round-up belongs to the purchase it rounded: with nothing left in the cart to round, there is
-     * no order to bring to a whole $5 and nothing the shopper agreed to pay for, so the gift goes with
-     * it rather than sitting alone in an emptied cart and being charged. A tier gift promised nothing
-     * about a total — it is a deliberate standalone donation and stays. Dropping is not recomputing:
-     * a pinned amount is still never quietly changed.
-     */
-    function isOrphanedRoundUp() {
-      var donation = currentDonation();
-      if (!donation || donation.custom.source !== "roundup") return false;
-      return !hasPurchase();
-    }
-
-    /**
-     * The drop is a cart write reacting to a cart change, and js/cart.js forbids a feature writing
-     * from its own `owl-park-cart-changed` handler — a write dispatched from inside the dispatch it is
-     * answering re-enters every listener, and the core restatement cap does not bound a feature that
-     * raises the event itself. So it is taken out of the dispatch and made on its own turn instead.
-     */
-    function scheduleOrphanDrop() {
-      if (dropId) return;
-      dropId = setTimeout(function () {
-        dropId = null;
-        if (!panelEl || !isOrphanedRoundUp()) return;
-        clearDonation();
-      }, 0);
     }
 
     /**
@@ -453,7 +418,6 @@
 
     function refresh() {
       lastSerialized = localStorage.getItem(CART_KEY);
-      if (isOrphanedRoundUp()) scheduleOrphanDrop();
       render();
     }
 
@@ -515,10 +479,6 @@
       if (pollId) {
         clearInterval(pollId);
         pollId = null;
-      }
-      if (dropId) {
-        clearTimeout(dropId);
-        dropId = null;
       }
       if (itemsObserver) {
         itemsObserver.disconnect();

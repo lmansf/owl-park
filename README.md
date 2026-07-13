@@ -90,7 +90,7 @@ feature panel sees a core mutation at once instead of up to one poll interval la
 button acts on the cart should still recompute its offer from a fresh cart read at click time and
 decline to apply an offer the cart no longer supports; the event closes the window, it doesn't remove
 the need to check. Because they can't import `js/products.js` either, the pricing rules are published on
-**`window.OwlPark`** (`resolveLine`, `cartTotal`, `discountOf`). A feature that prices cart lines
+**`window.OwlPark`** (`resolveLine`, `cartTotal`, `itemCount`, `isGiftOnly`, `discountOf`). A feature that prices cart lines
 **must** go through those — re-deriving price from `product.price × qty` silently drops donation
 lines and ignores off-peak discounts, and its total then disagrees with the drawer's. `js/products.js`
 publishes that API as an import side effect, and both page entry points (`js/main.js`,

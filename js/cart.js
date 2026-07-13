@@ -1,4 +1,4 @@
-import { itemCount } from "./products.js";
+import { itemCount, withoutOrphanedGifts } from "./products.js";
 
 const CART_STORAGE_KEY = "owl-park-cart";
 
@@ -16,10 +16,24 @@ const CART_STORAGE_KEY = "owl-park-cart";
  *              the single place these win over the catalog.
  */
 
+/**
+ * The one place the stored cart becomes lines. A gift left orphaned by the purchase it was attached to
+ * is dropped here (see `withoutOrphanedGifts`) rather than in the feature that offered it, so the rule
+ * holds with every feature switched off. The pruned cart is written straight back to storage without
+ * announcing it: this runs from inside `notify()`, and re-announcing a change from within the dispatch
+ * of that change is the re-entrant write `writeCart()` warns about. Every reader — the drawer, the
+ * badge, checkout, and any feature polling the storage key — reads the pruned cart anyway.
+ */
 function readCart() {
   try {
     const raw = localStorage.getItem(CART_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    const stored = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(stored)) return [];
+    const lines = withoutOrphanedGifts(stored);
+    if (lines !== stored) {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(lines));
+    }
+    return lines;
   } catch (err) {
     console.warn("Cart storage was corrupt, resetting.", err);
     return [];

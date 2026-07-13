@@ -43,7 +43,7 @@ This file is the project's committed home for project-intrinsic agent knowledge:
   render — never a discounted amount, which a persisted cart would outlive; `custom.price` is an
   absolute only for a line with no catalog product (the donation). Since features can't import
   `js/products.js` either, those rules are published on `window.OwlPark` (`resolveLine`, `cartTotal`,
-  `discountOf`) — a feature that prices cart lines MUST use them instead of `product.price × qty`,
+  `itemCount`, `isGiftOnly`, `discountOf`) — a feature that prices cart lines MUST use them instead of `product.price × qty`,
   which drops donation lines and ignores off-peak discounts. That API is an import side effect of
   `js/products.js`, so EVERY page that activates features must import it: `js/main.js` does, and
   `js/manager.js` imports it purely for that (features-manager.html activates default-on features

@@ -26,9 +26,14 @@ function priceOf(product, custom) {
   return product && product.price;
 }
 
-/** The whole-dollar discount a rate takes off a price. The one rounding, so no two shown numbers differ. */
+/**
+ * The whole-dollar discount a rate takes off a price. The one rounding, so no two shown numbers
+ * differ. A rate is read back from a persisted, user-writable line, so it is clamped to [0, 1] here:
+ * a discount basis can only ever price a line below catalog, never above it.
+ */
 export function discountOf(price, rate) {
-  return Math.min(Math.round(price * rate), price);
+  const share = Math.min(Math.max(Number(rate) || 0, 0), 1);
+  return Math.min(Math.round(price * share), price);
 }
 
 /**
@@ -90,6 +95,22 @@ export function itemCount(lines) {
  */
 export function isGiftOnly(lines) {
   return lines.length > 0 && !lines.some(isPurchasedItem);
+}
+
+/**
+ * The lines a cart really holds. A round-up gift was an offer to bring one purchase to a whole $5, so
+ * it dies with that purchase: once nothing is left to round, there is no order to carry it and a
+ * shopper who emptied their cart must not still be charged for it. A tier gift promised nothing about
+ * a total — it is a deliberate standalone donation and stands alone. Dropping is not recomputing: a
+ * pinned amount is still never quietly changed. This is a cart rule, not a plug-in's, so it lives here
+ * and holds no matter which features are switched on.
+ */
+export function withoutOrphanedGifts(lines) {
+  if (lines.some(isPurchasedItem)) return lines;
+  const kept = lines.filter(
+    (line) => !(line.custom && line.custom.source === "roundup"),
+  );
+  return kept.length === lines.length ? lines : kept;
 }
 
 /**
