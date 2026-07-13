@@ -9,45 +9,133 @@
   }
 </script>
 
-<style>
+<style id="owlpark-product-badges-style">
+  /* Refined product chip: a quiet corner chip on Owl Park .product-row
+     (absolute) and a compact inline chip in the zoo ticket-name cell. Frosted,
+     hairline-bordered, near-monochrome — ONE teal accent, used in two
+     intensities so the three badges stay distinguishable without shouting. */
   .owlpark-feat-product-badges {
     position: absolute;
     top: -0.5rem;
     left: 0.9rem;
-    font-size: 0.68rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-    padding: 0.28rem 0.6rem;
-    border-radius: 999px;
-    color: white;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     z-index: 3;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    pointer-events: none;
+    padding: 0.22rem 0.55rem;
+    border-radius: 999px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.64rem;
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #17211f;
+    background: rgba(255, 255, 255, 0.82);
+    -webkit-backdrop-filter: blur(8px) saturate(1.3);
+    backdrop-filter: blur(8px) saturate(1.3);
+    border: 1px solid rgba(17, 33, 31, 0.1);
+    box-shadow: 0 2px 6px rgba(20, 40, 40, 0.05);
+    animation: owlpark-pb-in 0.2s cubic-bezier(0.2, 0.6, 0.2, 1);
   }
-  /* Zoo PLU rows are table rows — hang the badge inline by the ticket name. */
+  /* Zoo PLU rows are table rows — hang a compact chip inline by the ticket name. */
   .owlpark-feat-product-badges.owlpark-badge-inline {
     position: static;
-    display: inline-block;
-    vertical-align: middle;
-    margin-left: 0.5rem;
     top: auto;
     left: auto;
+    vertical-align: middle;
+    margin-left: 0.5rem;
+    padding: 0.12rem 0.45rem;
+    font-size: 0.6rem;
     box-shadow: none;
   }
-  .owlpark-feat-product-badges.popular {
-    background: #e2662d;
-  }
+  /* Best Value — the strongest signal: soft-filled teal accent chip. */
   .owlpark-feat-product-badges.best-value {
-    background: #2f8f4e;
+    color: #0f6f7a;
+    background: rgba(15, 111, 122, 0.09);
+    border-color: rgba(15, 111, 122, 0.2);
   }
+  /* Members' Pick — a quieter teal, hairline outline only. */
   .owlpark-feat-product-badges.members-pick {
-    background: #a8321f;
+    border-color: rgba(15, 111, 122, 0.3);
+  }
+  /* Popular — the neutral base chip (no override needed). */
+
+  @keyframes owlpark-pb-in {
+    from {
+      opacity: 0;
+      transform: translateY(-3px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-product-badges {
+      color: #e9edec;
+      background: rgba(26, 34, 36, 0.78);
+      border-color: rgba(255, 255, 255, 0.11);
+    }
+    .owlpark-feat-product-badges.best-value {
+      color: #5bc7cf;
+      background: rgba(91, 199, 207, 0.12);
+      border-color: rgba(91, 199, 207, 0.28);
+    }
+    .owlpark-feat-product-badges.members-pick {
+      border-color: rgba(91, 199, 207, 0.34);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-product-badges {
+      animation: none;
+    }
   }
 </style>
 
 <script>
   (function () {
+    /* =========================================================================
+     * Product Badges  ·  visual
+     * -------------------------------------------------------------------------
+     * WHAT   Small "Popular" / "Best Value" / "Members' Pick" chips tucked onto
+     *        product rows so shoppers can scan the standouts at a glance.
+     * HOW    Reads the store's OWN live rows (no product feed). One badge per
+     *        row: Owl Park keys three product ids directly; any other store
+     *        derives the SAME set from live data — priciest row = Popular,
+     *        cheapest = Best Value, a membership-named row = Members' Pick. A
+     *        MutationObserver on the grid re-applies badges (guarded by an
+     *        idempotency check) after the host re-renders its list, e.g. Owl
+     *        Park's renderCatalog() wiping #catalog-grid on every tab switch.
+     * HOSTS  Zoo PLU rows (tr.pluRow[data-plu]) get a compact chip inline in the
+     *        ticket-name cell via H.isPlu(row); Owl Park rows (.product-row) get
+     *        a quiet absolute corner chip. No-ops on an unkeyed row when there's
+     *        no price spread (fewer than 2 rows, or every price equal).
+     * ===================================================================== */
+
     var FEATURE_ID = "product-badges";
+
+    // ----- Configuration --------------------------------------------------
+    // Badge definitions (label + CSS class) and the rules that assign them.
+    var CONFIG = {
+      popular: { label: "Popular", cls: "popular" }, // priciest row / keyed hero
+      bestValue: { label: "Best Value", cls: "best-value" }, // cheapest row
+      membersPick: { label: "Members' Pick", cls: "members-pick" }, // membership row
+      // Product ids Owl Park badges directly; every other store falls back to
+      // the price/name heuristic in badgeFor() to reach the SAME three badges.
+      keyed: {
+        "prod-ga-ticket": "popular",
+        "prod-family-day-pass": "bestValue",
+        "prod-household-membership": "membersPick",
+      },
+      // A row whose name matches this is always a Members' Pick, on any host.
+      membershipPattern: /member/i,
+    };
 
     // --- Host adapter -------------------------------------------------------
     // Resolves whichever storefront this snippet was pasted into, preferring the
@@ -128,27 +216,21 @@
     var H = owlHost();
     var observer = null;
 
-    // Owl Park keyed specific product ids; on any other store we derive the same
-    // three badges from the live rows: priciest = Popular, cheapest = Best Value,
-    // any membership row = Members' Pick.
-    var OWLPARK_BADGES = {
-      "prod-ga-ticket": { label: "Popular", cls: "popular" },
-      "prod-family-day-pass": { label: "Best Value", cls: "best-value" },
-      "prod-household-membership": { label: "Members' Pick", cls: "members-pick" },
-    };
-
+    // Owl Park keys specific product ids (CONFIG.keyed); on any other store we
+    // derive the same three badges from the live rows: priciest = Popular,
+    // cheapest = Best Value, any membership row = Members' Pick.
     function badgeFor(row, rows) {
       var id = H.rowId(row);
-      if (OWLPARK_BADGES[id]) return OWLPARK_BADGES[id];
-      if (/member/i.test(H.rowName(row))) return { label: "Members' Pick", cls: "members-pick" };
+      if (CONFIG.keyed[id]) return CONFIG[CONFIG.keyed[id]];
+      if (CONFIG.membershipPattern.test(H.rowName(row))) return CONFIG.membersPick;
       if (rows.length < 2) return null;
       var prices = rows.map(H.rowPrice);
       var max = Math.max.apply(null, prices);
       var min = Math.min.apply(null, prices);
       if (max === min) return null;
       var price = H.rowPrice(row);
-      if (price === max) return { label: "Popular", cls: "popular" };
-      if (price === min) return { label: "Best Value", cls: "best-value" };
+      if (price === max) return CONFIG.popular;
+      if (price === min) return CONFIG.bestValue;
       return null;
     }
 
@@ -157,17 +239,17 @@
       var badge = badgeFor(row, rows);
       if (!badge) return;
 
-      var ribbon = document.createElement("span");
-      ribbon.className = "owlpark-feat-product-badges " + badge.cls;
-      ribbon.setAttribute("data-owlpark-feature", FEATURE_ID);
-      ribbon.textContent = badge.label;
+      var chip = document.createElement("span");
+      chip.className = "owlpark-feat-product-badges " + badge.cls;
+      chip.setAttribute("data-owlpark-feature", FEATURE_ID);
+      chip.textContent = badge.label;
 
       if (H.isPlu(row)) {
-        ribbon.classList.add("owlpark-badge-inline");
+        chip.classList.add("owlpark-badge-inline");
         var cell = H.rowNameCell(row) || row;
-        cell.appendChild(ribbon);
+        cell.appendChild(chip);
       } else {
-        row.appendChild(ribbon);
+        row.appendChild(chip);
       }
     }
 

@@ -9,31 +9,38 @@
   }
 </script>
 
-<style>
+<style id="owlpark-wishlist-favorites-style">
+  /* Owl Park corner control: a quiet glass heart chip pinned to the row's
+     top-right. Favorited reads as a restrained teal, never a loud red. */
   .owlpark-feat-wishlist-favorites {
     position: absolute;
     top: 0.7rem;
-    right: 0.9rem;
-    background: white;
-    border: 1px solid var(--cove-border, #e4ddca);
-    border-radius: 50%;
-    width: 2.1rem;
-    height: 2.1rem;
-    display: flex;
+    right: 0.7rem;
+    z-index: 3;
+    box-sizing: border-box;
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    padding: 0;
+    margin: 0;
+    border: 1px solid rgba(17, 33, 31, 0.1);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.82);
+    -webkit-backdrop-filter: blur(10px) saturate(1.4);
+    backdrop-filter: blur(10px) saturate(1.4);
+    color: #8a938f;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
     font-size: 1.05rem;
     line-height: 1;
     cursor: pointer;
-    z-index: 3;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
-    color: #9aa5a4;
+    box-shadow: 0 2px 6px rgba(20, 40, 40, 0.05);
+    transition: all 0.16s cubic-bezier(0.2, 0.6, 0.2, 1);
   }
-  /* The painted heart stays 33.6px so the row looks exactly as it always has;
-     the 44pt thumb target is a transparent centred expander instead. It still
-     overhangs the heart by ~5px a side and hit-tests over whatever the heart is
-     absolutely positioned over — inherent to a 44pt target on a small floating
-     icon, and not fixed here. */
+  /* Transparent expander lifts the tap target to 44px without enlarging the
+     painted chip, so the row stays visually calm. */
   .owlpark-feat-wishlist-favorites::before {
     content: "";
     position: absolute;
@@ -44,25 +51,117 @@
     transform: translate(-50%, -50%);
     border-radius: 50%;
   }
-  .owlpark-feat-wishlist-favorites.is-favorited {
-    color: #a8321f;
-  }
   .owlpark-feat-wishlist-favorites:hover {
-    transform: scale(1.08);
+    color: #17211f;
+    border-color: rgba(17, 33, 31, 0.18);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(20, 40, 40, 0.09);
   }
+  .owlpark-feat-wishlist-favorites:active {
+    transform: translateY(0);
+  }
+  .owlpark-feat-wishlist-favorites:focus-visible {
+    outline: 2px solid #0f6f7a;
+    outline-offset: 2px;
+  }
+  .owlpark-feat-wishlist-favorites.is-favorited {
+    color: #0f6f7a;
+    border-color: rgba(15, 111, 122, 0.28);
+    background: rgba(15, 111, 122, 0.09);
+  }
+  .owlpark-feat-wishlist-favorites.is-favorited:hover {
+    color: #0c5f69;
+  }
+
+  /* Zoo ViewItems <tr> rows can't host an absolute child — the heart docks
+     inline beside the ticket name as a compact, transparent ghost. */
   .owlpark-feat-wishlist-favorites.owlpark-wishlist-inline {
     position: static;
-    display: inline-flex;
-    margin-left: 0.5rem;
+    vertical-align: middle;
+    width: 30px;
+    height: 30px;
+    margin-left: 0.4rem;
+    border-color: transparent;
+    background: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
     box-shadow: none;
-    width: 1.9rem;
-    height: 1.9rem;
+  }
+  .owlpark-feat-wishlist-favorites.owlpark-wishlist-inline:hover {
+    background: rgba(17, 33, 31, 0.05);
+    border-color: transparent;
+    transform: none;
+    box-shadow: none;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-wishlist-favorites {
+      background: rgba(18, 24, 26, 0.8);
+      border-color: rgba(255, 255, 255, 0.11);
+      color: #98a4a1;
+    }
+    .owlpark-feat-wishlist-favorites:hover {
+      color: #e9edec;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .owlpark-feat-wishlist-favorites.is-favorited {
+      color: #5bc7cf;
+      border-color: rgba(91, 199, 207, 0.35);
+      background: rgba(91, 199, 207, 0.12);
+    }
+    .owlpark-feat-wishlist-favorites.is-favorited:hover {
+      color: #7ad5db;
+    }
+    .owlpark-feat-wishlist-favorites.owlpark-wishlist-inline {
+      background: transparent;
+      border-color: transparent;
+    }
+    .owlpark-feat-wishlist-favorites.owlpark-wishlist-inline:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-wishlist-favorites {
+      transition: none;
+    }
+    .owlpark-feat-wishlist-favorites:hover,
+    .owlpark-feat-wishlist-favorites:active {
+      transform: none;
+    }
   }
 </style>
 
 <script>
   (function () {
+    /* =========================================================================
+     * Wishlist Favorites  ·  behavioral
+     * -------------------------------------------------------------------------
+     * WHAT   A quiet heart toggle on every product row. Tap to save a favorite;
+     *        favorites persist across visits and re-appear after the store
+     *        re-lists its products.
+     * HOW    Injects one ghost <button> per row, keyed by the row's product id
+     *        (H.rowId). State lives in localStorage under CONFIG.storageKey as a
+     *        JSON array of ids. A MutationObserver on the product grid re-applies
+     *        the heart after the host re-renders, guarded by a per-row
+     *        idempotency check so a heart is never doubled.
+     * HOSTS  Zoo ViewItems rows (tr.pluRow[data-plu]) get a compact inline heart
+     *        beside the ticket name; Owl Park rows (.product-row) get a top-right
+     *        corner control. Rows with no id / Angular {{template}} rows are
+     *        skipped; a page with no product rows is a no-op.
+     * ===================================================================== */
+
     var FEATURE_ID = "wishlist-favorites";
+
+    // ----- Configuration --------------------------------------------------
+    // Tunable values, safe to edit. Each explained inline.
+    var CONFIG = {
+      storageKey: "owl-park-wishlist", // localStorage key: a JSON array of favorited row ids
+      glyphOn: "♥", // heart shown when the row IS a favorite (♥)
+      glyphOff: "♡", // heart shown when the row is NOT a favorite (♡)
+      labelAdd: "Add to favorites", // aria-label + tooltip when not yet favorited
+      labelRemove: "Remove from favorites", // aria-label + tooltip when favorited
+    };
+
     // --- Host adapter -------------------------------------------------------
     // Resolves whichever storefront this snippet was pasted into, preferring the
     // ZooTampa web store (ASP.NET PLU rows), then the Owl Park storefront, then a
@@ -144,12 +243,11 @@
     }
     // ------------------------------------------------------------------------
     var H = owlHost();
-    var STORAGE_KEY = "owl-park-wishlist";
     var observer = null;
 
     function readWishlist() {
       try {
-        var raw = localStorage.getItem(STORAGE_KEY);
+        var raw = localStorage.getItem(CONFIG.storageKey);
         return raw ? JSON.parse(raw) : [];
       } catch (e) {
         return [];
@@ -157,16 +255,16 @@
     }
 
     function writeWishlist(ids) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+      localStorage.setItem(CONFIG.storageKey, JSON.stringify(ids));
     }
 
     function updateButton(btn, favorited) {
       btn.classList.toggle("is-favorited", favorited);
-      btn.textContent = favorited ? "♥" : "♡";
-      btn.setAttribute(
-        "aria-label",
-        favorited ? "Remove from favorites" : "Add to favorites",
-      );
+      btn.textContent = favorited ? CONFIG.glyphOn : CONFIG.glyphOff;
+      btn.setAttribute("aria-pressed", favorited ? "true" : "false");
+      var label = favorited ? CONFIG.labelRemove : CONFIG.labelAdd;
+      btn.setAttribute("aria-label", label);
+      btn.setAttribute("title", label);
     }
 
     function toggle(productId, btn) {
@@ -195,7 +293,7 @@
         toggle(productId, btn);
       });
       // Zoo <tr> rows can't host absolute children — dock the heart inline
-      // beside the product name; Owl Park keeps the absolute top-right badge.
+      // beside the product name; Owl Park keeps the corner-anchored control.
       if (H.isPlu(row)) {
         btn.classList.add("owlpark-wishlist-inline");
         (H.rowNameCell(row) || row).appendChild(btn);

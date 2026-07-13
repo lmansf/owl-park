@@ -9,31 +9,119 @@
   }
 </script>
 
-<style>
+<style id="owlpark-discount-badge-strikethrough-style">
+  /* Sleek/minimal price-drop treatment. Sits just before the host's live
+     price: a muted strikethrough "was" figure and a quiet caution chip. The
+     host's own price stays the ink "now" figure, so nothing is duplicated. */
   .owlpark-feat-discount-badge-strikethrough {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
     margin-right: 0.4rem;
+    vertical-align: middle;
+    color: #17211f;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    animation: owlpark-dbs-in 0.18s cubic-bezier(0.2, 0.6, 0.2, 1);
   }
   .owlpark-feat-discount-badge-strikethrough .dbs-was {
+    color: #67736f;
     text-decoration: line-through;
-    color: #9aa5a4;
+    text-decoration-thickness: 1px;
     font-size: 0.82rem;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
   }
   .owlpark-feat-discount-badge-strikethrough .dbs-pct {
-    background: #a8321f;
-    color: white;
-    font-size: 0.7rem;
-    font-weight: 800;
-    padding: 0.15rem 0.4rem;
-    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.22rem;
+    padding: 0.12rem 0.42rem;
+    border: 1px solid rgba(184, 121, 31, 0.22);
+    border-radius: 10px;
+    background: rgba(184, 121, 31, 0.1);
+    color: #b8791f;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+  .owlpark-feat-discount-badge-strikethrough .dbs-pct svg {
+    width: 0.78em;
+    height: 0.78em;
+    display: block;
+    flex: none;
+  }
+  @keyframes owlpark-dbs-in {
+    from {
+      opacity: 0;
+      transform: translateY(2px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-discount-badge-strikethrough {
+      color: #e9edec;
+    }
+    .owlpark-feat-discount-badge-strikethrough .dbs-was {
+      color: #98a4a1;
+    }
+    .owlpark-feat-discount-badge-strikethrough .dbs-pct {
+      border-color: rgba(224, 176, 112, 0.3);
+      background: rgba(224, 176, 112, 0.14);
+      color: #e0b070;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-discount-badge-strikethrough {
+      animation: none;
+    }
   }
 </style>
 
 <script>
   (function () {
+    /* =========================================================================
+     * Discount Badge Strikethrough  ·  visual
+     * -------------------------------------------------------------------------
+     * WHAT   A muted "was $X" strikethrough plus a small "-N%" discount chip
+     *        rendered just before a select row's live price, so the host's own
+     *        price reads as the ink "now" figure.
+     * HOW    Inserts a tagged <span> before each qualifying row's price element
+     *        (zoo [data-text="price"] / Owl Park .price-amount) via owlHost().
+     *        The "was" price is SIMULATED — there is no real promotions feed —
+     *        derived from the live current price: was = now / (1 - pct/100).
+     *        A MutationObserver on the product grid re-applies after the host
+     *        re-renders its rows; an idempotency guard prevents double-injection.
+     * HOSTS  Owl Park + zoo rows matching a CONFIG rule (per-id, "member", or the
+     *        single top-priced row). No-ops on a row with no discount, no price
+     *        element, or a zero price.
+     * ===================================================================== */
+
     var FEATURE_ID = "discount-badge-strikethrough";
+
+    // ----- Configuration --------------------------------------------------
+    // The "was" price is a SIMULATED demo value (no real promotions source);
+    // it is derived from the live current price via was = now / (1 - pct/100).
+    // These rules only pick which rows get a badge and at what percent.
+    var CONFIG = {
+      // Per-product demo discounts, matched on the row's stable id (Owl Park PLU).
+      discountsById: {
+        "prod-ga-ticket": 15,
+        "prod-individual-membership": 10,
+      },
+      memberPct: 10, // any row whose name mentions "member" gets 10% off …
+      topPricedPct: 15, // … else the single highest-priced row on the page gets 15%.
+      // Chip copy: a leading minus + the whole-number percent, e.g. "-15%".
+      chipLabel: function (pct) {
+        return "-" + pct + "%";
+      },
+    };
+
     // --- Host adapter -------------------------------------------------------
     // Resolves whichever storefront this snippet was pasted into, preferring the
     // ZooTampa web store (ASP.NET PLU rows), then the Owl Park storefront, then a
@@ -116,12 +204,13 @@
     // ------------------------------------------------------------------------
     var H = owlHost();
 
-    var DISCOUNTS = {
-      "prod-ga-ticket": 15,
-      "prod-individual-membership": 10,
-    };
-
     var observer = null;
+
+    // Small down-arrow glyph (currentColor) that precedes the "-N%" chip text.
+    var ARROW_SVG =
+      '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">' +
+      '<path d="M8 3v8m0 0 3-3m-3 3-3-3" fill="none" stroke="currentColor" ' +
+      'stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
     // Store-agnostic fallback: the single highest-priced row across H.rows().
     function topPricedRow(rows) {
@@ -139,10 +228,10 @@
 
     // Owl Park ids first; then the general rule (member 10% wins over top-price 15%).
     function pctFor(row, topRow) {
-      var byId = DISCOUNTS[H.rowId(row)];
+      var byId = CONFIG.discountsById[H.rowId(row)];
       if (byId) return byId;
-      if (/member/i.test(H.rowName(row))) return 10;
-      if (row === topRow) return 15;
+      if (/member/i.test(H.rowName(row))) return CONFIG.memberPct;
+      if (row === topRow) return CONFIG.topPricedPct;
       return 0;
     }
 
@@ -161,12 +250,15 @@
       var wrap = document.createElement("span");
       wrap.className = "owlpark-feat-discount-badge-strikethrough";
       wrap.setAttribute("data-owlpark-feature", FEATURE_ID);
+      wrap.setAttribute("aria-label", "Was $" + wasPrice.toFixed(2) + ", " + pct + "% off");
       wrap.innerHTML =
         '<span class="dbs-was">$' +
         wasPrice.toFixed(2) +
-        '</span><span class="dbs-pct">-' +
-        pct +
-        "%</span>";
+        '</span><span class="dbs-pct">' +
+        ARROW_SVG +
+        "<span>" +
+        CONFIG.chipLabel(pct) +
+        "</span></span>";
       priceAmountEl.insertAdjacentElement("beforebegin", wrap);
     }
 
