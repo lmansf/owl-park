@@ -9,78 +9,243 @@
   }
 </script>
 
-<style>
+<style id="owlpark-smart-cart-savings-style">
   .owlpark-feat-smart-cart-savings {
     display: grid;
-    gap: 0.55rem;
+    gap: 0.75rem;
+    margin-top: 0.25rem;
     flex-shrink: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    color: #17211f;
   }
   .owlpark-feat-smart-cart-savings[hidden] {
     display: none;
   }
+
+  /* Refined callout: soft teal-tinted surface, hairline border, card radius. */
   .owlpark-feat-smart-cart-savings .scs-card {
-    border: 1px solid #cfe3d4;
-    background: #f2f9f3;
-    border-radius: 12px;
-    padding: 0.7rem 0.75rem;
+    display: grid;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: rgba(15, 111, 122, 0.09);
+    border: 1px solid rgba(17, 33, 31, 0.1);
+    border-radius: 20px;
+    animation: scsRise 0.2s cubic-bezier(0.2, 0.6, 0.2, 1) both;
   }
-  .owlpark-feat-smart-cart-savings .scs-title {
+
+  /* Small, quiet category label above each offer. */
+  .owlpark-feat-smart-cart-savings .scs-eyebrow {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: 0.4rem;
     font-size: 0.72rem;
-    font-weight: 800;
+    font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
+    color: #67736f;
+  }
+  .owlpark-feat-smart-cart-savings .scs-eyebrow-icon {
+    font-size: 0.9rem;
+    line-height: 1;
+  }
+
+  /* The one emphasised figure per card. */
+  .owlpark-feat-smart-cart-savings .scs-figure {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+  .owlpark-feat-smart-cart-savings .scs-figure-lead {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.35rem;
+  }
+  .owlpark-feat-smart-cart-savings .scs-figure-icon {
+    font-size: 1.05rem;
+    line-height: 1;
+  }
+  .owlpark-feat-smart-cart-savings .scs-figure-amount {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+  }
+  .owlpark-feat-smart-cart-savings .scs-figure-caption {
+    font-size: 0.76rem;
+    font-weight: 500;
+    line-height: 1.4;
+    color: #67736f;
+  }
+  /* Membership figure reads as informational (teal accent). */
+  .owlpark-feat-smart-cart-savings .scs-figure--membership .scs-figure-amount,
+  .owlpark-feat-smart-cart-savings .scs-figure--membership .scs-figure-icon {
+    color: #0f6f7a;
+  }
+  /* Swap figure reads as a genuine saving (positive green). */
+  .owlpark-feat-smart-cart-savings .scs-figure--swap .scs-figure-amount,
+  .owlpark-feat-smart-cart-savings .scs-figure--swap .scs-figure-icon {
     color: #2f8f4e;
-    margin-bottom: 0.3rem;
   }
-  .owlpark-feat-smart-cart-savings .scs-line {
-    font-size: 0.86rem;
-    line-height: 1.35;
-    color: #2c2a26;
-  }
-  .owlpark-feat-smart-cart-savings .scs-line strong {
-    font-weight: 800;
+
+  .owlpark-feat-smart-cart-savings .scs-body {
+    font-size: 0.9rem;
+    line-height: 1.45;
+    color: #17211f;
   }
   .owlpark-feat-smart-cart-savings .scs-fine {
-    margin-top: 0.25rem;
     font-size: 0.76rem;
-    line-height: 1.35;
-    color: #6d675c;
+    line-height: 1.45;
+    color: #67736f;
   }
-  .owlpark-feat-smart-cart-savings .scs-swap-btn {
-    margin-top: 0.55rem;
+
+  .owlpark-feat-smart-cart-savings .scs-btn {
+    margin-top: 0.15rem;
     width: 100%;
     min-height: 44px;
+    box-sizing: border-box;
+    padding: 0.5rem 1rem;
     border: none;
-    border-radius: 10px;
-    background: #2f8f4e;
-    color: #fff;
-    font-weight: 800;
-    font-size: 0.88rem;
+    border-radius: 999px;
+    background: #0f6f7a;
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
     cursor: pointer;
-    padding: 0.5rem 0.9rem;
+    transition:
+      background 0.16s cubic-bezier(0.2, 0.6, 0.2, 1),
+      transform 0.16s cubic-bezier(0.2, 0.6, 0.2, 1);
   }
-  .owlpark-feat-smart-cart-savings .scs-swap-btn:active {
+  .owlpark-feat-smart-cart-savings .scs-btn:hover {
+    background: #0c5f69;
+    transform: translateY(-1px);
+  }
+  .owlpark-feat-smart-cart-savings .scs-btn:active {
     transform: translateY(1px);
   }
-  @media (hover: hover) {
-    .owlpark-feat-smart-cart-savings .scs-swap-btn:hover {
-      background: #26773f;
+  .owlpark-feat-smart-cart-savings :focus-visible {
+    outline: 2px solid #0f6f7a;
+    outline-offset: 2px;
+  }
+
+  @keyframes scsRise {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-smart-cart-savings {
+      color: #e9edec;
+    }
+    .owlpark-feat-smart-cart-savings .scs-card {
+      background: rgba(15, 111, 122, 0.16);
+      border-color: rgba(255, 255, 255, 0.11);
+    }
+    .owlpark-feat-smart-cart-savings .scs-eyebrow,
+    .owlpark-feat-smart-cart-savings .scs-figure-caption,
+    .owlpark-feat-smart-cart-savings .scs-fine {
+      color: #98a4a1;
+    }
+    .owlpark-feat-smart-cart-savings .scs-body {
+      color: #e9edec;
+    }
+    .owlpark-feat-smart-cart-savings .scs-figure--membership .scs-figure-amount,
+    .owlpark-feat-smart-cart-savings .scs-figure--membership .scs-figure-icon {
+      color: #5bc7cf;
+    }
+    .owlpark-feat-smart-cart-savings .scs-figure--swap .scs-figure-amount,
+    .owlpark-feat-smart-cart-savings .scs-figure--swap .scs-figure-icon {
+      color: #6ec78a;
+    }
+    .owlpark-feat-smart-cart-savings .scs-btn {
+      background: #12808c;
+    }
+    .owlpark-feat-smart-cart-savings .scs-btn:hover {
+      background: #0f6f7a;
+    }
+    .owlpark-feat-smart-cart-savings :focus-visible {
+      outline-color: #5bc7cf;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-smart-cart-savings .scs-card {
+      animation: none;
+    }
+    .owlpark-feat-smart-cart-savings .scs-btn {
+      transition: none;
+    }
+    .owlpark-feat-smart-cart-savings .scs-btn:hover,
+    .owlpark-feat-smart-cart-savings .scs-btn:active {
+      transform: none;
     }
   }
 </style>
 
 <script>
   (function () {
-    var FEATURE_ID = "smart-cart-savings";
-    var CART_KEY = "owl-park-cart";
-    var POLL_MS = 700;
+    /* =========================================================================
+     * Smart Cart Savings  ·  behavioral
+     * -------------------------------------------------------------------------
+     * WHAT   Two quiet cart-side callouts — a membership break-even and a
+     *        better-value ticket swap — each surfacing one emphasised figure and
+     *        a one-tap "swap" action, shown ONLY when the arithmetic genuinely
+     *        favours the shopper.
+     * HOW    Mounts a panel into the storefront cart region (#cart-items) and
+     *        re-appends itself (idempotent contains() guard) after main.js
+     *        rewrites that region, via a MutationObserver. Reads the cart from
+     *        localStorage (CONFIG.cartKey), polls every CONFIG.pollMs and also
+     *        listens for owl-park-cart-changed. Every line is priced through
+     *        core's window.OwlPark arithmetic (resolveLine / discountOf) — never
+     *        product.price × qty — so all totals agree; with no such API or no
+     *        catalog it renders nothing rather than guess. Offers are recomputed
+     *        from a FRESH cart read at click time and declined if the live cart
+     *        no longer supports them.
+     * HOSTS  Owl Park storefront only. No-op on the zoo ViewItems page and any
+     *        host without #cart-items or window.OwlPark (no in-page cart /
+     *        pricing to key off).
+     * ===================================================================== */
 
-    // A membership that only pays for itself after this many visits is not a claim worth making,
-    // so the feature stays silent instead of making a weak one.
-    var MAX_PLAUSIBLE_BREAK_EVEN = 4;
+    var FEATURE_ID = "smart-cart-savings";
+
+    // ----- Configuration --------------------------------------------------
+    // Thresholds + copy live here. The offers themselves (which membership,
+    // which ticket) are derived live from the catalog and the cart, so there are
+    // no static bundle definitions to configure — only the knobs below.
+    var CONFIG = {
+      cartKey: "owl-park-cart", // localStorage key the storefront cart is stored under
+      pollMs: 700, // how often (ms) to re-read the cart when no change event fires
+
+      // A membership that only pays for itself after MORE than this many visits
+      // is not a claim worth making, so the feature stays silent instead of
+      // making a weak one.
+      maxPlausibleBreakEven: 4,
+
+      // Membership break-even callout
+      membership: {
+        icon: "🪶", // eyebrow glyph
+        eyebrow: "Membership break-even", // small uppercase category label
+        coverageTail: "unlimited visits for 12 months.", // tail of the coverage line
+        buttonPrefix: "Swap my tickets for the membership", // price appended in ()
+      },
+
+      // Better-value ticket-swap callout
+      swap: {
+        icon: "🪺", // eyebrow glyph
+        eyebrow: "Cheaper for the same group",
+        savingIcon: "↓", // sits before the emphasised saving figure
+        savingCaption: "saved on the same group", // caption under the saving figure
+        buttonPrefix: "Swap and save", // saving amount appended
+      },
+    };
 
     var products = null;
     var panelEl = null;
@@ -93,7 +258,7 @@
 
     function readCart() {
       try {
-        var raw = localStorage.getItem(CART_KEY);
+        var raw = localStorage.getItem(CONFIG.cartKey);
         var lines = raw ? JSON.parse(raw) : [];
         return Array.isArray(lines) ? lines : [];
       } catch (err) {
@@ -102,7 +267,7 @@
     }
 
     function writeCart(lines) {
-      localStorage.setItem(CART_KEY, JSON.stringify(lines));
+      localStorage.setItem(CONFIG.cartKey, JSON.stringify(lines));
       window.dispatchEvent(new CustomEvent("owl-park-cart-changed"));
     }
 
@@ -292,7 +457,7 @@
         if (p.category !== "membership") continue;
         if (!covers(p, basket)) continue; // would leave someone in the cart at the gate
         var breakEven = Math.ceil(p.price / basket.subtotal);
-        if (breakEven > MAX_PLAUSIBLE_BREAK_EVEN) continue;
+        if (breakEven > CONFIG.maxPlausibleBreakEven) continue;
         if (!best || p.price < best.product.price) {
           best = { product: p, breakEven: breakEven };
         }
@@ -374,22 +539,172 @@
       writeCart(keep);
     }
 
-    function card(titleText, buildBody) {
-      var el = document.createElement("div");
-      el.className = "scs-card";
-      var title = document.createElement("div");
-      title.className = "scs-title";
-      title.textContent = titleText;
-      el.appendChild(title);
-      buildBody(el);
-      return el;
+    // ----- DOM builders ---------------------------------------------------
+    function el(tag, className, text) {
+      var e = document.createElement(tag);
+      if (className) e.className = className;
+      if (text != null) e.textContent = text;
+      return e;
     }
 
     function textLine(className, text) {
-      var el = document.createElement("div");
-      el.className = className;
-      el.textContent = text;
-      return el;
+      return el("div", className, text);
+    }
+
+    /** The small uppercase category label above an offer. */
+    function eyebrow(cfg) {
+      var row = el("div", "scs-eyebrow");
+      var ic = el("span", "scs-eyebrow-icon", cfg.icon);
+      ic.setAttribute("aria-hidden", "true");
+      row.appendChild(ic);
+      row.appendChild(el("span", "scs-eyebrow-label", cfg.eyebrow));
+      return row;
+    }
+
+    /** The one emphasised figure: optional icon + hero amount + caption. */
+    function figure(variant, amountText, captionText, iconText) {
+      var wrap = el("div", "scs-figure scs-figure--" + variant);
+      var lead = el("span", "scs-figure-lead");
+      if (iconText) {
+        var ic = el("span", "scs-figure-icon", iconText);
+        ic.setAttribute("aria-hidden", "true");
+        lead.appendChild(ic);
+      }
+      lead.appendChild(el("span", "scs-figure-amount", amountText));
+      wrap.appendChild(lead);
+      if (captionText) {
+        wrap.appendChild(el("span", "scs-figure-caption", captionText));
+      }
+      return wrap;
+    }
+
+    function actionButton(label, onClick) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "scs-btn";
+      btn.setAttribute("data-owlpark-feature", FEATURE_ID);
+      btn.textContent = label;
+      btn.addEventListener("click", onClick);
+      return btn;
+    }
+
+    function buildMembershipCard(basket, membership) {
+      var cfg = CONFIG.membership;
+      var p = membership.product;
+      var cardEl = el("div", "scs-card scs-card--membership");
+      cardEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+
+      cardEl.appendChild(eyebrow(cfg));
+      cardEl.appendChild(
+        figure(
+          "membership",
+          money(p.price),
+          "the " +
+            p.name +
+            " — pays for itself on your " +
+            ordinal(membership.breakEven) +
+            " visit at this price",
+          null,
+        ),
+      );
+      cardEl.appendChild(
+        textLine(
+          "scs-body",
+          "Your day out is " +
+            money(basket.subtotal) +
+            ". Covers " +
+            coverageText(p) +
+            ", " +
+            cfg.coverageTail,
+        ),
+      );
+
+      if (basket.dated) {
+        cardEl.appendChild(
+          textLine(
+            "scs-fine",
+            "Swapping replaces the tickets in your cart, so the visit " +
+              (basket.count === 1 ? "date" : "dates") +
+              " you picked" +
+              (basket.discounted ? " and their off-peak rate" : "") +
+              " come off — a membership admits you on any open day.",
+          ),
+        );
+      }
+
+      cardEl.appendChild(
+        actionButton(
+          cfg.buttonPrefix + " (" + money(p.price) + ")",
+          function () {
+            var offer = membershipOffer(readTicketBasket());
+            if (!offer || offer.product.id !== membership.product.id) {
+              refresh();
+              return;
+            }
+            swapTicketsFor(offer.product.id, 1, null);
+          },
+        ),
+      );
+      return cardEl;
+    }
+
+    function buildSwapCard(basket, swap) {
+      var cfg = CONFIG.swap;
+      var cardEl = el("div", "scs-card scs-card--swap");
+      cardEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+
+      cardEl.appendChild(eyebrow(cfg));
+      cardEl.appendChild(
+        figure("swap", money(swap.saving), cfg.savingCaption, cfg.savingIcon),
+      );
+      cardEl.appendChild(
+        textLine(
+          "scs-body",
+          "You have " +
+            basket.count +
+            (basket.count === 1 ? " ticket" : " tickets") +
+            " — " +
+            money(basket.subtotal) +
+            ". " +
+            (swap.qty === 1 ? article(swap.product.name) : swap.qty + " × ") +
+            swap.product.name +
+            " covers " +
+            coverageText(swap.product) +
+            " for " +
+            money(swap.cost) +
+            ".",
+        ),
+      );
+      cardEl.appendChild(
+        textLine(
+          "scs-fine",
+          "That admits everyone your tickets admit." +
+            (basket.carry.visit
+              ? " Your chosen visit date carries over" +
+                (basket.carry.discountRate !== null
+                  ? ", off-peak rate included."
+                  : ".")
+              : ""),
+        ),
+      );
+
+      cardEl.appendChild(
+        actionButton(cfg.buttonPrefix + " " + money(swap.saving), function () {
+          var fresh = readTicketBasket();
+          var offer = swapOffer(fresh);
+          if (
+            !offer ||
+            offer.product.id !== swap.product.id ||
+            offer.qty !== swap.qty ||
+            offer.saving < swap.saving - 0.005
+          ) {
+            refresh();
+            return;
+          }
+          swapTicketsFor(offer.product.id, offer.qty, fresh.carry);
+        }),
+      );
+      return cardEl;
     }
 
     function render() {
@@ -406,133 +721,22 @@
       var swap = swapOffer(basket);
 
       if (membership) {
-        panelEl.appendChild(
-          card("🪶 Membership break-even", function (el) {
-            el.appendChild(
-              textLine(
-                "scs-line",
-                "Your day out is " +
-                  money(basket.subtotal) +
-                  ". " +
-                  article(membership.product.name) +
-                  membership.product.name +
-                  " is " +
-                  money(membership.product.price) +
-                  " — it pays for itself on your " +
-                  ordinal(membership.breakEven) +
-                  " visit at this price.",
-              ),
-            );
-            el.appendChild(
-              textLine(
-                "scs-fine",
-                "Covers " +
-                  coverageText(membership.product) +
-                  ", unlimited visits for 12 months.",
-              ),
-            );
-            if (basket.dated) {
-              el.appendChild(
-                textLine(
-                  "scs-fine",
-                  "Swapping replaces the tickets in your cart, so the visit " +
-                    (basket.count === 1 ? "date" : "dates") +
-                    " you picked" +
-                    (basket.discounted ? " and their off-peak rate" : "") +
-                    " come off — a membership admits you on any open day.",
-                ),
-              );
-            }
-            var btn = document.createElement("button");
-            btn.type = "button";
-            btn.className = "scs-swap-btn";
-            btn.textContent =
-              "Swap my tickets for the membership (" +
-              money(membership.product.price) +
-              ")";
-            btn.addEventListener("click", function () {
-              var offer = membershipOffer(readTicketBasket());
-              if (!offer || offer.product.id !== membership.product.id) {
-                refresh();
-                return;
-              }
-              swapTicketsFor(offer.product.id, 1, null);
-            });
-            el.appendChild(btn);
-          }),
-        );
+        panelEl.appendChild(buildMembershipCard(basket, membership));
       }
-
       if (swap) {
-        panelEl.appendChild(
-          card("🪺 Cheaper for the same group", function (el) {
-            el.appendChild(
-              textLine(
-                "scs-line",
-                "You have " +
-                  basket.count +
-                  (basket.count === 1 ? " ticket" : " tickets") +
-                  " — " +
-                  money(basket.subtotal) +
-                  ". " +
-                  (swap.qty === 1
-                    ? article(swap.product.name)
-                    : swap.qty + " × ") +
-                  swap.product.name +
-                  " covers " +
-                  coverageText(swap.product) +
-                  " for " +
-                  money(swap.cost) +
-                  ".",
-              ),
-            );
-            el.appendChild(
-              textLine(
-                "scs-fine",
-                "That admits everyone your tickets admit, so swapping saves " +
-                  money(swap.saving) +
-                  "." +
-                  (basket.carry.visit
-                    ? " Your chosen visit date carries over" +
-                      (basket.carry.discountRate !== null
-                        ? ", off-peak rate included."
-                        : ".")
-                    : ""),
-              ),
-            );
-            var btn = document.createElement("button");
-            btn.type = "button";
-            btn.className = "scs-swap-btn";
-            btn.textContent = "Swap and save " + money(swap.saving);
-            btn.addEventListener("click", function () {
-              var fresh = readTicketBasket();
-              var offer = swapOffer(fresh);
-              if (
-                !offer ||
-                offer.product.id !== swap.product.id ||
-                offer.qty !== swap.qty ||
-                offer.saving < swap.saving - 0.005
-              ) {
-                refresh();
-                return;
-              }
-              swapTicketsFor(offer.product.id, offer.qty, fresh.carry);
-            });
-            el.appendChild(btn);
-          }),
-        );
+        panelEl.appendChild(buildSwapCard(basket, swap));
       }
 
       panelEl.hidden = !membership && !swap;
     }
 
     function refresh() {
-      lastSerialized = localStorage.getItem(CART_KEY);
+      lastSerialized = localStorage.getItem(CONFIG.cartKey);
       render();
     }
 
     function sync() {
-      if (localStorage.getItem(CART_KEY) === lastSerialized) return;
+      if (localStorage.getItem(CONFIG.cartKey) === lastSerialized) return;
       refresh();
     }
 
@@ -555,6 +759,9 @@
       panelEl = document.createElement("div");
       panelEl.className = "owlpark-feat-smart-cart-savings";
       panelEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+      // The panel is the dynamic region: announce refreshed offers politely.
+      panelEl.setAttribute("role", "status");
+      panelEl.setAttribute("aria-live", "polite");
       panelEl.hidden = true;
       mount();
 
@@ -581,7 +788,7 @@
           );
         });
 
-      pollId = setInterval(sync, POLL_MS);
+      pollId = setInterval(sync, CONFIG.pollMs);
       window.addEventListener("owl-park-cart-changed", sync);
     }
 

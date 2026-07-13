@@ -9,96 +9,205 @@
   }
 </script>
 
-<style>
+<style id="owlpark-visit-addons-style">
+  .owlpark-feat-visit-addons {
+    box-sizing: border-box;
+    flex-shrink: 0;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(17, 33, 31, 0.1);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    color: #17211f;
+  }
   .owlpark-feat-visit-addons[hidden] {
     display: none;
   }
-  .owlpark-feat-visit-addons {
-    flex-shrink: 0;
-    border-top: 1px dashed #d8cfae;
-    padding-top: 0.6rem;
-  }
   .owlpark-feat-visit-addons .vao-title {
+    margin: 0 0 0.6rem;
     font-size: 0.72rem;
-    font-weight: 800;
+    font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: #6d675c;
-    margin-bottom: 0.45rem;
+    color: #67736f;
   }
   .owlpark-feat-visit-addons .vao-rail {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.6rem;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    padding-bottom: 0.3rem;
+    padding-bottom: 0.4rem;
+    scrollbar-width: thin;
   }
   .owlpark-feat-visit-addons .vao-card {
-    flex: 0 0 10.5rem;
-    border: 1px solid var(--cove-border, #e4ddca);
-    border-radius: 12px;
-    background: #fff;
-    padding: 0.55rem 0.6rem;
+    box-sizing: border-box;
+    flex: 0 0 11rem;
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
+    gap: 0.4rem;
+    padding: 0.7rem 0.75rem;
+    background: #ffffff;
+    border: 1px solid rgba(17, 33, 31, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(20, 40, 40, 0.05);
+    transition: border-color 0.16s ease;
   }
   .owlpark-feat-visit-addons .vao-card.vao-in-cart {
-    border-color: #2f8f4e;
-    background: #f2f9f3;
+    border-color: rgba(15, 111, 122, 0.35);
+    background: rgba(15, 111, 122, 0.05);
   }
   .owlpark-feat-visit-addons .vao-head {
     display: flex;
-    align-items: baseline;
-    gap: 0.3rem;
+    align-items: flex-start;
+    gap: 0.4rem;
   }
   .owlpark-feat-visit-addons .vao-emoji {
+    flex-shrink: 0;
     font-size: 1rem;
+    line-height: 1.3;
   }
   .owlpark-feat-visit-addons .vao-name {
+    flex: 1;
+    min-width: 0;
     font-size: 0.82rem;
-    font-weight: 700;
-    line-height: 1.2;
-    color: #2c2a26;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    color: #17211f;
+  }
+  .owlpark-feat-visit-addons .vao-price {
+    flex-shrink: 0;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #17211f;
+    font-variant-numeric: tabular-nums;
   }
   .owlpark-feat-visit-addons .vao-tagline {
-    font-size: 0.72rem;
-    line-height: 1.25;
-    color: #6d675c;
     flex: 1;
+    font-size: 0.72rem;
+    line-height: 1.45;
+    color: #67736f;
   }
   .owlpark-feat-visit-addons .vao-in-cart-note {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
     font-size: 0.72rem;
-    font-weight: 700;
+    font-weight: 600;
     color: #2f8f4e;
   }
   .owlpark-feat-visit-addons .vao-add-btn {
-    min-height: 44px;
+    box-sizing: border-box;
     width: 100%;
+    min-height: 44px;
+    margin-top: 0.1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     border: none;
-    border-radius: 10px;
+    border-radius: 999px;
     background: #0f6f7a;
-    color: #fff;
-    font-weight: 800;
+    color: #ffffff;
+    font-family: inherit;
     font-size: 0.82rem;
-    padding: 0.4rem 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
     cursor: pointer;
+    transition:
+      background 0.16s ease,
+      transform 0.16s cubic-bezier(0.2, 0.6, 0.2, 1);
+  }
+  .owlpark-feat-visit-addons .vao-add-btn:hover {
+    background: #0c5f69;
+    transform: translateY(-1px);
   }
   .owlpark-feat-visit-addons .vao-add-btn:active {
     transform: translateY(1px);
   }
-  @media (hover: hover) {
+  .owlpark-feat-visit-addons :focus-visible {
+    outline: 2px solid #0f6f7a;
+    outline-offset: 2px;
+  }
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-visit-addons {
+      border-top-color: rgba(255, 255, 255, 0.11);
+      color: #e9edec;
+    }
+    .owlpark-feat-visit-addons .vao-title {
+      color: #98a4a1;
+    }
+    .owlpark-feat-visit-addons .vao-card {
+      background: #12181a;
+      border-color: rgba(255, 255, 255, 0.11);
+      box-shadow: none;
+    }
+    .owlpark-feat-visit-addons .vao-card.vao-in-cart {
+      border-color: rgba(91, 199, 207, 0.4);
+      background: rgba(91, 199, 207, 0.08);
+    }
+    .owlpark-feat-visit-addons .vao-name,
+    .owlpark-feat-visit-addons .vao-price {
+      color: #e9edec;
+    }
+    .owlpark-feat-visit-addons .vao-tagline {
+      color: #98a4a1;
+    }
+    .owlpark-feat-visit-addons .vao-in-cart-note {
+      color: #6bcf8e;
+    }
     .owlpark-feat-visit-addons .vao-add-btn:hover {
-      background: #0c5a63;
+      background: #12808d;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-visit-addons .vao-card,
+    .owlpark-feat-visit-addons .vao-add-btn {
+      transition: none;
+    }
+    .owlpark-feat-visit-addons .vao-add-btn:hover,
+    .owlpark-feat-visit-addons .vao-add-btn:active {
+      transform: none;
     }
   }
 </style>
 
 <script>
   (function () {
+    /* =========================================================================
+     * Visit Add-Ons  ·  behavioral
+     * -------------------------------------------------------------------------
+     * WHAT   A quiet rail of visit add-ons (parking, fast-track, keeper
+     *        experience, souvenir cup) that appears inside the cart once a
+     *        ticket is in it; one tap drops an add-on in as an ordinary line.
+     * HOW    Mounts a panel into the SCROLLING #cart-items region (never the
+     *        fixed footer, so Total/Checkout stay reachable on a phone) and
+     *        re-appends it after every renderCart() via a MutationObserver.
+     *        Add-on names/prices/taglines come live from data/products.json
+     *        (category "addon"). Cart state is read from localStorage
+     *        ("owl-park-cart"), polled every CONFIG.pollMs and on the
+     *        owl-park-cart-changed event; adding writes that key and dispatches
+     *        owl-park-cart-changed so the storefront re-renders.
+     * HOSTS  Owl Park storefront only — the rail shows when the cart holds a
+     *        ticket AND the catalog exposes addon-category products, both being
+     *        Owl-Park concepts. It stays hidden (a no-op) on other hosts and
+     *        whenever the catalog fetch fails (no stale prices ever shown).
+     * ===================================================================== */
+
     var FEATURE_ID = "visit-addons";
-    var CART_KEY = "owl-park-cart";
-    var POLL_MS = 700;
+    var CART_KEY = "owl-park-cart"; // shared cart contract key (not a preference)
+
+    // ----- Configuration --------------------------------------------------
+    // Tunable copy + timing. The add-on PRODUCTS themselves (name, price,
+    // tagline, emoji) are NOT configured here — they come live from the catalog
+    // (data/products.json, category "addon"); see the fetch() in activate().
+    var CONFIG = {
+      heading: "Make a day of it", // quiet section heading above the rail
+      addLabel: "Add", // add control when the add-on is not yet in the cart
+      addAnotherLabel: "Add another", // add control when it is already in the cart
+      inCartPrefix: "✓ ", // wraps the quantity in the "in cart" note …
+      inCartSuffix: " in cart", // … e.g. "✓ 2 in cart"
+      pollMs: 700, // how often the cart is re-checked for changes
+    };
 
     var products = null;
     var panelEl = null;
@@ -172,13 +281,22 @@
 
       var head = document.createElement("div");
       head.className = "vao-head";
+
       var emoji = document.createElement("span");
       emoji.className = "vao-emoji";
+      emoji.setAttribute("aria-hidden", "true");
       emoji.textContent = product.emoji;
+
       var name = document.createElement("span");
       name.className = "vao-name";
       name.textContent = product.name;
-      head.append(emoji, name);
+
+      // Price is aligned as its own element (top-right), not buried in the button.
+      var price = document.createElement("span");
+      price.className = "vao-price";
+      price.textContent = money(product.price);
+
+      head.append(emoji, name, price);
 
       var tagline = document.createElement("div");
       tagline.className = "vao-tagline";
@@ -189,15 +307,20 @@
       if (inCart) {
         var note = document.createElement("div");
         note.className = "vao-in-cart-note";
-        note.textContent = "✓ " + inCart + " in cart";
+        note.textContent = CONFIG.inCartPrefix + inCart + CONFIG.inCartSuffix;
         card.appendChild(note);
       }
 
+      var actionWord = inCart ? CONFIG.addAnotherLabel : CONFIG.addLabel;
       var btn = document.createElement("button");
       btn.type = "button";
       btn.className = "vao-add-btn";
-      btn.textContent =
-        (inCart ? "Add another · " : "Add · ") + money(product.price);
+      btn.textContent = actionWord;
+      // Full context for screen readers ("Add" alone repeats across every card).
+      btn.setAttribute(
+        "aria-label",
+        actionWord + " " + product.name + ", " + money(product.price),
+      );
       btn.setAttribute("data-addon-id", product.id);
       btn.addEventListener("click", function () {
         addAddon(product.id);
@@ -220,7 +343,7 @@
 
       var title = document.createElement("div");
       title.className = "vao-title";
-      title.textContent = "Make a day of it";
+      title.textContent = CONFIG.heading;
       panelEl.appendChild(title);
 
       var rail = document.createElement("div");
@@ -257,6 +380,8 @@
       panelEl = document.createElement("div");
       panelEl.className = "owlpark-feat-visit-addons";
       panelEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+      panelEl.setAttribute("role", "group");
+      panelEl.setAttribute("aria-label", CONFIG.heading);
       panelEl.hidden = true;
       mount();
 
@@ -282,7 +407,7 @@
           );
         });
 
-      pollId = setInterval(sync, POLL_MS);
+      pollId = setInterval(sync, CONFIG.pollMs);
       window.addEventListener("owl-park-cart-changed", sync);
     }
 
