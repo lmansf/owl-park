@@ -11,17 +11,20 @@
 
 <style>
   .owlpark-feat-ambient-park-sounds-btn {
-    background: rgba(255, 255, 255, 0.15);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    background: #0a4d55 !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.35) !important;
     padding: 0.4rem 0.7rem;
     border-radius: 8px;
     font-size: 0.85rem;
     font-weight: 700;
     cursor: pointer;
+    min-height: 44px;
+    box-sizing: border-box;
+    text-decoration: none;
   }
   .owlpark-feat-ambient-park-sounds-btn:hover {
-    background: rgba(255, 255, 255, 0.28);
+    background: #0c5b64 !important;
   }
 </style>
 
@@ -140,8 +143,13 @@
     }
 
     function activate() {
+      // Dock into the zoo web store's sub-header first, then Owl Park's header,
+      // then a floating bar if pasted into any other page body.
       var actions =
-        document.querySelector(".header-actions") || owlparkFallbackBar();
+        document.querySelector(".view-cart") ||
+        document.querySelector("#sub-header") ||
+        document.querySelector(".header-actions") ||
+        owlparkFallbackBar();
 
       buttonEl = document.createElement("button");
       buttonEl.type = "button";

@@ -34,6 +34,88 @@
 <script>
   (function () {
     var FEATURE_ID = "discount-badge-strikethrough";
+    // --- Host adapter -------------------------------------------------------
+    // Resolves whichever storefront this snippet was pasted into, preferring the
+    // ZooTampa web store (ASP.NET PLU rows), then the Owl Park storefront, then a
+    // generic fallback. Shared defensively on window so features pasted together
+    // reuse one instance. Keeps every feature speaking one host vocabulary.
+    function owlHost() {
+      if (window.__owlHost) return window.__owlHost;
+      var d = document;
+      function q(s, r) { return (r || d).querySelector(s); }
+      function num(t) { return parseFloat(String(t).replace(/[^0-9.]/g, "")) || 0; }
+      function bar() {
+        var b = d.getElementById("owlpark-fallback-actions");
+        if (b) return b;
+        b = d.createElement("div");
+        b.id = "owlpark-fallback-actions";
+        b.setAttribute("data-owlpark-fallback", "actions");
+        b.style.cssText =
+          "position:fixed;z-index:2147483000;display:flex;flex-wrap:wrap;gap:8px;" +
+          "align-items:center;justify-content:flex-end;max-width:calc(100vw - 20px);" +
+          "top:calc(10px + env(safe-area-inset-top, 0px));" +
+          "right:calc(10px + env(safe-area-inset-right, 0px));" +
+          "padding:8px 10px;background:rgba(10,77,85,0.96);border-radius:12px;" +
+          "box-shadow:0 8px 24px rgba(0,0,0,0.28);";
+        var st = d.createElement("style");
+        st.id = "owlpark-fallback-actions-style";
+        st.setAttribute("data-owlpark-fallback", "actions");
+        st.textContent =
+          "#owlpark-fallback-actions>button,#owlpark-fallback-actions>a" +
+          "{min-height:44px;box-sizing:border-box;}";
+        d.head.appendChild(st);
+        d.body.appendChild(b);
+        return b;
+      }
+      var H = {
+        isZoo: function () { return !!d.getElementById("SalesChannelDetailRepeater"); },
+        // Where header/utility buttons dock (zoo sub-header -> Owl Park header -> float).
+        dock: function () { return q(".view-cart") || q("#sub-header") || q(".header-actions") || bar(); },
+        fallbackBar: bar,
+        pruneBar: function () {
+          var b = d.getElementById("owlpark-fallback-actions");
+          if (!b || b.children.length) return;
+          b.remove();
+          var st = d.getElementById("owlpark-fallback-actions-style");
+          if (st) st.remove();
+        },
+        heading: function () { return q("#ContentHeading") || q(".catalog-heading"); },
+        // Product list container to observe for re-renders.
+        grid: function () { return d.getElementById("SalesChannelDetailRepeater") || d.getElementById("catalog-grid"); },
+        // Live product rows (skips Angular {{template}} rows on the zoo page).
+        rows: function () {
+          var out = [];
+          d.querySelectorAll("tr.pluRow[data-plu], .product-row[data-product-id]").forEach(function (r) {
+            var id = H.rowId(r);
+            if (id && id.indexOf("{{") === -1) out.push(r);
+          });
+          return out;
+        },
+        isPlu: function (r) { return !!(r.matches && r.matches("tr.pluRow")); },
+        rowId: function (r) { return r.getAttribute("data-plu") || r.getAttribute("data-product-id") || ""; },
+        rowName: function (r) { var e = q(".pluName, h3", r); return e ? e.textContent.trim() : ""; },
+        rowPriceEl: function (r) { return q('.pluPrice [data-text="price"], [data-text="price"], .price-amount', r); },
+        rowPrice: function (r) {
+          var h = q('input[id$="PLUPriceHiddenField"]', r);
+          if (h && h.value) return num(h.value);
+          var e = H.rowPriceEl(r);
+          return e ? num(e.textContent) : 0;
+        },
+        // Inline anchor to hang a small decoration next to the product name.
+        rowNameCell: function (r) { return q(".pluNameShortName, .row-title-line, .pluName, h3", r); },
+        // Block anchor under the product's descriptive text.
+        rowInfoCell: function (r) { return q(".pluInfo, .row-body", r) || r; },
+        rowQty: function (r) { return q("input.PLUQtyTextBox, [data-add-id]", r); },
+        qtyInputs: function () { return d.querySelectorAll("input.PLUQtyTextBox"); },
+        num: num,
+        q: q
+      };
+      window.__owlHost = H;
+      return H;
+    }
+    // ------------------------------------------------------------------------
+    var H = owlHost();
+
     var DISCOUNTS = {
       "prod-ga-ticket": 15,
       "prod-individual-membership": 10,
@@ -41,16 +123,38 @@
 
     var observer = null;
 
-    function injectInto(row) {
+    // Store-agnostic fallback: the single highest-priced row across H.rows().
+    function topPricedRow(rows) {
+      var best = null;
+      var bestPrice = -Infinity;
+      rows.forEach(function (row) {
+        var p = H.rowPrice(row);
+        if (p > bestPrice) {
+          bestPrice = p;
+          best = row;
+        }
+      });
+      return best;
+    }
+
+    // Owl Park ids first; then the general rule (member 10% wins over top-price 15%).
+    function pctFor(row, topRow) {
+      var byId = DISCOUNTS[H.rowId(row)];
+      if (byId) return byId;
+      if (/member/i.test(H.rowName(row))) return 10;
+      if (row === topRow) return 15;
+      return 0;
+    }
+
+    function injectInto(row, topRow) {
       if (row.querySelector('[data-owlpark-feature="' + FEATURE_ID + '"]'))
         return;
-      var productId = row.getAttribute("data-product-id");
-      var pct = DISCOUNTS[productId];
+      var pct = pctFor(row, topRow);
       if (!pct) return;
 
-      var priceAmountEl = row.querySelector(".price-amount");
+      var priceAmountEl = H.rowPriceEl(row);
       if (!priceAmountEl) return;
-      var currentPrice = parseFloat(priceAmountEl.textContent.replace(/[^0-9.]/g, ""));
+      var currentPrice = H.rowPrice(row);
       if (!currentPrice) return;
       var wasPrice = currentPrice / (1 - pct / 100);
 
@@ -67,19 +171,21 @@
     }
 
     function applyToRows() {
-      document
-        .querySelectorAll(".product-row[data-product-id]")
-        .forEach(injectInto);
+      var rows = H.rows();
+      var topRow = topPricedRow(rows);
+      rows.forEach(function (row) {
+        injectInto(row, topRow);
+      });
     }
 
     function activate() {
       applyToRows();
-      var grid = document.getElementById("catalog-grid");
+      var grid = H.grid();
       if (grid) {
         observer = new MutationObserver(function () {
           applyToRows();
         });
-        observer.observe(grid, { childList: true });
+        observer.observe(grid, { childList: true, subtree: true });
       }
     }
 

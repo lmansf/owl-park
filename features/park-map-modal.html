@@ -11,14 +11,20 @@
 
 <style>
   .owlpark-feat-park-map-modal-link {
-    background: transparent;
-    border: none;
-    color: white;
-    text-decoration: underline;
+    background: #0a4d55 !important;
+    border: 1px solid rgba(255, 255, 255, 0.35) !important;
+    color: #ffffff !important;
+    text-decoration: none;
     cursor: pointer;
     font-size: 0.85rem;
     font-weight: 700;
-    padding: 0.4rem 0.5rem;
+    padding: 0.4rem 0.7rem;
+    border-radius: 8px;
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+  .owlpark-feat-park-map-modal-link:hover {
+    background: #0c5b64 !important;
   }
   .owlpark-feat-park-map-modal-overlay {
     position: fixed;
@@ -156,8 +162,13 @@
     }
 
     function activate() {
+      // Dock into the zoo web store's sub-header first, then Owl Park's header,
+      // then a floating bar if pasted into any other page body.
       var actions =
-        document.querySelector(".header-actions") || owlparkFallbackBar();
+        document.querySelector(".view-cart") ||
+        document.querySelector("#sub-header") ||
+        document.querySelector(".header-actions") ||
+        owlparkFallbackBar();
 
       linkBtn = document.createElement("button");
       linkBtn.type = "button";

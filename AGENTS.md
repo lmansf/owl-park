@@ -90,13 +90,31 @@ This file is the project's committed home for project-intrinsic agent knowledge:
   standalone), so they call `env(...)` and `44px` literally. `.header-actions` is the header's
   extension point — features `prepend()` buttons into it, so `css/storefront.css` sizes
   `.header-actions > button, > a` centrally, and below 560px the strip scrolls horizontally with
-  the cart pinned (otherwise the sticky header grows unbounded with each feature enabled). So a
-  header/heading-docked utility still activates when pasted into a page that lacks that chrome (any
-  non-storefront body), five features (`dark-mode`, `accessibility-contrast`, `ambient-park-sounds`,
-  `park-map-modal`, `ticket-comparison-table`) resolve their mount as `anchor || owlparkFallbackBar()`
-  — an inline helper that builds one shared floating bar `#owlpark-fallback-actions` (created ONLY when
-  the anchor is absent, self-pruned when empty, so the storefront is untouched). Storefront-data
-  features (product-row/cart/checkout) intentionally keep no-opping where their data model is absent.
+  the cart pinned (otherwise the sticky header grows unbounded with each feature enabled).
+- Features target MULTIPLE storefronts — the ZooTampa ASP.NET web store (`Sandbox/shop/ViewItems.aspx`,
+  saved DOM landmarks: `#sub-header`/`.view-cart`, `#ContentHeading`, `#SalesChannelDetailRepeater`,
+  `tr.pluRow[data-plu]` with `.pluName` + `[data-text="price"]` + `input.PLUQtyTextBox`) FIRST, then the
+  Owl Park storefront, then a generic fallback. Any feature that touches host DOM inlines an IDENTICAL
+  `owlHost()` adapter (cached on `window.__owlHost`, so only the first-loaded copy runs — edit every
+  copy together; `grep "function owlHost"`). It resolves per host: `H.rows()` (zoo `tr.pluRow[data-plu]`
+  / owlpark `.product-row`, skipping Angular `{{…}}` template rows), `H.rowName/rowPrice/rowId`,
+  `H.grid()` to observe (`#SalesChannelDetailRepeater` / `#catalog-grid`, watched with `subtree:true`),
+  `H.dock()` for utility buttons (`.view-cart`/`#sub-header` → `.header-actions` → a floating
+  `#owlpark-fallback-actions` bar built ONLY when no dock exists and self-pruned when empty, so each
+  real storefront is untouched), and `H.heading()` (`#ContentHeading` / `.catalog-heading`). Zoo rows
+  are `<tr>`, so row decorations branch on `H.isPlu(row)` (inline in the name cell) vs owlpark's
+  absolute ribbons; docked utility buttons use a solid dark-teal style so they stay legible on the zoo
+  sub-header (not only owlpark's teal header). `dark-mode`/`accessibility-contrast` carry a second CSS
+  block targeting the zoo classes.
+- `data/products.json` is Owl-Park-only (404s on the zoo store), so features that keyed off it
+  (product-info-tooltips, membership-glow, ticket-comparison-table, sticky-mini-cart-bar) now derive
+  from the live rows and never block on the fetch (`.catch`). The zoo `ViewItems` page has no in-page
+  cart, so `sticky-mini-cart-bar` sums `input.PLUQtyTextBox` × price into a live "selection" total and
+  its View button follows `#ctl00_ViewCartHyperLink`; checkout/order-confirmation features
+  (copy-order-id, printable-receipt, confetti-checkout, add-to-calendar, …) have no anchor on that
+  ticket-selection page and correctly stay no-ops there. Verified with headless Chromium against the
+  saved `ViewItems.aspx` and against `index.html` (owlpark shows zero behavior change, never builds the
+  floating bar, leaves zero residue after disable-all).
 - Verifying mobile with chrome-devtools-axi: `emulate --viewport "375x667x2,mobile,touch"` must be
   re-applied **after** every `open`/reload, and `window.innerWidth` lies under emulation — read
   `document.documentElement.clientWidth` instead. Chrome injects no real safe-area insets, so test

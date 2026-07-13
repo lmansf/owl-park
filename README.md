@@ -247,17 +247,24 @@ out literally, writing `env(safe-area-inset-*, 0px)` and `44px` inline (see `pro
 `font-size-adjuster`, `sticky-mini-cart-bar`). The one thing a feature does _not_ have to do itself
 is size a button it prepends into `.header-actions`; the header sizes its own children.
 
-**Gotcha for header/heading-docked controls pasted into a foreign page:** a utility whose only tie to
-the storefront is _where its button mounts_ must still activate when neither `.header-actions` nor the
-catalog `.catalog-heading` exists — otherwise it silently dies the moment it's pasted into any other
-page body. `dark-mode`, `accessibility-contrast`, `ambient-park-sounds`, `park-map-modal`, and
-`ticket-comparison-table` resolve their mount as `document.querySelector(anchor) || owlparkFallbackBar()`,
-where the inline `owlparkFallbackBar()` helper lazily builds one shared floating bar
-(`#owlpark-fallback-actions`, fixed top-right, dark backdrop so the header-styled buttons stay legible,
-44px tap floor, created once and removed again once its last button leaves). The bar is built _only_
-when the preferred anchor is missing, so on the storefront itself nothing moves. Storefront-data
-features (product-row decorators, cart/checkout hooks) keep their existing graceful no-op instead — a
-floating button would have no product row or cart total to act on.
+**Gotcha for running on more than one storefront (the `owlHost()` adapter):** these snippets target the
+ZooTampa ASP.NET web store (`.../Sandbox/shop/ViewItems.aspx`) _first_, then the Owl Park storefront,
+then a generic fallback. Every feature that touches host DOM inlines one identical `owlHost()` helper —
+cached on `window.__owlHost`, so when several features are pasted together only the first-loaded copy
+runs, yet each must still carry the full adapter to work when pasted alone. It resolves the host's
+product rows (`H.rows()` → zoo `tr.pluRow[data-plu]` or Owl Park `.product-row`, skipping Angular
+`{{…}}` template rows), each row's name/price/id, the list container to observe (`H.grid()` →
+`#SalesChannelDetailRepeater` or `#catalog-grid`), the heading (`H.heading()`), and the utility dock
+(`H.dock()` → the zoo `.view-cart`/`#sub-header`, else Owl Park's `.header-actions`, else a shared
+floating `#owlpark-fallback-actions` bar that is built _only_ when no dock exists and self-prunes when
+empty). Two rules when you edit: (1) the adapter is duplicated verbatim, so change it in every feature
+at once — `grep -l "function owlHost" features/*.html`; (2) zoo product rows are `<tr>`s, so a
+decoration Owl Park positioned absolutely on a `.product-row` branches on `H.isPlu(row)` and mounts
+inline in the ticket's name cell instead. `data/products.json` is Owl-Park-only (it 404s on the zoo
+store), so features that keyed off it now derive from the live rows and never block on the fetch. The
+zoo ticket-selection page has no in-page cart, so `sticky-mini-cart-bar` shows a live Σ(qty × price)
+"selection" total read from the `input.PLUQtyTextBox` boxes; checkout / order-confirmation features
+have no anchor on that page and stay graceful no-ops there.
 
 **Gotcha for bottom-anchored feature widgets:** three modules pin controls into the same bottom band
 at the same `1.2rem` offset — `keyboard-shortcuts-helper` (bottom-left), `font-size-adjuster`

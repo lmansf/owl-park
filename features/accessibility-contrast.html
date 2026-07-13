@@ -11,17 +11,20 @@
 
 <style>
   .owlpark-feat-accessibility-contrast {
-    background: rgba(255, 255, 255, 0.15);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    background: #0a4d55 !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.35) !important;
     padding: 0.4rem 0.7rem;
     border-radius: 8px;
     font-size: 0.85rem;
     font-weight: 700;
     cursor: pointer;
+    min-height: 44px;
+    box-sizing: border-box;
+    text-decoration: none;
   }
   .owlpark-feat-accessibility-contrast:hover {
-    background: rgba(255, 255, 255, 0.28);
+    background: #0c5b64 !important;
   }
 
   body.high-contrast-active {
@@ -87,6 +90,57 @@
     color: #ffff00 !important;
     text-decoration: underline !important;
   }
+
+  /* --- ZooTampa web store surfaces (ASP.NET PLU layout) --- */
+  body.high-contrast-active #page,
+  body.high-contrast-active #MasterLayout,
+  body.high-contrast-active #container,
+  body.high-contrast-active #ContentWrapper,
+  body.high-contrast-active .ContentCell {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  body.high-contrast-active #Header,
+  body.high-contrast-active #sub-header {
+    background: #000000 !important;
+    color: #ffffff !important;
+  }
+  body.high-contrast-active #ContentHeading,
+  body.high-contrast-active #ContentHeading span,
+  body.high-contrast-active .categoryDescription,
+  body.high-contrast-active .parentSCDName,
+  body.high-contrast-active .pluName,
+  body.high-contrast-active .pluShortName,
+  body.high-contrast-active .pluDescription,
+  body.high-contrast-active .pluInfoHeader,
+  body.high-contrast-active [data-text="price"] {
+    color: #000000 !important;
+  }
+  body.high-contrast-active .pluRow,
+  body.high-contrast-active .pluTable,
+  body.high-contrast-active .SalesChannelDetailPLURepeater {
+    background: #ffffff !important;
+    border: 2px solid #000000 !important;
+  }
+  body.high-contrast-active .parentSCDheader {
+    background: #ffffff !important;
+    border: 2px solid #000000 !important;
+  }
+  body.high-contrast-active .addToCart {
+    background: #000000 !important;
+    color: #ffffff !important;
+    border: 2px solid #000000 !important;
+  }
+  body.high-contrast-active .PLUQtyTextBox {
+    border: 2px solid #000000 !important;
+    color: #000000 !important;
+    background: #ffffff !important;
+  }
+  body.high-contrast-active #sub-header a,
+  body.high-contrast-active .completeDetails {
+    color: #ffff00 !important;
+    text-decoration: underline !important;
+  }
 </style>
 
 <script>
@@ -134,8 +188,13 @@
     }
 
     function activate() {
+      // Dock into the zoo web store's sub-header first, then Owl Park's header,
+      // then a floating bar if pasted into any other page body.
       var actions =
-        document.querySelector(".header-actions") || owlparkFallbackBar();
+        document.querySelector(".view-cart") ||
+        document.querySelector("#sub-header") ||
+        document.querySelector(".header-actions") ||
+        owlparkFallbackBar();
 
       buttonEl = document.createElement("button");
       buttonEl.type = "button";

@@ -104,38 +104,97 @@
     var overlayEl = null;
     var products = null;
 
-    // Host-agnostic mount point. Prefer the storefront's own catalog heading,
-    // but fall back to a shared floating bar on <body> so this snippet still
-    // shows its control when pasted anywhere in ANY page's body.
-    function owlparkFallbackBar() {
-      var bar = document.getElementById("owlpark-fallback-actions");
-      if (bar) return bar;
-      bar = document.createElement("div");
-      bar.id = "owlpark-fallback-actions";
-      bar.setAttribute("data-owlpark-fallback", "actions");
-      bar.style.cssText =
-        "position:fixed;z-index:2147483000;display:flex;flex-wrap:wrap;gap:8px;" +
-        "align-items:center;justify-content:flex-end;max-width:calc(100vw - 20px);" +
-        "top:calc(10px + env(safe-area-inset-top, 0px));" +
-        "right:calc(10px + env(safe-area-inset-right, 0px));" +
-        "padding:8px 10px;background:rgba(10,77,85,0.96);border-radius:12px;" +
-        "box-shadow:0 8px 24px rgba(0,0,0,0.28);";
-      var barStyle = document.createElement("style");
-      barStyle.id = "owlpark-fallback-actions-style";
-      barStyle.setAttribute("data-owlpark-fallback", "actions");
-      barStyle.textContent =
-        "#owlpark-fallback-actions>button,#owlpark-fallback-actions>a" +
-        "{min-height:44px;box-sizing:border-box;}";
-      document.head.appendChild(barStyle);
-      document.body.appendChild(bar);
-      return bar;
+    // --- Host adapter -------------------------------------------------------
+    // Resolves whichever storefront this snippet was pasted into, preferring the
+    // ZooTampa web store (ASP.NET PLU rows), then the Owl Park storefront, then a
+    // generic fallback. Shared defensively on window so features pasted together
+    // reuse one instance. Keeps every feature speaking one host vocabulary.
+    function owlHost() {
+      if (window.__owlHost) return window.__owlHost;
+      var d = document;
+      function q(s, r) { return (r || d).querySelector(s); }
+      function num(t) { return parseFloat(String(t).replace(/[^0-9.]/g, "")) || 0; }
+      function bar() {
+        var b = d.getElementById("owlpark-fallback-actions");
+        if (b) return b;
+        b = d.createElement("div");
+        b.id = "owlpark-fallback-actions";
+        b.setAttribute("data-owlpark-fallback", "actions");
+        b.style.cssText =
+          "position:fixed;z-index:2147483000;display:flex;flex-wrap:wrap;gap:8px;" +
+          "align-items:center;justify-content:flex-end;max-width:calc(100vw - 20px);" +
+          "top:calc(10px + env(safe-area-inset-top, 0px));" +
+          "right:calc(10px + env(safe-area-inset-right, 0px));" +
+          "padding:8px 10px;background:rgba(10,77,85,0.96);border-radius:12px;" +
+          "box-shadow:0 8px 24px rgba(0,0,0,0.28);";
+        var st = d.createElement("style");
+        st.id = "owlpark-fallback-actions-style";
+        st.setAttribute("data-owlpark-fallback", "actions");
+        st.textContent =
+          "#owlpark-fallback-actions>button,#owlpark-fallback-actions>a" +
+          "{min-height:44px;box-sizing:border-box;}";
+        d.head.appendChild(st);
+        d.body.appendChild(b);
+        return b;
+      }
+      var H = {
+        isZoo: function () { return !!d.getElementById("SalesChannelDetailRepeater"); },
+        dock: function () { return q(".view-cart") || q("#sub-header") || q(".header-actions") || bar(); },
+        fallbackBar: bar,
+        pruneBar: function () {
+          var b = d.getElementById("owlpark-fallback-actions");
+          if (!b || b.children.length) return;
+          b.remove();
+          var st = d.getElementById("owlpark-fallback-actions-style");
+          if (st) st.remove();
+        },
+        heading: function () { return q("#ContentHeading") || q(".catalog-heading"); },
+        grid: function () { return d.getElementById("SalesChannelDetailRepeater") || d.getElementById("catalog-grid"); },
+        rows: function () {
+          var out = [];
+          d.querySelectorAll("tr.pluRow[data-plu], .product-row[data-product-id]").forEach(function (r) {
+            var id = H.rowId(r);
+            if (id && id.indexOf("{{") === -1) out.push(r);
+          });
+          return out;
+        },
+        isPlu: function (r) { return !!(r.matches && r.matches("tr.pluRow")); },
+        rowId: function (r) { return r.getAttribute("data-plu") || r.getAttribute("data-product-id") || ""; },
+        rowName: function (r) { var e = q(".pluName, h3", r); return e ? e.textContent.trim() : ""; },
+        rowPriceEl: function (r) { return q('.pluPrice [data-text="price"], [data-text="price"], .price-amount', r); },
+        rowPrice: function (r) {
+          var h = q('input[id$="PLUPriceHiddenField"]', r);
+          if (h && h.value) return num(h.value);
+          var e = H.rowPriceEl(r);
+          return e ? num(e.textContent) : 0;
+        },
+        rowNameCell: function (r) { return q(".pluNameShortName, .row-title-line, .pluName, h3", r); },
+        rowInfoCell: function (r) { return q(".pluInfo, .row-body", r) || r; },
+        rowQty: function (r) { return q("input.PLUQtyTextBox, [data-add-id]", r); },
+        qtyInputs: function () { return d.querySelectorAll("input.PLUQtyTextBox"); },
+        num: num,
+        q: q
+      };
+      window.__owlHost = H;
+      return H;
     }
-    function owlparkPruneFallbackBar() {
-      var bar = document.getElementById("owlpark-fallback-actions");
-      if (!bar || bar.children.length) return;
-      bar.remove();
-      var barStyle = document.getElementById("owlpark-fallback-actions-style");
-      if (barStyle) barStyle.remove();
+    // ------------------------------------------------------------------------
+    var H = owlHost();
+
+    // Build the comparison list from the live rows of whatever store we're on —
+    // the zoo web store has no products.json feed, so read its PLU rows directly.
+    function rowsToList() {
+      return H.rows().map(function (r) {
+        var name = H.rowName(r);
+        return {
+          name: name,
+          category: /member/i.test(name) ? "membership" : "ticket",
+          price: H.rowPrice(r),
+          unit: "",
+          plu: H.rowId(r),
+          emoji: "🎟️",
+        };
+      });
     }
 
     function removeOverlay() {
@@ -226,6 +285,11 @@
         showOverlay(products);
         return;
       }
+      // The zoo web store has no products.json — compare its live PLU rows.
+      if (H.isZoo()) {
+        showOverlay(rowsToList());
+        return;
+      }
       fetch("data/products.json")
         .then(function (res) {
           if (!res.ok) throw new Error("HTTP " + res.status);
@@ -237,7 +301,10 @@
         })
         .catch(function (err) {
           console.error("[" + FEATURE_ID + "] failed to load products", err);
-          if (compareBtn) {
+          var list = rowsToList();
+          if (list.length) {
+            showOverlay(list);
+          } else if (compareBtn) {
             compareBtn.textContent = "⚖️ Compare unavailable";
             compareBtn.disabled = true;
           }
@@ -245,8 +312,9 @@
     }
 
     function activate() {
-      var heading =
-        document.querySelector(".catalog-heading") || owlparkFallbackBar();
+      // Dock beside the zoo web store's content heading first, then Owl Park's
+      // catalog heading, then a floating bar if pasted into any other page body.
+      var heading = H.heading() || H.dock();
 
       compareBtn = document.createElement("button");
       compareBtn.type = "button";
@@ -264,7 +332,7 @@
         compareBtn.remove();
         compareBtn = null;
       }
-      owlparkPruneFallbackBar();
+      H.pruneBar();
     }
 
     activate();

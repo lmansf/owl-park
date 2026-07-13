@@ -141,6 +141,111 @@
     var productsLoaded = false;
     var lastSnapshot = null;
 
+    // --- Host adapter -------------------------------------------------------
+    // Resolves whichever storefront this snippet was pasted into, preferring the
+    // ZooTampa web store (ASP.NET PLU rows), then the Owl Park storefront, then a
+    // generic fallback. Shared defensively on window so features pasted together
+    // reuse one instance. Keeps every feature speaking one host vocabulary.
+    function owlHost() {
+      if (window.__owlHost) return window.__owlHost;
+      var d = document;
+      function q(s, r) { return (r || d).querySelector(s); }
+      function num(t) { return parseFloat(String(t).replace(/[^0-9.]/g, "")) || 0; }
+      function bar() {
+        var b = d.getElementById("owlpark-fallback-actions");
+        if (b) return b;
+        b = d.createElement("div");
+        b.id = "owlpark-fallback-actions";
+        b.setAttribute("data-owlpark-fallback", "actions");
+        b.style.cssText =
+          "position:fixed;z-index:2147483000;display:flex;flex-wrap:wrap;gap:8px;" +
+          "align-items:center;justify-content:flex-end;max-width:calc(100vw - 20px);" +
+          "top:calc(10px + env(safe-area-inset-top, 0px));" +
+          "right:calc(10px + env(safe-area-inset-right, 0px));" +
+          "padding:8px 10px;background:rgba(10,77,85,0.96);border-radius:12px;" +
+          "box-shadow:0 8px 24px rgba(0,0,0,0.28);";
+        var st = d.createElement("style");
+        st.id = "owlpark-fallback-actions-style";
+        st.setAttribute("data-owlpark-fallback", "actions");
+        st.textContent =
+          "#owlpark-fallback-actions>button,#owlpark-fallback-actions>a" +
+          "{min-height:44px;box-sizing:border-box;}";
+        d.head.appendChild(st);
+        d.body.appendChild(b);
+        return b;
+      }
+      var H = {
+        isZoo: function () { return !!d.getElementById("SalesChannelDetailRepeater"); },
+        dock: function () { return q(".view-cart") || q("#sub-header") || q(".header-actions") || bar(); },
+        fallbackBar: bar,
+        pruneBar: function () {
+          var b = d.getElementById("owlpark-fallback-actions");
+          if (!b || b.children.length) return;
+          b.remove();
+          var st = d.getElementById("owlpark-fallback-actions-style");
+          if (st) st.remove();
+        },
+        heading: function () { return q("#ContentHeading") || q(".catalog-heading"); },
+        grid: function () { return d.getElementById("SalesChannelDetailRepeater") || d.getElementById("catalog-grid"); },
+        rows: function () {
+          var out = [];
+          d.querySelectorAll("tr.pluRow[data-plu], .product-row[data-product-id]").forEach(function (r) {
+            var id = H.rowId(r);
+            if (id && id.indexOf("{{") === -1) out.push(r);
+          });
+          return out;
+        },
+        isPlu: function (r) { return !!(r.matches && r.matches("tr.pluRow")); },
+        rowId: function (r) { return r.getAttribute("data-plu") || r.getAttribute("data-product-id") || ""; },
+        rowName: function (r) { var e = q(".pluName, h3", r); return e ? e.textContent.trim() : ""; },
+        rowPriceEl: function (r) { return q('.pluPrice [data-text="price"], [data-text="price"], .price-amount', r); },
+        rowPrice: function (r) {
+          var h = q('input[id$="PLUPriceHiddenField"]', r);
+          if (h && h.value) return num(h.value);
+          var e = H.rowPriceEl(r);
+          return e ? num(e.textContent) : 0;
+        },
+        rowNameCell: function (r) { return q(".pluNameShortName, .row-title-line, .pluName, h3", r); },
+        rowInfoCell: function (r) { return q(".pluInfo, .row-body", r) || r; },
+        rowQty: function (r) { return q("input.PLUQtyTextBox, [data-add-id]", r); },
+        qtyInputs: function () { return d.querySelectorAll("input.PLUQtyTextBox"); },
+        num: num,
+        q: q
+      };
+      window.__owlHost = H;
+      return H;
+    }
+    // ------------------------------------------------------------------------
+    var H = owlHost();
+
+    // On the zoo store there is no in-page cart on the ticket-selection page, but
+    // there ARE per-ticket quantity boxes — sum qty × price into a live running
+    // "selection" total so the bar still reflects what the guest is choosing.
+    function zooSelection() {
+      var count = 0;
+      var total = 0;
+      H.rows().forEach(function (r) {
+        var input = H.rowQty(r);
+        var qty = input ? parseInt(input.value, 10) || 0 : 0;
+        if (qty > 0) {
+          count += qty;
+          total += qty * H.rowPrice(r);
+        }
+      });
+      return { count: count, total: total };
+    }
+
+    function cartSnapshot() {
+      if (H.isZoo()) {
+        var s = "";
+        H.qtyInputs().forEach(function (i) {
+          s += (i.value || "") + ",";
+        });
+        return s;
+      }
+      return localStorage.getItem(CART_STORAGE_KEY) || "";
+    }
+
     function readCartLines() {
       try {
         var raw = localStorage.getItem(CART_STORAGE_KEY);
@@ -154,6 +259,21 @@
       var bar = document.getElementById("smcb-bar");
       var summary = document.getElementById("smcb-summary");
       if (!bar || !summary) return;
+
+      if (H.isZoo()) {
+        var sel = zooSelection();
+        if (sel.count === 0) {
+          bar.hidden = true;
+          return;
+        }
+        summary.textContent =
+          sel.count +
+          (sel.count === 1 ? " ticket · $" : " tickets · $") +
+          sel.total.toFixed(2) +
+          " selected";
+        bar.hidden = false;
+        return;
+      }
 
       var lines = readCartLines();
       var api = window.OwlPark;
@@ -190,7 +310,7 @@
     }
 
     function pollCart() {
-      var snapshot = localStorage.getItem(CART_STORAGE_KEY) || "";
+      var snapshot = cartSnapshot();
       if (snapshot !== lastSnapshot) {
         lastSnapshot = snapshot;
         render();
@@ -198,7 +318,12 @@
     }
 
     function openCart() {
-      var cartBtn = document.getElementById("open-cart-btn");
+      // Zoo store: its "View Cart" link navigates to the cart page; Owl Park
+      // opens its in-page drawer.
+      var cartBtn =
+        document.getElementById("ctl00_ViewCartHyperLink") ||
+        document.getElementById("open-cart-btn") ||
+        document.querySelector(".view-cart a");
       if (cartBtn) cartBtn.click();
     }
 
@@ -225,6 +350,7 @@
       }
 
       pollIntervalId = setInterval(pollCart, POLL_MS);
+      render(); // reflect any pre-filled quantities right away on the zoo store
     }
 
     function deactivate() {

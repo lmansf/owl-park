@@ -60,6 +60,18 @@
       var hero = document.querySelector(".hero-banner");
       if (ticker && hero && ticker.previousElementSibling !== hero) {
         hero.insertAdjacentElement("afterend", ticker);
+      } else if (ticker) {
+        // No Owl Park hero — sit the ticker just under the zoo store heading.
+        var zooAnchor =
+          document.getElementById("ContentHeading") ||
+          document.getElementById("sub-header");
+        if (
+          zooAnchor &&
+          zooAnchor.parentNode &&
+          ticker.previousElementSibling !== zooAnchor
+        ) {
+          zooAnchor.insertAdjacentElement("afterend", ticker);
+        }
       }
       track.innerHTML = FACTS.map(function (fact) {
         return "<span>" + fact + "</span>";

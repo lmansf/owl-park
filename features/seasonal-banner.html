@@ -47,6 +47,18 @@
     function activate() {
       var el = document.querySelector(".owlpark-feat-seasonal-banner .sb-text");
       if (!el) return;
+
+      // On a store that isn't Owl Park (e.g. the zoo web store), lift the banner
+      // to the top of the page content so it reads as a banner instead of
+      // trailing the end of the body where the loader first dropped it.
+      var banner = document.querySelector(".owlpark-feat-seasonal-banner");
+      var anchor =
+        document.getElementById("sub-header") ||
+        document.getElementById("ContentHeading");
+      if (banner && anchor && anchor.parentNode) {
+        anchor.parentNode.insertBefore(banner, anchor);
+      }
+
       var i = 0;
       intervalId = setInterval(function () {
         i = (i + 1) % MESSAGES.length;
