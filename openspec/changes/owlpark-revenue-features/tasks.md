@@ -4,16 +4,21 @@
 - [x] 1.2 `data/products.json`: add 4 `addon` products (Parking, Fast-Track Entry, Behind-the-Scenes
       Keeper Experience, Souvenir Owl Cup) with their own PLUs.
 - [x] 1.3 `js/products.js`: add `resolveLine(line, products)` — the single place a line's
-      name/price/emoji/plu/unit is decided (catalog product, overridden by `line.custom`).
+      name/price/emoji/plu/unit is decided (catalog product, overridden by `line.custom`) — plus the
+      rest of the cart arithmetic beside it: `cartTotal`, `discountOf` (the one rounding, rate clamped
+      to `[0, 1]`), `itemCount`/`isGiftOnly` (a donation is money, not an item) and
+      `withoutOrphanedGifts` (a `custom.source === "roundup"` gift dies with the purchase it rounded).
+      Publish them on `window.OwlPark` for the features, which cannot import the module.
 - [x] 1.4 `js/cart.js`: optional `key`/`meta`/`custom` on lines (written by the features, which cannot
       import the module); `removeItem`/`setQty` match on line key (which equals the product id for plain
       lines); listen for the `owl-park-cart-changed` window event and re-notify, and raise that same
-      event from `writeCart()` so a core mutation reaches feature panels at once. Existing contract
-      unchanged.
+      event from `writeCart()` so a core mutation reaches feature panels at once (a write made from
+      inside that dispatch is re-announced when it unwinds, capped so it cannot loop); prune an
+      orphaned round-up gift on read. Existing contract unchanged.
 - [x] 1.5 `js/main.js`: render cart lines and the checkout summary through `resolveLine`; use the line
       key in the drawer's data attributes; render `meta.*.note` captions with `textContent`; hide the
-      quantity stepper on `custom.fixed` lines; show only categories that have a filter tab in the
-      catalog.
+      quantity stepper on `custom.fixed` lines; badge a gift-only cart as 🎁 rather than "0"; show only
+      categories that have a filter tab in the catalog.
 
 ## 2. The five modules
 

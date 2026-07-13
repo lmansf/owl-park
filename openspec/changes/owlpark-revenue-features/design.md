@@ -26,7 +26,8 @@ Three of the five features need more than that:
     "emoji": "🦉",
     "unit": "donation",
     "kind": "donation",          //   marks a line that is not admission (excluded from savings math)
-    "fixed": true                //   render without a quantity stepper
+    "fixed": true,               //   render without a quantity stepper
+    "source": "roundup"          //   which offer the line came from (a round-up gift vs a tier gift)
   }
 }
 ```
@@ -60,8 +61,20 @@ product price.
 **Why the pricing rules are also on `window.OwlPark`:** feature modules cannot `import`, so before
 this they each re-derived `product.price × qty` — which drops non-catalog lines (a donation showed as
 $0.00 in the mini cart bar) and ignores off-peak discounts, producing two different totals for one
-cart. `js/products.js` publishes `resolveLine`, `cartTotal` and `discountOf` on `window.OwlPark`, and
-every feature that prices lines goes through them.
+cart. `js/products.js` publishes `resolveLine`, `cartTotal`, `itemCount`, `isGiftOnly` and
+`discountOf` on `window.OwlPark`, and every feature that prices or counts lines goes through them.
+
+**Why a donation is not an item, and an orphaned round-up is dropped:** a charitable gift is given,
+not bought, so `itemCount()` (and `Cart.totalItemCount()` through it) skips a `custom.kind ===
+"donation"` line, and a cart holding a gift and nothing else — `isGiftOnly()` — badges as 🎁 rather
+than claiming "0 items" beside a real total. A round-up gift, though, was an offer to round _one
+purchase_ up, so once nothing is left to round there is no order left to carry it:
+`withoutOrphanedGifts()` drops a `custom.source === "roundup"` line when no purchased line remains,
+and `readCart()` applies that on every read, so a shopper who emptied their cart is never still
+charged for it. The rule lives in `js/products.js`, not in `conservation-roundup`, so it holds with
+every feature switched off — a feature is not the last line of defence for a charge. A tier gift is a
+deliberate standalone donation and is left alone. Dropping is not recomputing: a pinned amount is
+still never quietly changed.
 
 **Why `meta` is namespaced with a `note`:** `js/main.js` stays feature-agnostic — it renders
 `Object.values(line.meta).map(v => v.note)` as small caption lines under the cart line name (with
@@ -78,9 +91,15 @@ re-renders. On the manager page (no cart module loaded) the event is simply unob
 
 The bridge runs both ways: `writeCart()` in `js/cart.js` raises the same event, so a core mutation
 (Add to Cart, the drawer's +/-/Remove, `clear`) reaches feature panels at once rather than up to one
-700 ms poll later — a panel acting on a cart it has not seen yet acts on the wrong one. The dispatch
-is not re-entrant (a listener that writes the cart back is stored but does not raise a second event,
-and every listener re-reads storage anyway), so it cannot loop. It is a latency fix, not a guarantee:
+700 ms poll later — a panel acting on a cart it has not seen yet acts on the wrong one. The event
+dispatches synchronously, so a listener that writes the cart back re-enters `writeCart()` while
+earlier listeners have already run against the older lines; that nested write is therefore stored and
+**re-announced once the dispatch in flight unwinds**, rather than dropped — otherwise the drawer,
+whose listener runs first, would keep rendering lines a later listener had already replaced. Two
+listeners writing at each other would recur forever, so the restatements are capped
+(`MAX_RESTATEMENTS`, after which the module warns and stops). The cap bounds writes made *through*
+this module only: a feature writes the storage key and dispatches the event itself, so it must not
+write the cart from its own `owl-park-cart-changed` handler. It is a latency fix, not a guarantee:
 a panel whose button mutates the cart still recomputes its offer from a fresh cart read **at click
 time** and declines to apply an offer the cart no longer supports.
 

@@ -33,7 +33,9 @@ This file is the project's committed home for project-intrinsic agent knowledge:
   A feature that WRITES the cart writes that key and then dispatches `owl-park-cart-changed` on
   `window`; `js/cart.js` listens and re-notifies so the storefront re-renders. `js/cart.js`'s own
   `writeCart()` raises that same event, so a core mutation reaches feature panels at once instead of
-  up to one poll interval later (the dispatch is guarded against re-entry, so it can't loop). It's a
+  up to one poll interval later (a write made from inside that dispatch is re-announced once it
+  unwinds, so no listener is left rendering superseded lines, capped so two feuding listeners can't
+  loop). It's a
   latency fix, not a guarantee: a feature panel whose button mutates the cart must still recompute its
   offer from a fresh cart read AT CLICK TIME and decline an offer the cart no longer supports. A cart
   line is
@@ -41,7 +43,10 @@ This file is the project's committed home for project-intrinsic agent knowledge:
   only place a line's price and display fields are decided, so every total agrees. A discounted line
   (off-peak) stores `custom.discountRate`, a basis re-applied to the live catalog price on every
   render — never a discounted amount, which a persisted cart would outlive; `custom.price` is an
-  absolute only for a line with no catalog product (the donation). Since features can't import
+  absolute only for a line with no catalog product (the donation). A donation isn't an item, so
+  `itemCount()` skips it and a gift-only cart badges as 🎁 (`isGiftOnly()`); `readCart()` drops a
+  `custom.source === "roundup"` donation once the cart holds no purchased line (`withoutOrphanedGifts()`)
+  — a CORE rule, so it holds with `conservation-roundup` switched off. Since features can't import
   `js/products.js` either, those rules are published on `window.OwlPark` (`resolveLine`, `cartTotal`,
   `itemCount`, `isGiftOnly`, `discountOf`) — a feature that prices cart lines MUST use them instead of `product.price × qty`,
   which drops donation lines and ignores off-peak discounts. That API is an import side effect of

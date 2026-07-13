@@ -75,11 +75,23 @@ discounted line stores the **discount basis**, never a discounted amount: `resol
 `discountRate` to today's catalog price on every render, so re-pricing a product can't leave a stale
 number behind. An absolute `custom.price` is only for a line with no catalog product — a donation
 amount is the shopper's own choice, not a product price. `discountOf(price, rate)` is the single
-rounding, so an advertised saving always equals the amount actually charged.
+rounding, so an advertised saving always equals the amount actually charged; it clamps the rate to
+`[0, 1]`, since a rate read back from a hand-editable stored line may only ever price a line below
+catalog, never above it.
 
 `resolveLine(line, products)` in `js/products.js` is the **single** place a line's price and display
 fields are decided (`custom` wins over the catalog product). The drawer subtotals, the cart total and
 the checkout summary all go through it, so no total can disagree with any line.
+
+A donation is given, not bought, so it isn't one of the items the shopper is carrying: `itemCount()`
+(and so `Cart.totalItemCount()`) skips any line marked `custom.kind === "donation"`, and a cart
+holding a gift and nothing else — `isGiftOnly()` — shows a 🎁 on the cart badge, because "0 items"
+beside a real total would be a small untruth. A round-up gift was an offer to round _one purchase_ up,
+so it dies with that purchase: `readCart()` drops a `custom.source === "roundup"` line once no
+purchased line is left (`withoutOrphanedGifts()` in `js/products.js`). That lives in core, not in
+`conservation-roundup`, so it holds with every feature switched off. A tier donation promised nothing
+about a total and stands alone; and dropping an orphan is not _recomputing_ one — an amount the
+shopper agreed to is still never quietly changed.
 
 Features can't `import` `js/cart.js`, so a feature that _mutates_ the cart writes
 `localStorage["owl-park-cart"]` directly and then dispatches `owl-park-cart-changed` on `window`;
@@ -90,9 +102,11 @@ feature panel sees a core mutation at once instead of up to one poll interval la
 button acts on the cart should still recompute its offer from a fresh cart read at click time and
 decline to apply an offer the cart no longer supports; the event closes the window, it doesn't remove
 the need to check. Because they can't import `js/products.js` either, the pricing rules are published on
-**`window.OwlPark`** (`resolveLine`, `cartTotal`, `itemCount`, `isGiftOnly`, `discountOf`). A feature that prices cart lines
+**`window.OwlPark`** (`resolveLine`, `cartTotal`, `itemCount`, `isGiftOnly`, `discountOf`). A feature
+that prices or counts cart lines
 **must** go through those — re-deriving price from `product.price × qty` silently drops donation
-lines and ignores off-peak discounts, and its total then disagrees with the drawer's. `js/products.js`
+lines and ignores off-peak discounts, and counting `qty` by hand tallies a donation as an item, so its
+numbers then disagree with the drawer's (see `sticky-mini-cart-bar`). `js/products.js`
 publishes that API as an import side effect, and both page entry points (`js/main.js`,
 `js/manager.js`) import it, so it exists wherever features are activated; a feature should still guard
 for its absence and stay quiet rather than throw.
@@ -215,8 +229,10 @@ concatenating the value into an `innerHTML` string — a corrupted or hand-edite
 render as literal text, not as markup (see `order-history-log` and `ticket-comparison-table`).
 Purely static shells (headings, close buttons) can keep using `innerHTML`.
 
-**Gotcha for features that fetch `data/products.json`:** cart lines in `localStorage` carry only
-`{ id, qty }`, so any price or total is derived from a product list your feature fetched itself.
+**Gotcha for features that fetch `data/products.json`:** a cart line in `localStorage` carries no
+price, so any price or total is derived from a product list your feature fetched itself — and derived
+through `window.OwlPark` (see [the cart line model](#the-cart-line-model)), never from
+`product.price × qty`, which drops donation lines and ignores off-peak discounts.
 Don't render that derived value until the fetch resolves — show nothing rather than a wrong number
 (see `sticky-mini-cart-bar`, which stays hidden, and logs to the console, if its fetch fails). The
 feature can also be disabled while that request is in flight, so bump an activation counter in
@@ -319,7 +335,7 @@ features-manager.html      enhancement manager UI
 css/storefront.css         shared site styles
 css/manager.css            manager-page-only styles
 data/products.json         product catalog + PLU data
-js/products.js             product data loading helpers
+js/products.js             product data loading + cart-line pricing rules (also on window.OwlPark)
 js/cart.js                 cart state module (localStorage-backed)
 js/feature-loader.js       runtime feature discovery/activate/deactivate
 js/main.js                 storefront page glue

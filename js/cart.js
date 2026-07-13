@@ -12,8 +12,11 @@ const CART_STORAGE_KEY = "owl-park-cart";
  *              may carry a `note` string, which the storefront renders as a caption on the line.
  *   - `custom` self-describing overrides: `discountRate` (a share off the live catalog price, e.g. an
  *              off-peak ticket) or `price` (the whole price of a non-catalog line such as a donation),
- *              plus `name`/`emoji`/`unit`/`plu`/`kind`/`fixed`. `resolveLine()` in js/products.js is
- *              the single place these win over the catalog.
+ *              plus `name`/`emoji`/`unit`/`plu`/`kind`/`fixed`/`source` (`kind: "donation"` marks a
+ *              line that is money but not an item, so `itemCount()` skips it; `source` records the
+ *              offer a line came from, and a `"roundup"` gift is dropped once nothing is left to round
+ *              — see `withoutOrphanedGifts`). `resolveLine()` in js/products.js is the single place
+ *              these win over the catalog.
  */
 
 /**
