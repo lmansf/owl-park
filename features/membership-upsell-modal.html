@@ -9,85 +9,208 @@
   }
 </script>
 
-<style>
-  .owlpark-feat-membership-upsell-overlay {
+<style id="owlpark-membership-upsell-modal-style">
+  .owlpark-feat-membership-upsell-modal-overlay {
     position: fixed;
     inset: 0;
-    /* inset: 0 sizes this against the *large* viewport on iOS Safari, so 100% of
-       it is taller than what you can see. 100dvh pins it to the visible one. */
+    /* inset: 0 sizes against the *large* iOS viewport, so 100% is taller than
+       what you can see. 100dvh pins it to the visible one. */
     height: 100dvh;
     box-sizing: border-box;
-    background: rgba(10, 30, 32, 0.45);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 65;
-    padding: calc(1rem + env(safe-area-inset-top, 0px))
-      calc(1rem + env(safe-area-inset-right, 0px))
-      calc(1rem + env(safe-area-inset-bottom, 0px))
-      calc(1rem + env(safe-area-inset-left, 0px));
-    animation: owlpark-membership-upsell-fade-in 0.2s ease;
+    z-index: 2147483200;
+    padding: calc(1.25rem + env(safe-area-inset-top, 0px))
+      calc(1.25rem + env(safe-area-inset-right, 0px))
+      calc(1.25rem + env(safe-area-inset-bottom, 0px))
+      calc(1.25rem + env(safe-area-inset-left, 0px));
+    background: rgba(16, 22, 24, 0.38);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    transition: opacity 0.18s ease;
   }
-
-  @keyframes owlpark-membership-upsell-fade-in {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
+  .owlpark-feat-membership-upsell-modal-overlay.is-open {
+    opacity: 1;
   }
-
-  .owlpark-feat-membership-upsell-card {
-    background: white;
-    border-radius: var(--radius-lg);
-    padding: 1.8rem;
-    max-width: 380px;
+  .owlpark-feat-membership-upsell-modal-card {
+    position: relative;
+    background: #ffffff;
+    border: 1px solid rgba(17, 33, 31, 0.08);
+    border-radius: 20px;
+    padding: 2rem;
+    max-width: 420px;
     width: 100%;
     box-sizing: border-box;
-    text-align: center;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
     /* Cap to the overlay box — the visible viewport, minus its safe-area
-       padding — so a short phone screen can still reach the buttons below. */
+       padding — so a short phone screen can still reach the button below. */
     max-height: 100%;
     overflow-y: auto;
+    box-shadow: 0 18px 50px rgba(15, 30, 33, 0.18);
+    text-align: center;
+    color: #17211f;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    transform: scale(0.98);
+    opacity: 0;
+    transition:
+      transform 0.2s cubic-bezier(0.2, 0.6, 0.2, 1),
+      opacity 0.2s ease;
   }
-
-  .owlpark-feat-membership-upsell-card .mu-icon {
-    font-size: 2.4rem;
+  .owlpark-feat-membership-upsell-modal-overlay.is-open
+    .owlpark-feat-membership-upsell-modal-card {
+    transform: scale(1);
+    opacity: 1;
   }
-  .owlpark-feat-membership-upsell-card h3 {
-    margin: 0.5rem 0 0.4rem;
-    color: var(--cove-teal-dark);
+  .owlpark-feat-membership-upsell-modal-icon {
+    font-size: 2rem;
+    line-height: 1;
+    margin-bottom: 0.75rem;
   }
-  .owlpark-feat-membership-upsell-card p {
-    margin: 0 0 1.2rem;
-    color: #4a5657;
-    font-size: 0.92rem;
+  .owlpark-feat-membership-upsell-modal-card h3 {
+    margin: 0 0 0.6rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #17211f;
   }
-
-  .owlpark-feat-membership-upsell-card .mu-dismiss {
-    background: var(--cove-teal);
-    color: white;
+  .owlpark-feat-membership-upsell-modal-card p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    color: #67736f;
+  }
+  .owlpark-feat-membership-upsell-modal-x {
+    position: absolute;
+    top: 0.9rem;
+    right: 0.9rem;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
     border: none;
-    padding: 0.6rem 1.3rem;
     border-radius: 999px;
-    font-weight: 700;
+    background: transparent;
+    color: #67736f;
+    font-size: 1.35rem;
+    line-height: 1;
     cursor: pointer;
+    transition:
+      background 0.16s ease,
+      color 0.16s ease;
+  }
+  .owlpark-feat-membership-upsell-modal-x:hover {
+    background: rgba(17, 33, 31, 0.05);
+    color: #17211f;
+  }
+  .owlpark-feat-membership-upsell-modal-cta {
+    margin-top: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 1.5rem;
+    background: #0f6f7a;
+    color: #ffffff;
+    border: none;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+      background 0.16s ease,
+      transform 0.16s ease;
+  }
+  .owlpark-feat-membership-upsell-modal-cta:hover {
+    background: #0c5f69;
+    transform: translateY(-1px);
+  }
+  .owlpark-feat-membership-upsell-modal-cta:active {
+    transform: translateY(0);
+  }
+  .owlpark-feat-membership-upsell-modal-card :focus-visible {
+    outline: 2px solid #0f6f7a;
+    outline-offset: 2px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-membership-upsell-modal-card {
+      background: #12181a;
+      border-color: rgba(255, 255, 255, 0.1);
+      color: #e9edec;
+    }
+    .owlpark-feat-membership-upsell-modal-card h3 {
+      color: #e9edec;
+    }
+    .owlpark-feat-membership-upsell-modal-card p {
+      color: #98a4a1;
+    }
+    .owlpark-feat-membership-upsell-modal-x {
+      color: #98a4a1;
+    }
+    .owlpark-feat-membership-upsell-modal-x:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #e9edec;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-membership-upsell-modal-overlay,
+    .owlpark-feat-membership-upsell-modal-card,
+    .owlpark-feat-membership-upsell-modal-cta,
+    .owlpark-feat-membership-upsell-modal-x {
+      transition: none;
+    }
+    .owlpark-feat-membership-upsell-modal-card {
+      transform: none;
+    }
   }
 </style>
 
 <script>
   (function () {
+    /* =========================================================================
+     * Membership Upsell Modal  ·  behavioral
+     * -------------------------------------------------------------------------
+     * WHAT   A calm, frosted dialog that invites a guest to consider an annual
+     *        membership once their cart is ticket-only and holds enough tickets
+     *        that a pass would start to pay off.
+     * HOW    Polls localStorage("owl-park-cart") on an interval; when every line
+     *        is a ticket and the ticket count meets CONFIG.minTicketQty, it opens
+     *        once per session. Ticket categories are read from data/products.json.
+     *        The dialog fades/scales in, traps focus, closes on Esc / scrim / × /
+     *        primary action, and restores focus to whatever was focused before.
+     * HOSTS  Owl Park storefront (its cart model + products.json). No-ops where
+     *        that cart/data isn't present (e.g. the zoo ticket-selection page).
+     * ===================================================================== */
+
     var FEATURE_ID = "membership-upsell-modal";
+    var TITLE_ID = "owlpark-membership-upsell-modal-title";
     var CART_STORAGE_KEY = "owl-park-cart";
-    var POLL_MS = 2000;
+
+    // ----- Configuration --------------------------------------------------
+    var CONFIG = {
+      // Trigger: open once the cart holds ONLY tickets and at least this many.
+      minTicketQty: 2,
+      pollMs: 2000, // how often to re-check the cart for the trigger condition
+      icon: "🦉", // small accent above the headline ("" to hide it)
+      title: "Visiting more than once this year?",
+      body:
+        "A Family Membership pays for itself after just 2 visits — plus " +
+        "unlimited return trips all year long.",
+      ctaLabel: "Explore memberships", // the single teal primary pill
+      dismissLabel: "Dismiss", // accessible name for the corner × control
+    };
 
     var pollIntervalId = null;
-    var modalEl = null;
+    var overlayEl = null;
     var shownThisSession = false;
     var products = [];
     var lastCartSnapshot = "";
+    var lastFocus = null;
+    var keyHandler = null;
 
     function readCartLines() {
       try {
@@ -98,37 +221,109 @@
       }
     }
 
-    function removeModal() {
-      if (modalEl) {
-        modalEl.remove();
-        modalEl = null;
+    // ----- Modal dialog ---------------------------------------------------
+    function focusable() {
+      if (!overlayEl) return [];
+      return [].slice.call(
+        overlayEl.querySelectorAll('button, [href], input, [tabindex]:not([tabindex="-1"])'),
+      );
+    }
+
+    function onKey(e) {
+      if (e.key === "Escape" || e.key === "Esc") {
+        e.preventDefault();
+        closeModal();
+        return;
+      }
+      if (e.key === "Tab") {
+        var f = focusable();
+        if (!f.length) return;
+        var first = f[0];
+        var last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
       }
     }
 
     function showModal() {
-      if (modalEl) return;
+      if (overlayEl) return;
       shownThisSession = true;
+      lastFocus = document.activeElement;
 
-      modalEl = document.createElement("div");
-      modalEl.className = "owlpark-feat-membership-upsell-overlay";
-      modalEl.setAttribute("data-owlpark-feature", FEATURE_ID);
-      modalEl.innerHTML =
-        '<div class="owlpark-feat-membership-upsell-card">' +
-        '<div class="mu-icon">🦉</div>' +
-        "<h3>Visiting more than once this year?</h3>" +
-        "<p>A Family Membership pays for itself after just 2 visits — plus unlimited return trips " +
-        "all year long.</p>" +
-        '<button class="mu-dismiss" type="button">Maybe later</button>' +
+      overlayEl = document.createElement("div");
+      overlayEl.className = "owlpark-feat-membership-upsell-modal-overlay";
+      overlayEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+      overlayEl.setAttribute("role", "dialog");
+      overlayEl.setAttribute("aria-modal", "true");
+      overlayEl.setAttribute("aria-labelledby", TITLE_ID);
+
+      var iconHtml = CONFIG.icon
+        ? '<div class="owlpark-feat-membership-upsell-modal-icon" aria-hidden="true">' +
+          CONFIG.icon +
+          "</div>"
+        : "";
+      overlayEl.innerHTML =
+        '<div class="owlpark-feat-membership-upsell-modal-card">' +
+        '<button type="button" class="owlpark-feat-membership-upsell-modal-x" aria-label="' +
+        CONFIG.dismissLabel +
+        '">&times;</button>' +
+        iconHtml +
+        '<h3 id="' +
+        TITLE_ID +
+        '">' +
+        CONFIG.title +
+        "</h3>" +
+        "<p>" +
+        CONFIG.body +
+        "</p>" +
+        '<div><button type="button" class="owlpark-feat-membership-upsell-modal-cta">' +
+        CONFIG.ctaLabel +
+        "</button></div>" +
         "</div>";
-      document.body.appendChild(modalEl);
-      modalEl
-        .querySelector(".mu-dismiss")
-        .addEventListener("click", removeModal);
-      modalEl.addEventListener("click", function (e) {
-        if (e.target === modalEl) removeModal();
+      document.body.appendChild(overlayEl);
+
+      overlayEl
+        .querySelector(".owlpark-feat-membership-upsell-modal-cta")
+        .addEventListener("click", closeModal);
+      overlayEl
+        .querySelector(".owlpark-feat-membership-upsell-modal-x")
+        .addEventListener("click", closeModal);
+      overlayEl.addEventListener("click", function (e) {
+        if (e.target === overlayEl) closeModal();
+      });
+      keyHandler = onKey;
+      document.addEventListener("keydown", keyHandler);
+
+      requestAnimationFrame(function () {
+        if (overlayEl) overlayEl.classList.add("is-open");
+        var x =
+          overlayEl && overlayEl.querySelector(".owlpark-feat-membership-upsell-modal-x");
+        if (x) x.focus();
       });
     }
 
+    function closeModal() {
+      if (!overlayEl) return;
+      var el = overlayEl;
+      overlayEl = null;
+      if (keyHandler) {
+        document.removeEventListener("keydown", keyHandler);
+        keyHandler = null;
+      }
+      el.classList.remove("is-open");
+      setTimeout(function () {
+        el.remove();
+      }, 180);
+      if (lastFocus && typeof lastFocus.focus === "function") lastFocus.focus();
+      lastFocus = null;
+    }
+
+    // ----- Trigger --------------------------------------------------------
     function checkCart() {
       if (shownThisSession) return;
       var lines = readCartLines();
@@ -145,7 +340,7 @@
         return sum + l.qty;
       }, 0);
 
-      if (allTickets && ticketQty >= 2) {
+      if (allTickets && ticketQty >= CONFIG.minTicketQty) {
         showModal();
       }
     }
@@ -169,7 +364,7 @@
           products = data;
           checkCart();
         });
-      pollIntervalId = setInterval(pollCart, POLL_MS);
+      pollIntervalId = setInterval(pollCart, CONFIG.pollMs);
     }
 
     function deactivate() {
@@ -177,7 +372,7 @@
         clearInterval(pollIntervalId);
         pollIntervalId = null;
       }
-      removeModal();
+      closeModal();
     }
 
     activate();

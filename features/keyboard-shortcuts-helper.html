@@ -9,7 +9,11 @@
   }
 </script>
 
-<style>
+<style id="owlpark-keyboard-shortcuts-helper-style">
+  /* Floating launcher: a quiet teal FAB that opens the cheat-sheet. Self-owned,
+     fixed to the viewport corner, safe-area padded, 44px tap target. Kept at a
+     modest z-index so the storefront's own cart/checkout overlays still cover
+     it, exactly as before. */
   .owlpark-feat-keyboard-shortcuts-helper-btn {
     position: fixed;
     left: calc(1.2rem + env(safe-area-inset-left, 0px));
@@ -17,123 +21,309 @@
     bottom: calc(1.2rem + env(safe-area-inset-bottom, 0px));
     width: 44px;
     height: 44px;
-    border-radius: 50%;
-    border: none;
-    background: var(--cove-teal, #0f6f7a);
-    color: white;
-    font-weight: 800;
-    font-size: 1rem;
-    cursor: pointer;
-    box-shadow: 0 8px 24px rgba(15, 60, 65, 0.3);
-    z-index: 45;
-  }
-  .owlpark-feat-keyboard-shortcuts-helper-panel {
-    position: fixed;
-    left: calc(1.2rem + env(safe-area-inset-left, 0px));
-    bottom: calc(4.9rem + env(safe-area-inset-bottom, 0px));
-    max-width: calc(
-      100vw - 2.4rem - env(safe-area-inset-left, 0px) -
-        env(safe-area-inset-right, 0px)
-    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
     box-sizing: border-box;
-    background: white;
-    border: 1px solid var(--cove-border, #e4ddca);
-    border-radius: var(--radius-md, 10px);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
-    padding: 0.8rem 1rem;
-    font-size: 0.82rem;
+    padding: 0;
+    border-radius: 999px;
+    border: none;
+    background: #0f6f7a;
+    color: #ffffff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    font-weight: 600;
+    font-size: 1.05rem;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 6px 24px rgba(20, 40, 40, 0.18);
     z-index: 45;
-    min-width: 210px;
+    transition:
+      transform 0.16s cubic-bezier(0.2, 0.6, 0.2, 1),
+      background 0.16s ease,
+      box-shadow 0.16s ease;
   }
-  .owlpark-feat-keyboard-shortcuts-helper-panel h4 {
-    margin: 0 0 0.5rem;
-    color: var(--cove-teal-dark, #0a4d55);
+  .owlpark-feat-keyboard-shortcuts-helper-btn:hover {
+    background: #0c5f69;
+    transform: translateY(-1px);
+    box-shadow: 0 10px 30px rgba(20, 40, 40, 0.22);
   }
-  .owlpark-feat-keyboard-shortcuts-helper-panel dl {
-    margin: 0;
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0.25rem 0.6rem;
+  .owlpark-feat-keyboard-shortcuts-helper-btn:active {
+    transform: translateY(0);
   }
-  .owlpark-feat-keyboard-shortcuts-helper-panel dt {
-    font-family: monospace;
-    background: var(--cove-sand, #faf3e6);
-    border-radius: 4px;
-    padding: 0.05rem 0.4rem;
+  .owlpark-feat-keyboard-shortcuts-helper-btn:focus-visible {
+    outline: 2px solid #0f6f7a;
+    outline-offset: 2px;
+  }
+
+  .owlpark-feat-keyboard-shortcuts-helper-overlay {
+    position: fixed;
+    inset: 0;
+    height: 100dvh;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2147483200;
+    padding: calc(1.25rem + env(safe-area-inset-top, 0px))
+      calc(1.25rem + env(safe-area-inset-right, 0px))
+      calc(1.25rem + env(safe-area-inset-bottom, 0px))
+      calc(1.25rem + env(safe-area-inset-left, 0px));
+    background: rgba(16, 22, 24, 0.38);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    transition: opacity 0.18s ease;
+  }
+  .owlpark-feat-keyboard-shortcuts-helper-overlay.is-open {
+    opacity: 1;
+  }
+  .owlpark-feat-keyboard-shortcuts-helper-card {
+    position: relative;
+    background: rgba(255, 255, 255, 0.9);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    backdrop-filter: blur(16px) saturate(1.4);
+    border: 1px solid rgba(17, 33, 31, 0.1);
+    border-radius: 20px;
+    padding: 1.75rem;
+    max-width: 420px;
+    width: 100%;
+    box-sizing: border-box;
+    box-shadow: 0 18px 50px rgba(15, 30, 33, 0.18);
     text-align: center;
+    max-height: 100%;
+    overflow-y: auto;
+    color: #17211f;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    transform: scale(0.98);
+    opacity: 0;
+    transition:
+      transform 0.2s cubic-bezier(0.2, 0.6, 0.2, 1),
+      opacity 0.2s ease;
   }
-  .owlpark-feat-keyboard-shortcuts-helper-panel dd {
-    margin: 0;
-    color: #4a5657;
+  .owlpark-feat-keyboard-shortcuts-helper-overlay.is-open
+    .owlpark-feat-keyboard-shortcuts-helper-card {
+    transform: scale(1);
+    opacity: 1;
+  }
+  .owlpark-feat-keyboard-shortcuts-helper-card h3 {
+    margin: 0 0 1.25rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #17211f;
+  }
+  .owlpark-feat-keyboard-shortcuts-helper-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    text-align: left;
+  }
+  .owlpark-feat-keyboard-shortcuts-helper-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.55rem 0.25rem;
+    border-bottom: 1px solid rgba(17, 33, 31, 0.06);
+  }
+  .owlpark-feat-keyboard-shortcuts-helper-row:last-child {
+    border-bottom: none;
+  }
+  .owlpark-feat-keyboard-shortcuts-helper-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #67736f;
+  }
+  .owlpark-feat-keyboard-shortcuts-helper-kbd {
+    flex: none;
+    min-width: 1.5rem;
+    box-sizing: border-box;
+    padding: 0.2rem 0.55rem;
+    background: #f7f8f7;
+    border: 1px solid rgba(17, 33, 31, 0.1);
+    border-radius: 10px;
+    box-shadow: 0 1px 0 rgba(17, 33, 31, 0.06);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas,
+      "Liberation Mono", monospace;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.4;
+    text-align: center;
+    color: #17211f;
+  }
+  .owlpark-feat-keyboard-shortcuts-helper-x {
+    position: absolute;
+    top: 0.9rem;
+    right: 0.9rem;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: #67736f;
+    font-size: 1.35rem;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      background 0.16s ease,
+      color 0.16s ease;
+  }
+  .owlpark-feat-keyboard-shortcuts-helper-x:hover {
+    background: rgba(17, 33, 31, 0.05);
+    color: #17211f;
+  }
+  .owlpark-feat-keyboard-shortcuts-helper-close {
+    margin-top: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 1.5rem;
+    background: #0f6f7a;
+    color: #ffffff;
+    border: none;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+      background 0.16s ease,
+      transform 0.16s ease;
+  }
+  .owlpark-feat-keyboard-shortcuts-helper-close:hover {
+    background: #0c5f69;
+    transform: translateY(-1px);
+  }
+  .owlpark-feat-keyboard-shortcuts-helper-close:active {
+    transform: translateY(0);
+  }
+  .owlpark-feat-keyboard-shortcuts-helper-card :focus-visible {
+    outline: 2px solid #0f6f7a;
+    outline-offset: 2px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-keyboard-shortcuts-helper-card {
+      background: rgba(18, 24, 26, 0.9);
+      border-color: rgba(255, 255, 255, 0.1);
+      color: #e9edec;
+    }
+    .owlpark-feat-keyboard-shortcuts-helper-card h3 {
+      color: #e9edec;
+    }
+    .owlpark-feat-keyboard-shortcuts-helper-row {
+      border-bottom-color: rgba(255, 255, 255, 0.08);
+    }
+    .owlpark-feat-keyboard-shortcuts-helper-label {
+      color: #98a4a1;
+    }
+    .owlpark-feat-keyboard-shortcuts-helper-kbd {
+      background: #1a2224;
+      border-color: rgba(255, 255, 255, 0.11);
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+      color: #e9edec;
+    }
+    .owlpark-feat-keyboard-shortcuts-helper-x {
+      color: #98a4a1;
+    }
+    .owlpark-feat-keyboard-shortcuts-helper-x:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #e9edec;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-keyboard-shortcuts-helper-overlay,
+    .owlpark-feat-keyboard-shortcuts-helper-card,
+    .owlpark-feat-keyboard-shortcuts-helper-btn,
+    .owlpark-feat-keyboard-shortcuts-helper-close,
+    .owlpark-feat-keyboard-shortcuts-helper-x {
+      transition: none;
+    }
+    .owlpark-feat-keyboard-shortcuts-helper-card {
+      transform: none;
+    }
   }
 </style>
 
 <script>
   (function () {
+    /* =========================================================================
+     * Keyboard Shortcuts Helper  ·  utility
+     * -------------------------------------------------------------------------
+     * WHAT   A floating "?" launcher that opens an accessible cheat-sheet modal
+     *        of the storefront's keyboard shortcuts, plus the live global key
+     *        handler that actually runs those shortcuts.
+     * HOW    Appends a fixed launcher button and (on demand) a dialog overlay to
+     *        <body>. The cheat-sheet rows AND the working key handler both derive
+     *        from CONFIG.shortcuts, so they can never drift. The dialog fades /
+     *        scales in, traps focus, closes on Esc / scrim / x / Close, and
+     *        restores focus to the launcher.
+     * HOSTS  Self-contained; the launcher renders on every host. Each shortcut
+     *        action targets Owl Park controls by id/selector and is a safe no-op
+     *        where those controls are absent (e.g. the zoo ViewItems store).
+     * ===================================================================== */
+
     var FEATURE_ID = "keyboard-shortcuts-helper";
+
+    // ----- Configuration --------------------------------------------------
+    // Tunable values, safe to edit. Each explained inline.
+    var CONFIG = {
+      // Title shown atop the cheat-sheet dialog (also its accessible name).
+      title: "Keyboard Shortcuts",
+      // Glyph on the floating launcher button that opens the cheat-sheet.
+      triggerKey: "?",
+      // Accessible name for the icon-only launcher button.
+      buttonLabel: "Show keyboard shortcuts",
+      // The shortcuts. `key`: the chip shown AND the key that fires it (matched
+      // case-insensitively; "Esc" matches the Escape key). `label`: the row
+      // description. `action`: the id dispatched to runAction() when pressed.
+      shortcuts: [
+        { key: "c", label: "Open cart", action: "cart" },
+        { key: "t", label: "Tickets tab", action: "tab:ticket" },
+        { key: "m", label: "Memberships tab", action: "tab:membership" },
+        { key: "a", label: "All tab", action: "tab:all" },
+        { key: "Esc", label: "Close cart / modal", action: "escape" },
+      ],
+    };
+
+    // Id linking the dialog to its title via aria-labelledby.
+    var TITLE_ID = "owlpark-keyboard-shortcuts-helper-title";
+
     var helpBtn = null;
-    var panelEl = null;
-    var keydownHandler = null;
+    var overlayEl = null;
+    var keydownHandler = null; // global shortcut handler (on while active)
+    var keyHandler = null; // modal focus-trap / Esc handler (only while open)
+    var lastFocus = null;
 
-    function isTypingTarget(target) {
-      if (!target) return false;
-      var tag = target.tagName;
-      return (
-        tag === "INPUT" ||
-        tag === "TEXTAREA" ||
-        target.isContentEditable
-      );
-    }
-
-    function togglePanel() {
-      if (panelEl) {
-        panelEl.remove();
-        panelEl = null;
-        return;
-      }
-      panelEl = document.createElement("div");
-      panelEl.className = "owlpark-feat-keyboard-shortcuts-helper-panel";
-      panelEl.setAttribute("data-owlpark-feature", FEATURE_ID);
-      panelEl.innerHTML =
-        "<h4>Keyboard Shortcuts</h4><dl>" +
-        "<dt>c</dt><dd>Open cart</dd>" +
-        "<dt>t</dt><dd>Tickets tab</dd>" +
-        "<dt>m</dt><dd>Memberships tab</dd>" +
-        "<dt>a</dt><dd>All tab</dd>" +
-        "<dt>Esc</dt><dd>Close cart / modal</dd>" +
-        "</dl>";
-      document.body.appendChild(panelEl);
-    }
-
+    // ----- Shortcut actions (unchanged storefront behavior) ---------------
     function clickTab(filter) {
       var btn = document.querySelector('.tab-btn[data-filter="' + filter + '"]');
       if (btn) btn.click();
     }
 
-    function onKeydown(event) {
-      if (isTypingTarget(event.target)) return;
-      if (event.metaKey || event.ctrlKey || event.altKey) return;
-
-      switch (event.key) {
-        case "c":
-        case "C": {
+    function runAction(action) {
+      switch (action) {
+        case "cart": {
           var cartBtn = document.getElementById("open-cart-btn");
           if (cartBtn) cartBtn.click();
           break;
         }
-        case "t":
-        case "T":
+        case "tab:ticket":
           clickTab("ticket");
           break;
-        case "m":
-        case "M":
+        case "tab:membership":
           clickTab("membership");
           break;
-        case "a":
-        case "A":
+        case "tab:all":
           clickTab("all");
           break;
-        case "Escape": {
+        case "escape": {
           var drawer = document.getElementById("cart-drawer");
           if (drawer && drawer.classList.contains("open")) {
             var closeBtn = document.getElementById("close-cart-btn");
@@ -147,8 +337,140 @@
           break;
         }
         default:
-          return;
+          break;
       }
+    }
+
+    function isTypingTarget(target) {
+      if (!target) return false;
+      var tag = target.tagName;
+      return tag === "INPUT" || tag === "TEXTAREA" || target.isContentEditable;
+    }
+
+    function keyMatches(eventKey, shortcutKey) {
+      if (shortcutKey === "Esc") {
+        return eventKey === "Escape" || eventKey === "Esc";
+      }
+      return eventKey.toLowerCase() === shortcutKey.toLowerCase();
+    }
+
+    function onKeydown(event) {
+      if (isTypingTarget(event.target)) return;
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      for (var i = 0; i < CONFIG.shortcuts.length; i++) {
+        if (keyMatches(event.key, CONFIG.shortcuts[i].key)) {
+          runAction(CONFIG.shortcuts[i].action);
+          return;
+        }
+      }
+    }
+
+    // ----- Cheat-sheet dialog ---------------------------------------------
+    function buildRows() {
+      var html = "";
+      CONFIG.shortcuts.forEach(function (sc) {
+        html +=
+          '<div class="owlpark-feat-keyboard-shortcuts-helper-row">' +
+          '<span class="owlpark-feat-keyboard-shortcuts-helper-label">' +
+          sc.label +
+          "</span>" +
+          '<kbd class="owlpark-feat-keyboard-shortcuts-helper-kbd">' +
+          sc.key +
+          "</kbd>" +
+          "</div>";
+      });
+      return html;
+    }
+
+    function focusable() {
+      if (!overlayEl) return [];
+      return [].slice.call(
+        overlayEl.querySelectorAll(
+          'button, [href], input, [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+    }
+
+    function onKey(e) {
+      if (e.key === "Escape" || e.key === "Esc") {
+        e.preventDefault();
+        closeSheet();
+        return;
+      }
+      if (e.key === "Tab") {
+        var f = focusable();
+        if (!f.length) return;
+        var first = f[0];
+        var last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+
+    function openSheet() {
+      if (overlayEl) return;
+      lastFocus = document.activeElement;
+      overlayEl = document.createElement("div");
+      overlayEl.className = "owlpark-feat-keyboard-shortcuts-helper-overlay";
+      overlayEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+      overlayEl.setAttribute("role", "dialog");
+      overlayEl.setAttribute("aria-modal", "true");
+      overlayEl.setAttribute("aria-labelledby", TITLE_ID);
+      overlayEl.innerHTML =
+        '<div class="owlpark-feat-keyboard-shortcuts-helper-card">' +
+        '<button type="button" class="owlpark-feat-keyboard-shortcuts-helper-x" aria-label="Close">&times;</button>' +
+        '<h3 id="' +
+        TITLE_ID +
+        '">' +
+        CONFIG.title +
+        "</h3>" +
+        '<div class="owlpark-feat-keyboard-shortcuts-helper-list">' +
+        buildRows() +
+        "</div>" +
+        '<div><button type="button" class="owlpark-feat-keyboard-shortcuts-helper-close">Close</button></div>' +
+        "</div>";
+      document.body.appendChild(overlayEl);
+
+      overlayEl
+        .querySelector(".owlpark-feat-keyboard-shortcuts-helper-close")
+        .addEventListener("click", closeSheet);
+      overlayEl
+        .querySelector(".owlpark-feat-keyboard-shortcuts-helper-x")
+        .addEventListener("click", closeSheet);
+      overlayEl.addEventListener("click", function (e) {
+        if (e.target === overlayEl) closeSheet();
+      });
+      keyHandler = onKey;
+      document.addEventListener("keydown", keyHandler);
+
+      requestAnimationFrame(function () {
+        if (overlayEl) overlayEl.classList.add("is-open");
+        var x =
+          overlayEl &&
+          overlayEl.querySelector(".owlpark-feat-keyboard-shortcuts-helper-x");
+        if (x) x.focus();
+      });
+    }
+
+    function closeSheet() {
+      if (!overlayEl) return;
+      var el = overlayEl;
+      overlayEl = null;
+      if (keyHandler) {
+        document.removeEventListener("keydown", keyHandler);
+        keyHandler = null;
+      }
+      el.classList.remove("is-open");
+      setTimeout(function () {
+        el.remove();
+      }, 180);
+      if (lastFocus && typeof lastFocus.focus === "function") lastFocus.focus();
+      lastFocus = null;
     }
 
     function activate() {
@@ -156,9 +478,10 @@
       helpBtn.type = "button";
       helpBtn.className = "owlpark-feat-keyboard-shortcuts-helper-btn";
       helpBtn.setAttribute("data-owlpark-feature", FEATURE_ID);
-      helpBtn.setAttribute("aria-label", "Show keyboard shortcuts");
-      helpBtn.textContent = "?";
-      helpBtn.addEventListener("click", togglePanel);
+      helpBtn.setAttribute("aria-label", CONFIG.buttonLabel);
+      helpBtn.setAttribute("aria-haspopup", "dialog");
+      helpBtn.textContent = CONFIG.triggerKey;
+      helpBtn.addEventListener("click", openSheet);
       document.body.appendChild(helpBtn);
 
       keydownHandler = onKeydown;
@@ -170,12 +493,9 @@
         document.removeEventListener("keydown", keydownHandler);
         keydownHandler = null;
       }
-      if (panelEl) {
-        panelEl.remove();
-        panelEl = null;
-      }
+      closeSheet();
       if (helpBtn) {
-        helpBtn.removeEventListener("click", togglePanel);
+        helpBtn.removeEventListener("click", openSheet);
         helpBtn.remove();
         helpBtn = null;
       }
