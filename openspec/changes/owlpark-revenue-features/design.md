@@ -6,7 +6,7 @@ Today a cart line is `{ id, qty }` and every price is looked up in `data/product
 Three of the five features need more than that:
 
 - `gift-mode` needs per-line gift details (recipient, message, delivery date).
-- `offpeak-date-nudge` needs a per-line visit date **and** a per-line discounted price.
+- `offpeak-date-nudge` needs a per-line visit date **and** a per-line discount off the catalog price.
 - `conservation-roundup` needs a line that is not a catalog product at all.
 
 ### The line shape
@@ -20,7 +20,8 @@ Three of the five features need more than that:
     "visit": { "date": "2026-07-22", "note": "📅 Visit Wed 22 Jul · quiet day" }
   },
   "custom": {                    // OPTIONAL. Self-describing overrides.
-    "price": 30.0,               //   price override (off-peak) — or the whole price (donation)
+    "discountRate": 0.12,        //   share off the LIVE catalog price (off-peak); never an amount
+    "price": 30.0,               //   whole price of a line with NO catalog product (donation)
     "name": "Owl Rehabilitation Fund", // only for non-catalog lines
     "emoji": "🦉",
     "unit": "donation",
@@ -38,12 +39,27 @@ different dates, are different lines that must not merge. `lineKey(line) = line.
 `addItem(id, { meta, custom })` always creates a new keyed line. `removeItem`/`setQty` match on
 `lineKey`, which for a plain line _is_ the product id — so every existing caller is unaffected.
 
-**Why `custom` carries the price:** it keeps the price where the total is computed. `resolveLine()`
-(in `js/products.js`) returns `{ name, price, emoji, plu, unit, fixed }` for a line, preferring
-`line.custom` fields over the catalog product's, so the cart drawer, the cart total, and the checkout
-summary all get the right number from one place. A donation line has no catalog product at all and is
-resolved entirely from `custom`. There is no code path where a total is computed from anything but
-`resolveLine()`.
+**Why `custom` carries the pricing basis:** it keeps the price where the total is computed.
+`resolveLine()` (in `js/products.js`) returns `{ name, price, emoji, plu, unit, fixed }` for a line,
+preferring `line.custom` fields over the catalog product's, so the cart drawer, the cart total, and
+the checkout summary all get the right number from one place. A donation line has no catalog product
+at all and is resolved entirely from `custom`. There is no code path where a total is computed from
+anything but `resolveLine()`.
+
+**Why a discounted line stores a rate, not a price:** a cart persists indefinitely and outlives the
+catalog it was priced against, so an absolute off-peak price stored in `localStorage` is a hardcoded
+price that keeps charging the old amount after a re-price. An off-peak line therefore carries
+`custom.discountRate` and `resolveLine()` re-applies it to today's catalog price on every render.
+`discountOf(price, rate)` is the one rounding, shared by the date chip's "save $4" label and the
+charged line price, so the advertised saving is always exactly what is charged. `custom.price` stays
+absolute for a line with **no** catalog product: a donation is the shopper's chosen amount, not a
+product price.
+
+**Why the pricing rules are also on `window.OwlPark`:** feature modules cannot `import`, so before
+this they each re-derived `product.price × qty` — which drops non-catalog lines (a donation showed as
+$0.00 in the mini cart bar) and ignores off-peak discounts, producing two different totals for one
+cart. `js/products.js` publishes `resolveLine`, `cartTotal` and `discountOf` on `window.OwlPark`, and
+every feature that prices lines goes through them.
 
 **Why `meta` is namespaced with a `note`:** `js/main.js` stays feature-agnostic — it renders
 `Object.values(line.meta).map(v => v.note)` as small caption lines under the cart line name (with
@@ -103,7 +119,7 @@ features would need the `localStorage` fallback anyway; the event bridge keeps o
 | `conservation-roundup` | cart drawer, above the total row | adds/removes one `custom.kind === "donation"` line |
 | `visit-addons` | cart drawer, horizontally scrolling rail | adds plain `addon` catalog lines |
 | `gift-mode` | membership product rows (inline panel) + checkout modal (certificate) | adds a keyed line with `meta.gift` |
-| `offpeak-date-nudge` | ticket product rows (inline date rail) | adds a keyed line with `meta.visit` + `custom.price` |
+| `offpeak-date-nudge` | ticket product rows (inline date rail) | adds a keyed line with `meta.visit` + `custom.discountRate` |
 
 Row-mounted features (`gift-mode`, `offpeak-date-nudge`) re-apply through a `MutationObserver` on
 `#catalog-grid` with an idempotency guard, because `renderCatalog()` replaces the grid's `innerHTML`

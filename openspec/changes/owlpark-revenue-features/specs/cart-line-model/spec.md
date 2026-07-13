@@ -29,11 +29,15 @@ disagree with any line.
 - **THEN** the cart drawer renders it with that name and price, the cart total includes it, and the
   checkout summary includes it at the same amount
 
-#### Scenario: A price override is applied everywhere
+#### Scenario: A discount is applied everywhere, against the live catalog
 
-- **WHEN** a line for a catalog product carries `custom.price` (an off-peak discounted ticket)
-- **THEN** the drawer line subtotal, the cart total, and the checkout summary all use the overridden
-  price, and never the catalog price
+- **WHEN** a line for a catalog product carries `custom.discountRate` (an off-peak discounted ticket)
+- **THEN** the drawer line subtotal, the cart total, and the checkout summary all use the catalog
+  price with that rate taken off, and never the undiscounted catalog price
+- **AND WHEN** that product's price changes in `data/products.json` while the line sits in a stored
+  cart
+- **THEN** the line re-prices itself against the new catalog price, because no discounted amount was
+  ever stored
 
 ### Requirement: Features can mutate the cart without importing it
 

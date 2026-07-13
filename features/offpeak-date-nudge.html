@@ -156,11 +156,16 @@
       return DEMAND_LEVELS[index];
     }
 
-    /** The real discount for a date: 0 unless the date is quiet, and always whole dollars. */
+    /**
+     * The real discount for a date: 0 unless the date is quiet, and always whole dollars. The chip
+     * label, the cart note and the price the line is charged at all come from this one number, which
+     * is core's own rounding (js/products.js), so the advertised saving is exactly what is charged.
+     */
     function discountFor(product, demand) {
       if (!demand.discounted) return 0;
-      var off = Math.round(product.price * OFFPEAK_DISCOUNT_RATE);
-      return Math.min(off, product.price);
+      var api = window.OwlPark;
+      if (!api || typeof api.discountOf !== "function") return 0;
+      return api.discountOf(product.price, OFFPEAK_DISCOUNT_RATE);
     }
 
     function upcomingDates() {
@@ -192,13 +197,14 @@
 
     function addDatedTicket(product, date, demand) {
       var discount = discountFor(product, demand);
-      var price = product.price - discount;
+      // The note is stored, and a stored cart outlives the catalog it was priced against, so it
+      // carries no amount: the off-peak price itself is re-resolved from the live catalog on render.
       var note =
         "📅 Visit " +
         longDay(date) +
         " · " +
         demand.label +
-        (discount > 0 ? " · saved " + money(discount) + " off-peak" : "");
+        (discount > 0 ? " · off-peak rate" : "");
 
       var line = {
         id: product.id,
@@ -208,7 +214,7 @@
           visit: { date: isoOf(date), demand: demand.key, note: note },
         },
       };
-      if (discount > 0) line.custom = { price: price };
+      if (discount > 0) line.custom = { discountRate: OFFPEAK_DISCOUNT_RATE };
 
       // Same ticket, same date => same line: bump its quantity instead of stacking a duplicate.
       var lines = readCart();

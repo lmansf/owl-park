@@ -8,9 +8,10 @@ const CART_STORAGE_KEY = "owl-park-cart";
  *              get distinct keys and never merge.
  *   - `meta`   a namespaced map, one entry per feature (`{ gift: {...}, visit: {...} }`). Each entry
  *              may carry a `note` string, which the storefront renders as a caption on the line.
- *   - `custom` self-describing overrides: `price` (a discounted catalog line, or the whole price of a
- *              non-catalog line such as a donation), plus `name`/`emoji`/`unit`/`plu`/`kind`/`fixed`.
- *              `resolveLine()` in js/products.js is the single place these win over the catalog.
+ *   - `custom` self-describing overrides: `discountRate` (a share off the live catalog price, e.g. an
+ *              off-peak ticket) or `price` (the whole price of a non-catalog line such as a donation),
+ *              plus `name`/`emoji`/`unit`/`plu`/`kind`/`fixed`. `resolveLine()` in js/products.js is
+ *              the single place these win over the catalog.
  */
 
 function readCart() {

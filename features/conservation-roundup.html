@@ -166,25 +166,16 @@
       return null;
     }
 
-    /** What the shopper is actually paying for the park, before any giving. */
+    /**
+     * What the shopper is actually paying for the park, before any giving — priced by core's own cart
+     * arithmetic (window.OwlPark, js/products.js), so the round-up is computed off exactly the total
+     * the drawer shows.
+     */
     function purchaseSubtotal() {
-      var lines = readCart();
-      var subtotal = 0;
-      for (var i = 0; i < lines.length; i++) {
-        var line = lines[i];
-        if (isDonation(line)) continue;
-        var price = null;
-        if (line.custom && typeof line.custom.price === "number") {
-          price = line.custom.price;
-        } else {
-          for (var j = 0; j < products.length; j++) {
-            if (products[j].id === line.id) price = products[j].price;
-          }
-        }
-        if (price === null) continue;
-        subtotal += price * line.qty;
-      }
-      return subtotal;
+      var lines = readCart().filter(function (line) {
+        return !isDonation(line);
+      });
+      return window.OwlPark.cartTotal(lines, products);
     }
 
     /** The next whole $5 above what they're paying, and the gift that gets them there. */

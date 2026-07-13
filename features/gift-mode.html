@@ -106,6 +106,7 @@
     var gridObserver = null;
     var orderObserver = null;
     var pendingGifts = [];
+    var products = null;
 
     function readCart() {
       try {
@@ -269,6 +270,7 @@
      * re-applied after each render, guarded so a row that already has one is left alone.
      */
     function decorateRows() {
+      if (!products) return;
       var rows = document.querySelectorAll(
         '#catalog-grid .product-row[data-product-id]',
       );
@@ -276,9 +278,12 @@
         if (row.querySelector('[data-owlpark-feature="' + FEATURE_ID + '"]')) {
           return;
         }
-        var pill = row.querySelector(".category-pill");
-        if (!pill || pill.textContent.trim() !== "membership") return;
-        buildGiftBlock(row, row.getAttribute("data-product-id"));
+        var id = row.getAttribute("data-product-id");
+        var product = products.filter(function (p) {
+          return p.id === id;
+        })[0];
+        if (!product || product.category !== "membership") return;
+        buildGiftBlock(row, id);
       });
     }
 
@@ -333,8 +338,13 @@
       var card = document.querySelector("#checkout-modal .modal-card");
       if (!card) return;
 
-      var existing = card.querySelector(".owlpark-feat-gift-mode-cert-btn");
-      if (existing) existing.remove();
+      // One button per gift went in, so every one of them has to come back out — a survivor would
+      // offer a certificate for a previous order's recipient.
+      card
+        .querySelectorAll(".owlpark-feat-gift-mode-cert-btn")
+        .forEach(function (btn) {
+          btn.remove();
+        });
       if (!pendingGifts.length) return;
 
       var closeBtn = document.getElementById("close-modal-btn");
@@ -364,39 +374,38 @@
       if (!target || !target.closest) return;
       if (!target.closest("#checkout-btn")) return;
 
-      pendingGifts = [];
       var lines = readCart().filter(function (line) {
         return line.meta && line.meta.gift && line.meta.gift.recipient;
       });
-      if (!lines.length) return;
+      pendingGifts = lines.map(function (line) {
+        var product = (products || []).filter(function (p) {
+          return p.id === line.id;
+        })[0];
+        return {
+          gift: line.meta.gift,
+          productName: product ? product.name : "Owl Park membership",
+        };
+      });
+      injectCertificateButton();
+    }
 
+    function activate() {
+      // A row is a membership because the catalog says so, not because of how the row is labelled.
       fetch("data/products.json")
         .then(function (res) {
           if (!res.ok) throw new Error("products.json: " + res.status);
           return res.json();
         })
-        .then(function (products) {
-          pendingGifts = lines.map(function (line) {
-            var product = products.filter(function (p) {
-              return p.id === line.id;
-            })[0];
-            return {
-              gift: line.meta.gift,
-              productName: product ? product.name : "Owl Park membership",
-            };
-          });
-          injectCertificateButton();
+        .then(function (data) {
+          products = data;
+          decorateRows();
         })
         .catch(function (err) {
           console.warn(
-            "[" + FEATURE_ID + "] no catalog, skipping the certificate.",
+            "[" + FEATURE_ID + "] no catalog, gift mode stays off.",
             err,
           );
         });
-    }
-
-    function activate() {
-      decorateRows();
 
       var grid = document.getElementById("catalog-grid");
       if (grid) {
@@ -424,6 +433,7 @@
       }
       document.removeEventListener("click", captureCheckout, true);
       pendingGifts = [];
+      products = null;
       document
         .querySelectorAll('[data-owlpark-feature="' + FEATURE_ID + '"]')
         .forEach(function (el) {

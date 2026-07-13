@@ -62,9 +62,16 @@ A line is `{ id, qty }` — plus three optional fields that let a line carry mor
 - `meta` — a namespaced map, one entry per feature (`{ gift: {...}, visit: {...} }`). An entry may
   carry a `note` string, which `js/main.js` renders as a caption on the cart line and in the checkout
   summary (as text, never markup). Core never learns what a "gift" is.
-- `custom` — self-describing overrides: `price` (a discounted catalog line, e.g. an off-peak ticket —
-  or the whole price of a line with no catalog product at all, e.g. a donation), plus
-  `name`/`emoji`/`unit`/`plu`/`kind`/`fixed` (`fixed` hides the quantity stepper).
+- `custom` — self-describing overrides: `discountRate` (a share off the _live_ catalog price, e.g. an
+  off-peak ticket), `price` (the whole price of a line with no catalog product at all, e.g. a
+  donation), plus `name`/`emoji`/`unit`/`plu`/`kind`/`fixed` (`fixed` hides the quantity stepper).
+
+A cart persists indefinitely and so outlives the catalog it was priced against, which is why a
+discounted line stores the **discount basis**, never a discounted amount: `resolveLine()` re-applies
+`discountRate` to today's catalog price on every render, so re-pricing a product can't leave a stale
+number behind. An absolute `custom.price` is only for a line with no catalog product — a donation
+amount is the shopper's own choice, not a product price. `discountOf(price, rate)` is the single
+rounding, so an advertised saving always equals the amount actually charged.
 
 `resolveLine(line, products)` in `js/products.js` is the **single** place a line's price and display
 fields are decided (`custom` wins over the catalog product). The drawer subtotals, the cart total and
@@ -73,6 +80,10 @@ the checkout summary all go through it, so no total can disagree with any line.
 Features can't `import` `js/cart.js`, so a feature that _mutates_ the cart writes
 `localStorage["owl-park-cart"]` directly and then dispatches `owl-park-cart-changed` on `window`;
 `js/cart.js` listens for that event and re-runs its `onChange` notification, so the page re-renders.
+Because they can't import `js/products.js` either, the pricing rules are published on
+**`window.OwlPark`** (`resolveLine`, `cartTotal`, `discountOf`). A feature that prices cart lines
+**must** go through those — re-deriving price from `product.price × qty` silently drops donation
+lines and ignores off-peak discounts, and its total then disagrees with the drawer's.
 
 Checkout is fully mocked: clicking **Checkout** renders an order summary and a confirmation with a
 generated order id, then clears the cart. There's no real payment backend — this is a demo.

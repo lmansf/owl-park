@@ -15,6 +15,9 @@
     gap: 0.55rem;
     flex-shrink: 0;
   }
+  .owlpark-feat-smart-cart-savings[hidden] {
+    display: none;
+  }
   .owlpark-feat-smart-cart-savings .scs-card {
     border: 1px solid #cfe3d4;
     background: #f2f9f3;
@@ -122,12 +125,15 @@
       return null;
     }
 
-    /** A line's effective price — an off-peak line carries its own discounted price. */
+    /** A line's effective price, straight from core's cart arithmetic (window.OwlPark, js/products.js). */
     function linePrice(line, product) {
-      if (line.custom && typeof line.custom.price === "number") {
-        return line.custom.price;
-      }
-      return product.price;
+      var resolved = window.OwlPark.resolveLine(line, products);
+      return resolved ? resolved.price : product.price;
+    }
+
+    /** A membership bought for someone else does not make the shopper a member. */
+    function isGift(line) {
+      return !!(line.meta && line.meta.gift);
     }
 
     function capacityOf(product) {
@@ -150,7 +156,9 @@
         var line = lines[i];
         var product = productFor(line);
         if (!product) continue;
-        if (product.category === "membership") hasMembership = true;
+        if (product.category === "membership" && !isGift(line)) {
+          hasMembership = true;
+        }
         if (product.category !== "ticket") continue;
         subtotal += linePrice(line, product) * line.qty;
         heads += capacityOf(product).heads * line.qty;

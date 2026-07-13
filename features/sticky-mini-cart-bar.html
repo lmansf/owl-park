@@ -162,14 +162,14 @@
       }
 
       var count = 0;
-      var total = 0;
       lines.forEach(function (line) {
-        var p = products.find(function (prod) {
-          return prod.id === line.id;
-        });
         count += line.qty;
-        if (p) total += p.price * line.qty;
       });
+
+      // Priced by core's own cart arithmetic (window.OwlPark, js/products.js), so this bar can never
+      // show a different total from the cart drawer: it honours a line's off-peak discount, and
+      // counts a line with no catalog product behind it at all, such as a donation.
+      var total = window.OwlPark.cartTotal(lines, products);
 
       summary.textContent = count + (count === 1 ? " item · $" : " items · $") + total.toFixed(2);
       bar.hidden = false;

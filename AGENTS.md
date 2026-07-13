@@ -33,8 +33,13 @@ This file is the project's committed home for project-intrinsic agent knowledge:
   A feature that WRITES the cart writes that key and then dispatches `owl-park-cart-changed` on
   `window`; `js/cart.js` listens and re-notifies so the storefront re-renders. A cart line is
   `{ id, qty }` plus optional `key` / `meta` / `custom` — `resolveLine()` (`js/products.js`) is the
-  only place a line's price and display fields are decided, so every total agrees. See README.md's
-  "The cart line model".
+  only place a line's price and display fields are decided, so every total agrees. A discounted line
+  (off-peak) stores `custom.discountRate`, a basis re-applied to the live catalog price on every
+  render — never a discounted amount, which a persisted cart would outlive; `custom.price` is an
+  absolute only for a line with no catalog product (the donation). Since features can't import
+  `js/products.js` either, those rules are published on `window.OwlPark` (`resolveLine`, `cartTotal`,
+  `discountOf`) — a feature that prices cart lines MUST use them instead of `product.price × qty`,
+  which drops donation lines and ignores off-peak discounts. See README.md's "The cart line model".
 - Only product categories that have a filter tab in `index.html` are rendered in the catalog
   (`renderCatalog()` derives the list from `.tab-btn[data-filter]`), which is what keeps the `addon`
   products out of the storefront — they're attached from the cart by `visit-addons`.
