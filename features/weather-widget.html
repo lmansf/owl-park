@@ -10,44 +10,56 @@
 </script>
 
 <style id="owlpark-weather-widget-style">
+  /* Full-width banner strip that sits in the document flow just below the host's
+     header (see the script), rather than a floating corner badge. */
   .owlpark-feat-weather-widget {
-    position: fixed;
-    top: 5.4rem;
-    right: 1.2rem;
-    z-index: 30;
-    background: white;
-    border: 1px solid var(--cove-border, #e4ddca);
-    border-radius: var(--radius-md, 10px);
-    box-shadow: var(--shadow-card, 0 6px 20px rgba(0, 0, 0, 0.12));
-    padding: 0.55rem 0.9rem;
+    box-sizing: border-box;
+    width: 100%;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.85rem;
+    justify-content: center;
+    gap: 0.65rem;
+    padding: 0.72rem 1.1rem;
+    /* A full-bleed strip, so keep the text clear of landscape notches. */
+    padding-left: calc(1.1rem + env(safe-area-inset-left, 0px));
+    padding-right: calc(1.1rem + env(safe-area-inset-right, 0px));
+    background: linear-gradient(120deg, #0e6b76 0%, #1f97a8 55%, #46b39c 100%);
+    color: #ffffff;
+    font-size: 0.95rem;
     font-weight: 600;
-    color: var(--cove-teal-dark, #0a4d55);
-    max-width: 240px;
+    letter-spacing: 0.2px;
+    line-height: 1.3;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.16);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+    position: relative;
+    z-index: 25;
   }
 
   .owlpark-feat-weather-widget .ww-icon {
-    font-size: 1.15rem;
+    font-size: 1.45rem;
+    line-height: 1;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.2));
   }
 
-  @media (max-width: 700px) {
+  .owlpark-feat-weather-widget .ww-text {
+    text-align: center;
+  }
+
+  @media (max-width: 560px) {
     .owlpark-feat-weather-widget {
-      top: auto;
-      /* Bottom-anchored on phones, so it has to clear the home indicator. */
-      bottom: calc(1.2rem + env(safe-area-inset-bottom, 0px));
-      right: calc(1rem + env(safe-area-inset-right, 0px));
-      left: calc(1rem + env(safe-area-inset-left, 0px));
-      max-width: none;
-      justify-content: center;
+      font-size: 0.85rem;
+      padding-top: 0.6rem;
+      padding-bottom: 0.6rem;
+      gap: 0.5rem;
+    }
+    .owlpark-feat-weather-widget .ww-icon {
+      font-size: 1.25rem;
     }
   }
 </style>
 
-<div class="owlpark-feat-weather-widget">
-  <span class="ww-icon">🌤️</span>
+<div class="owlpark-feat-weather-widget" role="status" aria-live="polite">
+  <span class="ww-icon" aria-hidden="true">🌤️</span>
   <span class="ww-text">Loading local weather…</span>
 </div>
 
@@ -118,17 +130,34 @@
         });
     }
 
-    // The badge is position:fixed, so its on-screen spot never depends on where
-    // it sits in the DOM. Lift it to be a direct child of <body> so a store that
-    // reveals or re-renders its own content wrapper (e.g. the zoo store's #page)
-    // after load can't take the badge down with it; re-attach if it ever does.
-    function ensureMounted() {
-      if (rootEl && !(rootEl.isConnected && rootEl.parentElement === document.body)) {
-        document.body.appendChild(rootEl);
+    // Place the banner in the document flow just below the host's header, full
+    // width, so it reads as a masthead strip rather than a floating badge. The
+    // header region is full-width on each host, so `width:100%` fills the screen
+    // without a full-bleed hack (which would add horizontal scroll).
+    function resolveHeaderInsertion() {
+      var zooHeader = document.getElementById("Header"); // zoo masthead (full-width)
+      if (zooHeader) return { ref: zooHeader, pos: "afterend" };
+      var owlHeader = document.querySelector(".site-header"); // Owl Park header
+      if (owlHeader) return { ref: owlHeader, pos: "afterend" };
+      return { ref: document.body, pos: "afterbegin" }; // generic: top of the page
+    }
+
+    function placedCorrectly(target) {
+      if (!rootEl.isConnected) return false;
+      return target.pos === "afterend"
+        ? target.ref.nextElementSibling === rootEl
+        : target.ref.firstElementChild === rootEl;
+    }
+
+    // Keep the banner (and its <style>) alive and in place: a store that reveals
+    // or re-renders its own chrome after load can drop or displace anything we
+    // inserted, so re-place it from the watchdog if it drifts.
+    function ensurePlaced() {
+      if (!rootEl) return;
+      var target = resolveHeaderInsertion();
+      if (!placedCorrectly(target)) {
+        target.ref.insertAdjacentElement(target.pos, rootEl);
       }
-      // The badge's own <style> is part of the pasted snippet; if it was dropped
-      // inside a region the host re-renders, keep it alive in <head> so the badge
-      // never loses its border/shadow/colour along with that region.
       var styleEl = document.getElementById("owlpark-weather-widget-style");
       if (styleEl && styleEl.parentElement !== document.head) {
         document.head.appendChild(styleEl);
@@ -138,13 +167,13 @@
     function activate() {
       rootEl = document.querySelector(".owlpark-feat-weather-widget");
       if (!rootEl) return;
-      ensureMounted();
+      ensurePlaced();
       iconEl = rootEl.querySelector(".ww-icon");
       textEl = rootEl.querySelector(".ww-text");
 
       loadWeather();
       refreshId = setInterval(loadWeather, REFRESH_MS);
-      watchdogId = setInterval(ensureMounted, 1000);
+      watchdogId = setInterval(ensurePlaced, 1000);
     }
 
     function deactivate() {
