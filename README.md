@@ -254,15 +254,20 @@ js/main.js                 storefront page glue
 js/manager.js              manager page glue
 features/index.json        registry of feature filenames
 features/<feature-id>.html one self-contained file per enhancement
-openspec/                  OpenSpec proposal/specs/design/tasks for this project
+openspec/                  OpenSpec proposals/specs/designs/tasks for the specced changes
 ```
 
 ## OpenSpec
 
-The product/PLU model, cart, features plugin system, and manager UI were specced before
-implementation — see `openspec/changes/critter-cove-shop/` for the proposal, design doc, per-
-capability specs, and task breakdown. The 15 round-2 enhancement modules were specced the same
-way — see `openspec/changes/owlpark-feat15-round2/`.
+Some of the work here was specced before implementation, and those specs live under
+`openspec/changes/`: the product/PLU model, cart, features plugin system, and manager UI in
+`openspec/changes/critter-cove-shop/` (proposal, design doc, per-capability specs, task
+breakdown), and the 15 round-2 enhancement modules in `openspec/changes/owlpark-feat15-round2/`.
+
+Not every change goes through OpenSpec. The mobile/touch responsiveness pass, for example, shipped
+without one — its durable invariants are recorded in the "Mobile & touch" section above rather
+than in a change directory. Don't assume an `openspec/changes/` entry exists for a given behavior;
+the code and this README are the source of truth for anything not listed above.
 
 ## Continuous Integration
 
