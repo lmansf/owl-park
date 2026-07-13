@@ -1,0 +1,120 @@
+# Design
+
+## 1. The cart line model extension
+
+Today a cart line is `{ id, qty }` and every price is looked up in `data/products.json` by `id`.
+Three of the five features need more than that:
+
+- `gift-mode` needs per-line gift details (recipient, message, delivery date).
+- `offpeak-date-nudge` needs a per-line visit date **and** a per-line discounted price.
+- `conservation-roundup` needs a line that is not a catalog product at all.
+
+### The line shape
+
+```jsonc
+{
+  "id": "prod-ga-ticket",       // catalog id, or a synthetic id for a non-catalog line
+  "qty": 1,
+  "key": "prod-ga-ticket#v3",   // OPTIONAL. Unique line key. Absent => key === id (a "plain" line)
+  "meta": {                      // OPTIONAL. Namespaced, one key per feature.
+    "visit": { "date": "2026-07-22", "note": "📅 Visit Wed 22 Jul · quiet day" }
+  },
+  "custom": {                    // OPTIONAL. Self-describing overrides.
+    "price": 30.0,               //   price override (off-peak) — or the whole price (donation)
+    "name": "Owl Rehabilitation Fund", // only for non-catalog lines
+    "emoji": "🦉",
+    "unit": "donation",
+    "kind": "donation",          //   marks a line that is not admission (excluded from savings math)
+    "fixed": true                //   render without a quantity stepper
+  }
+}
+```
+
+Every field beyond `id`/`qty` is optional, so existing stored carts keep working untouched.
+
+**Why a `key` and not just `id`:** two gift memberships for different recipients, or two GA tickets on
+different dates, are different lines that must not merge. `lineKey(line) = line.key || line.id`.
+`addItem(id)` with no options still merges into the plain line for that product (unchanged behavior);
+`addItem(id, { meta, custom })` always creates a new keyed line. `removeItem`/`setQty` match on
+`lineKey`, which for a plain line _is_ the product id — so every existing caller is unaffected.
+
+**Why `custom` carries the price:** it keeps the price where the total is computed. `resolveLine()`
+(in `js/products.js`) returns `{ name, price, emoji, plu, unit, fixed }` for a line, preferring
+`line.custom` fields over the catalog product's, so the cart drawer, the cart total, and the checkout
+summary all get the right number from one place. A donation line has no catalog product at all and is
+resolved entirely from `custom`. There is no code path where a total is computed from anything but
+`resolveLine()`.
+
+**Why `meta` is namespaced with a `note`:** `js/main.js` stays feature-agnostic — it renders
+`Object.values(line.meta).map(v => v.note)` as small caption lines under the cart line name (with
+`textContent`, never `innerHTML`, per the README's dynamic-string gotcha). Gift mode and off-peak can
+therefore both decorate the same line without colliding, and core never learns what a "gift" is.
+
+### The external-mutation bridge
+
+Features cannot `import` `js/cart.js` (the single-file plugin contract forbids imports), so a feature
+that mutates the cart writes `localStorage["owl-park-cart"]` directly — as existing features already
+do for reads — and then dispatches `new CustomEvent("owl-park-cart-changed")` on `window`.
+`js/cart.js` listens for that event and re-runs its `onChange` notification, so `js/main.js`
+re-renders. On the manager page (no cart module loaded) the event is simply unobserved — harmless.
+
+Rejected alternative: exposing `window.OwlParkCart`. It would only exist on the storefront page, so
+features would need the `localStorage` fallback anyway; the event bridge keeps one write path.
+
+## 2. Catalog changes
+
+- **`addon` category.** Parking, Fast-Track Entry, Behind-the-Scenes Keeper Experience and Souvenir
+  Owl Cup become real catalog products with their own PLUs (`A2xx`) and `"category": "addon"`.
+  `renderCatalog()` now shows only products whose category has a filter tab (`ticket`, `membership`),
+  derived from the `.tab-btn[data-filter]` elements rather than hardcoded — so any future category
+  without a tab is automatically storefront-invisible. Add-ons reach the cart only through the
+  `visit-addons` rail, but they are ordinary catalog lines once there (correct name, PLU, price,
+  stepper, totals).
+- **`capacity: { adults, kids }`** on tickets and memberships. This is what makes the
+  `smart-cart-savings` coverage math honest and data-driven — no "3 tickets" or "family of 5"
+  constants in feature code.
+
+## 3. Honesty rules (the point of this change)
+
+- **Never state a saving that isn't arithmetic.** `smart-cart-savings` only renders a swap when
+  `candidateCost < currentTicketSubtotal`, and it prints the difference it actually computed.
+- **Never overstate coverage.** A swap card always names the target's real capacity in the copy
+  ("covers 2 adults + up to 3 kids") and never asserts that it covers the shopper's party; it offers
+  the cheaper option and lets the shopper judge. A membership is only offered when its capacity is at
+  least the number of admissions in the cart.
+- **Break-even is computed, never written.** `ceil(membershipPrice / ticketSubtotal)` → "pays for
+  itself on your Nth visit". If that count exceeds `MAX_PLAUSIBLE_BREAK_EVEN` (4), the feature says
+  nothing rather than making a weak claim.
+- **The donation is opt-in only.** Nothing is pre-selected, nothing is added to a total until the
+  shopper taps an amount, and a donation already in the cart shows an explicit Remove control. The
+  round-up amount is recomputed from the live non-donation subtotal each time the offer renders; once
+  added, the line is a plain "$N to the Owl Rehabilitation Fund" — a claim that stays true even if the
+  cart changes afterwards.
+- **Mocked demand is labelled as mocked.** `offpeak-date-nudge` derives demand from a documented
+  deterministic hash of the ISO date (same date ⇒ same demand, forever) and says "demo demand data" in
+  the UI. The off-peak discount it advertises is genuinely applied to the line price, so the total the
+  shopper pays matches the saving they were promised.
+
+## 4. Per-feature design
+
+| Feature | Mounts on | Cart interaction |
+| --- | --- | --- |
+| `smart-cart-savings` | cart drawer, above the total row | reads cart + products; swap rewrites ticket lines |
+| `conservation-roundup` | cart drawer, above the total row | adds/removes one `custom.kind === "donation"` line |
+| `visit-addons` | cart drawer, horizontally scrolling rail | adds plain `addon` catalog lines |
+| `gift-mode` | membership product rows (inline panel) + checkout modal (certificate) | adds a keyed line with `meta.gift` |
+| `offpeak-date-nudge` | ticket product rows (inline date rail) | adds a keyed line with `meta.visit` + `custom.price` |
+
+Row-mounted features (`gift-mode`, `offpeak-date-nudge`) re-apply through a `MutationObserver` on
+`#catalog-grid` with an idempotency guard, because `renderCatalog()` replaces the grid's `innerHTML`
+on every tab switch (README gotcha). `gift-mode`'s certificate hooks the mocked checkout: it snapshots
+the cart from a **document-level capture-phase** click listener on `#checkout-btn` (which runs before
+`js/main.js`'s own handler calls `Cart.clear()`), then injects the certificate button when `#order-id`
+mutates.
+
+## 5. Mobile-first
+
+Every control is ≥44×44px; captions and labels are not tap targets. The two rails (add-ons, dates)
+scroll inside their own `overflow-x: auto` container, never the page. Panels that overlay use
+`padding-bottom: env(safe-area-inset-bottom)`. Nothing depends on hover: hover styling is additive
+only, and every affordance is a real button or input.

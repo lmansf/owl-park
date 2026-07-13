@@ -1,0 +1,442 @@
+<script type="application/json" data-owlpark-manifest>
+  {
+    "id": "gift-mode",
+    "name": "Gift Mode",
+    "description": "Buy a membership as a gift: recipient, personal message and delivery date ride the cart line, with a printable certificate at checkout.",
+    "category": "behavioral",
+    "enabledByDefault": false,
+    "requiresReload": false
+  }
+</script>
+
+<style>
+  .owlpark-feat-gift-mode {
+    margin-top: 0.8rem;
+    border-top: 1px dashed #d8cfae;
+    padding-top: 0.7rem;
+  }
+  .owlpark-feat-gift-mode .gm-open-btn {
+    min-height: 44px;
+    border: 1px solid #d9b8c8;
+    background: #fdf3f7;
+    color: #8a2f5a;
+    border-radius: 10px;
+    padding: 0.5rem 0.9rem;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .owlpark-feat-gift-mode .gm-panel {
+    margin-top: 0.7rem;
+    display: grid;
+    gap: 0.55rem;
+    border: 1px solid #d9b8c8;
+    background: #fdf3f7;
+    border-radius: 12px;
+    padding: 0.75rem;
+  }
+  .owlpark-feat-gift-mode .gm-field {
+    display: grid;
+    gap: 0.25rem;
+  }
+  .owlpark-feat-gift-mode .gm-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #6d675c;
+  }
+  .owlpark-feat-gift-mode .gm-input,
+  .owlpark-feat-gift-mode .gm-textarea {
+    width: 100%;
+    min-height: 44px;
+    border: 1px solid #e4ddca;
+    border-radius: 10px;
+    padding: 0.55rem 0.7rem;
+    font-size: 0.9rem;
+    font-family: inherit;
+    background: #fff;
+    box-sizing: border-box;
+  }
+  .owlpark-feat-gift-mode .gm-textarea {
+    min-height: 66px;
+    resize: vertical;
+  }
+  .owlpark-feat-gift-mode .gm-add-btn {
+    min-height: 44px;
+    width: 100%;
+    border: none;
+    border-radius: 10px;
+    background: #8a2f5a;
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.9rem;
+    padding: 0.55rem 0.9rem;
+    cursor: pointer;
+  }
+  .owlpark-feat-gift-mode .gm-error {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #a8321f;
+  }
+  .owlpark-feat-gift-mode-cert-btn {
+    display: block;
+    width: 100%;
+    min-height: 44px;
+    margin-top: 0.7rem;
+    border: 1px solid #d9b8c8;
+    background: #fdf3f7;
+    color: #8a2f5a;
+    border-radius: 10px;
+    padding: 0.55rem 0.9rem;
+    font-weight: 800;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  @media (hover: hover) {
+    .owlpark-feat-gift-mode .gm-add-btn:hover {
+      background: #71264a;
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    var FEATURE_ID = "gift-mode";
+    var CART_KEY = "owl-park-cart";
+
+    var gridObserver = null;
+    var orderObserver = null;
+    var pendingGifts = [];
+
+    function readCart() {
+      try {
+        var raw = localStorage.getItem(CART_KEY);
+        var lines = raw ? JSON.parse(raw) : [];
+        return Array.isArray(lines) ? lines : [];
+      } catch (err) {
+        return [];
+      }
+    }
+
+    function writeCart(lines) {
+      localStorage.setItem(CART_KEY, JSON.stringify(lines));
+      window.dispatchEvent(new CustomEvent("owl-park-cart-changed"));
+    }
+
+    function newLineKey(productId) {
+      return (
+        productId +
+        "#gift-" +
+        Date.now().toString(36) +
+        Math.random().toString(36).slice(2, 7)
+      );
+    }
+
+    function formatDay(iso) {
+      // iso is yyyy-mm-dd; parse as local so the label can't slip a day across time zones.
+      var parts = (iso || "").split("-");
+      if (parts.length !== 3) return iso || "";
+      var date = new Date(+parts[0], +parts[1] - 1, +parts[2]);
+      if (isNaN(date.getTime())) return iso;
+      return date.toLocaleDateString(undefined, {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+    }
+
+    function todayIso() {
+      var now = new Date();
+      var m = String(now.getMonth() + 1).padStart(2, "0");
+      var d = String(now.getDate()).padStart(2, "0");
+      return now.getFullYear() + "-" + m + "-" + d;
+    }
+
+    function addGiftLine(productId, gift) {
+      var lines = readCart();
+      lines.push({
+        id: productId,
+        key: newLineKey(productId),
+        qty: 1,
+        meta: {
+          gift: {
+            recipient: gift.recipient,
+            message: gift.message,
+            deliveryDate: gift.deliveryDate,
+            note:
+              "🎁 Gift for " +
+              gift.recipient +
+              " · delivers " +
+              formatDay(gift.deliveryDate),
+          },
+        },
+      });
+      writeCart(lines);
+    }
+
+    function field(labelText, control) {
+      var wrap = document.createElement("label");
+      wrap.className = "gm-field";
+      var label = document.createElement("span");
+      label.className = "gm-label";
+      label.textContent = labelText;
+      wrap.append(label, control);
+      return wrap;
+    }
+
+    function buildGiftBlock(row, productId) {
+      var block = document.createElement("div");
+      block.className = "owlpark-feat-gift-mode";
+      block.setAttribute("data-owlpark-feature", FEATURE_ID);
+
+      var openBtn = document.createElement("button");
+      openBtn.type = "button";
+      openBtn.className = "gm-open-btn";
+      openBtn.textContent = "🎁 Buying this as a gift?";
+      openBtn.setAttribute("aria-expanded", "false");
+      block.appendChild(openBtn);
+
+      var panel = document.createElement("div");
+      panel.className = "gm-panel";
+      panel.hidden = true;
+
+      var recipient = document.createElement("input");
+      recipient.type = "text";
+      recipient.className = "gm-input";
+      recipient.maxLength = 60;
+      recipient.placeholder = "Who's it for?";
+
+      var message = document.createElement("textarea");
+      message.className = "gm-textarea";
+      message.maxLength = 240;
+      message.placeholder = "A line they'll read on the certificate";
+
+      var deliveryDate = document.createElement("input");
+      deliveryDate.type = "date";
+      deliveryDate.className = "gm-input";
+      deliveryDate.min = todayIso();
+      deliveryDate.value = todayIso();
+
+      var error = document.createElement("div");
+      error.className = "gm-error";
+      error.hidden = true;
+
+      var addBtn = document.createElement("button");
+      addBtn.type = "button";
+      addBtn.className = "gm-add-btn";
+      addBtn.textContent = "Add as a gift";
+
+      addBtn.addEventListener("click", function () {
+        var name = recipient.value.trim();
+        if (!name) {
+          error.hidden = false;
+          error.textContent = "Who is the gift for? Add a name first.";
+          recipient.focus();
+          return;
+        }
+        error.hidden = true;
+        addGiftLine(productId, {
+          recipient: name,
+          message: message.value.trim(),
+          deliveryDate: deliveryDate.value || todayIso(),
+        });
+        recipient.value = "";
+        message.value = "";
+        panel.hidden = true;
+        openBtn.setAttribute("aria-expanded", "false");
+      });
+
+      panel.append(
+        field("Recipient", recipient),
+        field("Personal message (optional)", message),
+        field("Deliver on", deliveryDate),
+        error,
+        addBtn,
+      );
+      block.appendChild(panel);
+
+      openBtn.addEventListener("click", function () {
+        panel.hidden = !panel.hidden;
+        openBtn.setAttribute("aria-expanded", String(!panel.hidden));
+        if (!panel.hidden) recipient.focus();
+      });
+
+      row.appendChild(block);
+    }
+
+    /**
+     * `renderCatalog()` replaces #catalog-grid's innerHTML on every tab switch, so the gift block is
+     * re-applied after each render, guarded so a row that already has one is left alone.
+     */
+    function decorateRows() {
+      var rows = document.querySelectorAll(
+        '#catalog-grid .product-row[data-product-id]',
+      );
+      rows.forEach(function (row) {
+        if (row.querySelector('[data-owlpark-feature="' + FEATURE_ID + '"]')) {
+          return;
+        }
+        var pill = row.querySelector(".category-pill");
+        if (!pill || pill.textContent.trim() !== "membership") return;
+        buildGiftBlock(row, row.getAttribute("data-product-id"));
+      });
+    }
+
+    function openCertificate(gift, productName) {
+      var win = window.open("", "_blank", "width=640,height=760");
+      if (!win) {
+        console.warn("[" + FEATURE_ID + "] certificate window was blocked.");
+        return;
+      }
+      var doc = win.document;
+      doc.title = "Owl Park gift certificate";
+
+      var style = doc.createElement("style");
+      style.textContent =
+        "body{font-family:Georgia,serif;margin:0;padding:32px;background:#fdf3f7;color:#2c2a26}" +
+        ".cert{border:3px double #8a2f5a;border-radius:16px;background:#fff;padding:32px;text-align:center}" +
+        ".mark{font-size:48px}h1{font-size:22px;letter-spacing:.08em;text-transform:uppercase;color:#8a2f5a}" +
+        ".for{font-size:28px;margin:18px 0 6px}.what{font-size:17px;font-weight:bold}" +
+        ".msg{margin:22px auto;max-width:34em;font-style:italic;white-space:pre-wrap}" +
+        ".when{margin-top:18px;font-size:14px;color:#6d675c}" +
+        "@media print{body{background:#fff;padding:0}}";
+      doc.head.appendChild(style);
+
+      var cert = doc.createElement("div");
+      cert.className = "cert";
+
+      function part(className, text) {
+        var el = doc.createElement("div");
+        el.className = className;
+        el.textContent = text;
+        return el;
+      }
+
+      var heading = doc.createElement("h1");
+      heading.textContent = "An Owl Park Gift Membership";
+
+      cert.append(
+        part("mark", "🦉"),
+        heading,
+        part("for", "For " + gift.recipient),
+        part("what", productName),
+      );
+      if (gift.message) cert.appendChild(part("msg", "“" + gift.message + "”"));
+      cert.appendChild(part("when", "Delivers " + formatDay(gift.deliveryDate)));
+
+      doc.body.appendChild(cert);
+      win.focus();
+      win.print();
+    }
+
+    function injectCertificateButton() {
+      var card = document.querySelector("#checkout-modal .modal-card");
+      if (!card) return;
+
+      var existing = card.querySelector(".owlpark-feat-gift-mode-cert-btn");
+      if (existing) existing.remove();
+      if (!pendingGifts.length) return;
+
+      var closeBtn = document.getElementById("close-modal-btn");
+      pendingGifts.forEach(function (entry) {
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "owlpark-feat-gift-mode-cert-btn";
+        btn.setAttribute("data-owlpark-feature", FEATURE_ID);
+        btn.textContent = "🎁 Print gift certificate for " + entry.gift.recipient;
+        btn.addEventListener("click", function () {
+          openCertificate(entry.gift, entry.productName);
+        });
+        if (closeBtn) {
+          closeBtn.insertAdjacentElement("beforebegin", btn);
+        } else {
+          card.appendChild(btn);
+        }
+      });
+    }
+
+    /**
+     * js/main.js clears the cart inside its own checkout handler, so the gift lines have to be
+     * captured before it runs. A capture-phase listener on the document sees the click first.
+     */
+    function captureCheckout(event) {
+      var target = event.target;
+      if (!target || !target.closest) return;
+      if (!target.closest("#checkout-btn")) return;
+
+      pendingGifts = [];
+      var lines = readCart().filter(function (line) {
+        return line.meta && line.meta.gift && line.meta.gift.recipient;
+      });
+      if (!lines.length) return;
+
+      fetch("data/products.json")
+        .then(function (res) {
+          if (!res.ok) throw new Error("products.json: " + res.status);
+          return res.json();
+        })
+        .then(function (products) {
+          pendingGifts = lines.map(function (line) {
+            var product = products.filter(function (p) {
+              return p.id === line.id;
+            })[0];
+            return {
+              gift: line.meta.gift,
+              productName: product ? product.name : "Owl Park membership",
+            };
+          });
+          injectCertificateButton();
+        })
+        .catch(function (err) {
+          console.warn(
+            "[" + FEATURE_ID + "] no catalog, skipping the certificate.",
+            err,
+          );
+        });
+    }
+
+    function activate() {
+      decorateRows();
+
+      var grid = document.getElementById("catalog-grid");
+      if (grid) {
+        gridObserver = new MutationObserver(decorateRows);
+        gridObserver.observe(grid, { childList: true });
+      }
+
+      var orderId = document.getElementById("order-id");
+      if (orderId) {
+        orderObserver = new MutationObserver(injectCertificateButton);
+        orderObserver.observe(orderId, { childList: true, characterData: true });
+      }
+
+      document.addEventListener("click", captureCheckout, true);
+    }
+
+    function deactivate() {
+      if (gridObserver) {
+        gridObserver.disconnect();
+        gridObserver = null;
+      }
+      if (orderObserver) {
+        orderObserver.disconnect();
+        orderObserver = null;
+      }
+      document.removeEventListener("click", captureCheckout, true);
+      pendingGifts = [];
+      document
+        .querySelectorAll('[data-owlpark-feature="' + FEATURE_ID + '"]')
+        .forEach(function (el) {
+          el.remove();
+        });
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures[FEATURE_ID] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
+</script>

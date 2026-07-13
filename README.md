@@ -28,12 +28,20 @@ the catalog is hardcoded into HTML or JS. Each product has:
 - `plu` — a short, retail-style lookup code (e.g. `4011`, `M250`), completely independent of `id`.
   Re-map a product to a different PLU by editing this one field — no template, layout, or logic
   changes needed.
-- `category` — `"ticket"` or `"membership"`, used for the storefront filter tabs.
+- `category` — `"ticket"`, `"membership"`, or `"addon"`. The storefront renders **only the categories
+  that have a filter tab** (`renderCatalog()` derives that list from the `.tab-btn[data-filter]`
+  elements). `addon` has no tab, so add-ons never appear in the catalog: they are attached from the
+  cart by the `visit-addons` feature, and are ordinary catalog lines once they're in it. Give a future
+  category a tab in `index.html` and it becomes storefront-visible with no JS change.
+- `capacity` — `{ adults, kids }` on tickets and memberships: how many people the product admits.
+  This is what lets `smart-cart-savings` compute coverage and membership break-even from catalog data
+  instead of hardcoding party sizes.
 - Display fields: `name`, `tagline`, `description`, `price`, `unit`, `emoji`, `accent` (a hex color
   used as the card's accent), and an optional `featured` flag.
 
-The catalog ships with 5 products: General Admission, Family Day Pass, and Twilight Explorer
-tickets, plus Individual and Family & Household memberships.
+The catalog ships with 5 sellable products — General Admission, Family Day Pass, and Twilight
+Explorer tickets, plus Individual and Family & Household memberships — and 4 add-ons (Parking,
+Fast-Track Entry, Behind-the-Scenes Keeper Experience, Souvenir Owl Cup).
 
 ## Shopping cart
 
@@ -41,6 +49,30 @@ tickets, plus Individual and Family & Household memberships.
 exposes add/remove/set-quantity/clear plus a subscribe hook (`Cart.onChange`) that the storefront
 UI (`js/main.js`) uses to re-render the cart drawer any time it changes. The cart persists across
 reloads, and totals are always recomputed from current cart lines rather than cached.
+
+### The cart line model
+
+A line is `{ id, qty }` — plus three optional fields that let a line carry more than a product id:
+
+- `key` — a unique line key. Absent means the line is _plain_ and its key **is** its product id, so a
+  cart stored before these fields existed keeps working. `removeItem`/`setQty` address a line by its
+  key, which for a plain line is the product id, so every existing call site is unaffected. Two lines
+  of the same product with different metadata (two gift memberships, one ticket on two dates) get
+  distinct keys and never merge.
+- `meta` — a namespaced map, one entry per feature (`{ gift: {...}, visit: {...} }`). An entry may
+  carry a `note` string, which `js/main.js` renders as a caption on the cart line and in the checkout
+  summary (as text, never markup). Core never learns what a "gift" is.
+- `custom` — self-describing overrides: `price` (a discounted catalog line, e.g. an off-peak ticket —
+  or the whole price of a line with no catalog product at all, e.g. a donation), plus
+  `name`/`emoji`/`unit`/`plu`/`kind`/`fixed` (`fixed` hides the quantity stepper).
+
+`resolveLine(line, products)` in `js/products.js` is the **single** place a line's price and display
+fields are decided (`custom` wins over the catalog product). The drawer subtotals, the cart total and
+the checkout summary all go through it, so no total can disagree with any line.
+
+Features can't `import` `js/cart.js`, so a feature that _mutates_ the cart writes
+`localStorage["owl-park-cart"]` directly and then dispatches `owl-park-cart-changed` on `window`;
+`js/cart.js` listens for that event and re-runs its `onChange` notification, so the page re-renders.
 
 Checkout is fully mocked: clicking **Checkout** renders an order summary and a confirmation with a
 generated order id, then clears the cart. There's no real payment backend — this is a demo.
@@ -108,14 +140,16 @@ file contains, in order:
 (`js/feature-loader.js`) fetches each file's raw text once, parses out the manifest for discovery,
 and on activate re-creates every non-manifest element and appends it live — creating a _new_
 `<script>` element and appending it (rather than setting `innerHTML`) is what makes the browser
-execute it. All 35 shipped features toggle live with zero page reloads; the manifest/manager UI
+execute it. All 40 shipped features toggle live with zero page reloads; the manifest/manager UI
 still support a `requiresReload` escape hatch for a future feature that genuinely needs one.
 
 Because features can't `import` anything (including each other, or `js/cart.js`), any feature that
-needs cart contents reads `localStorage.getItem("owl-park-cart")` directly (a JSON array of
-`{ id, qty }` objects) and polls on an interval to react to changes, rather than subscribing to a
-callback. `fetch("data/products.json")` remains fine to call from a feature — that's a data fetch,
-not a code import.
+needs cart contents reads `localStorage.getItem("owl-park-cart")` directly (a JSON array of lines —
+see [the cart line model](#the-cart-line-model)) and polls on an interval to react to changes, rather
+than subscribing to a callback. A feature that _writes_ the cart writes that same key and then
+dispatches `owl-park-cart-changed` on `window` so the storefront re-renders.
+`fetch("data/products.json")` remains fine to call from a feature — that's a data fetch, not a code
+import.
 
 ### Authoring a new feature
 
@@ -146,6 +180,12 @@ that decorate the confirmation (see `copy-order-id-button` and `order-history-lo
 `MutationObserver` on the checkout modal / order-id element to re-apply (or react) after each
 checkout, with the same idempotency guard.
 
+**Gotcha for cart-drawer features:** `renderCart()` replaces `#cart-items`' `innerHTML` on every cart
+change, so a panel mounted there needs the same `MutationObserver` + idempotency re-mount (see
+`smart-cart-savings`, `conservation-roundup`, `visit-addons`). Mount panels there rather than in
+`.cart-footer`: the footer doesn't scroll, so anything tall enough pushes the total and the Checkout
+button off the bottom of a phone screen, while `#cart-items` scrolls and keeps them pinned.
+
 **Gotcha for rendering dynamic strings:** build any DOM whose text comes from `localStorage` (or
 any other value your file doesn't hardcode) with `createElement` + `textContent`, never by
 concatenating the value into an `innerHTML` string — a corrupted or hand-edited stored value must
@@ -173,7 +213,7 @@ Cart" button. It resolves this below 560px by ending short of whichever widget i
 selectors — so renaming either of those elements silently reintroduces the dead zone. A new
 bottom-anchored widget has to be fitted into this shared band deliberately.
 
-## The 35 enhancements
+## The 40 enhancements
 
 | Feature                 | Category   | Description                                                                                    |
 | ----------------------- | ---------- | ---------------------------------------------------------------------------------------------- |
@@ -212,6 +252,11 @@ bottom-anchored widget has to be fitted into this shared band deliberately.
 | Species Fact Ticker     | visual     | Scrolling marquee ticker of rotating owl facts below the hero.                                  |
 | Discount Badge Strikethrough | visual | "Was $X" strikethrough pricing with a sale-percent badge on select rows.                    |
 | Park Map Modal          | visual     | Opens a simple illustrated park map in a modal.                                                |
+| Smart Cart Savings      | behavioral | Membership break-even and better-value ticket swaps, computed live from the cart and catalog.  |
+| Conservation Round-Up   | behavioral | Opt-in round-up donation and adopt-an-owl tiers for the Owl Rehabilitation Fund.               |
+| Visit Add-Ons           | behavioral | One-tap rail of visit add-ons in the cart once a ticket is in it.                              |
+| Gift Mode               | behavioral | Gift memberships: recipient, message and delivery date, with a printable certificate.          |
+| Off-Peak Date Nudge     | behavioral | Visit-date picker with per-date demand and a real off-peak discount on quiet days.             |
 
 (Each feature also has a `description` in its own `data-owlpark-manifest` block, shown live in the
 Feature Manager UI; this table mirrors the same feature set.)
@@ -262,7 +307,9 @@ openspec/                  OpenSpec proposals/specs/designs/tasks for the specce
 Some of the work here was specced before implementation, and those specs live under
 `openspec/changes/`: the product/PLU model, cart, features plugin system, and manager UI in
 `openspec/changes/critter-cove-shop/` (proposal, design doc, per-capability specs, task
-breakdown), and the 15 round-2 enhancement modules in `openspec/changes/owlpark-feat15-round2/`.
+breakdown), the 15 round-2 enhancement modules in `openspec/changes/owlpark-feat15-round2/`, and
+the 5 revenue modules plus the cart line model they needed in
+`openspec/changes/owlpark-revenue-features/`.
 
 Not every change goes through OpenSpec. The mobile/touch responsiveness pass, for example, shipped
 without one — its durable invariants are recorded in the "Mobile & touch" section above rather

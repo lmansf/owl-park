@@ -30,6 +30,14 @@ This file is the project's committed home for project-intrinsic agent knowledge:
   after disabling) — re-run that style of check after touching the loader or any feature.
 - Features can't import `js/cart.js` (no imports allowed at all) — those that need cart contents
   read `localStorage.getItem("owl-park-cart")` directly and poll on an interval to react to changes.
+  A feature that WRITES the cart writes that key and then dispatches `owl-park-cart-changed` on
+  `window`; `js/cart.js` listens and re-notifies so the storefront re-renders. A cart line is
+  `{ id, qty }` plus optional `key` / `meta` / `custom` — `resolveLine()` (`js/products.js`) is the
+  only place a line's price and display fields are decided, so every total agrees. See README.md's
+  "The cart line model".
+- Only product categories that have a filter tab in `index.html` are rendered in the catalog
+  (`renderCatalog()` derives the list from `.tab-btn[data-filter]`), which is what keeps the `addon`
+  products out of the storefront — they're attached from the cart by `visit-addons`.
 - Sharp edge in `js/feature-loader.js`'s `injectSnippet`: it parses a feature's raw text with
   `DOMParser`, wrapped in a manually-built `<html><body>...</body></html>` shell before parsing —
   don't remove that wrapper. Without it, a feature file whose first elements are `<script>`/`<style>`
@@ -43,7 +51,10 @@ This file is the project's committed home for project-intrinsic agent knowledge:
   `membership-glow`, `wishlist-favorites`, `discount-badge-strikethrough`) re-apply via a
   `MutationObserver` on `#catalog-grid` guarded by an idempotency check. `js/main.js` likewise
   overwrites `#order-id`'s `textContent` on every checkout (`copy-order-id-button` and
-  `order-history-log` observe and re-apply) — see README.md's "Authoring a new feature" section.
+  `order-history-log` observe and re-apply) and replaces `#cart-items`' `innerHTML` on every cart
+  change (`smart-cart-savings`, `conservation-roundup`, `visit-addons` re-mount the same way) — see
+  README.md's "Authoring a new feature" section. Mount cart panels in `#cart-items` (it scrolls), not
+  `.cart-footer` (it doesn't — tall content there pushes Total and Checkout off a phone screen).
 - CI (`.github/workflows/ci.yml`) runs on every push/PR: JSON validity, `node --check` on `js/` and
   on each feature's extracted behavior script, a `features/index.json` <-> `features/*.html`
   consistency check, and an HTTP smoke test of key pages/assets over `python3 -m http.server`.

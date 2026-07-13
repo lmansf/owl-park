@@ -1,0 +1,440 @@
+<script type="application/json" data-owlpark-manifest>
+  {
+    "id": "smart-cart-savings",
+    "name": "Smart Cart Savings",
+    "description": "Cart-side arithmetic: membership break-even and better-value ticket swaps, shown only when the numbers genuinely favour the shopper.",
+    "category": "behavioral",
+    "enabledByDefault": false,
+    "requiresReload": false
+  }
+</script>
+
+<style>
+  .owlpark-feat-smart-cart-savings {
+    display: grid;
+    gap: 0.55rem;
+    flex-shrink: 0;
+  }
+  .owlpark-feat-smart-cart-savings .scs-card {
+    border: 1px solid #cfe3d4;
+    background: #f2f9f3;
+    border-radius: 12px;
+    padding: 0.7rem 0.75rem;
+  }
+  .owlpark-feat-smart-cart-savings .scs-title {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #2f8f4e;
+    margin-bottom: 0.3rem;
+  }
+  .owlpark-feat-smart-cart-savings .scs-line {
+    font-size: 0.86rem;
+    line-height: 1.35;
+    color: #2c2a26;
+  }
+  .owlpark-feat-smart-cart-savings .scs-line strong {
+    font-weight: 800;
+  }
+  .owlpark-feat-smart-cart-savings .scs-fine {
+    margin-top: 0.25rem;
+    font-size: 0.76rem;
+    line-height: 1.35;
+    color: #6d675c;
+  }
+  .owlpark-feat-smart-cart-savings .scs-swap-btn {
+    margin-top: 0.55rem;
+    width: 100%;
+    min-height: 44px;
+    border: none;
+    border-radius: 10px;
+    background: #2f8f4e;
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.88rem;
+    cursor: pointer;
+    padding: 0.5rem 0.9rem;
+  }
+  .owlpark-feat-smart-cart-savings .scs-swap-btn:active {
+    transform: translateY(1px);
+  }
+  @media (hover: hover) {
+    .owlpark-feat-smart-cart-savings .scs-swap-btn:hover {
+      background: #26773f;
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    var FEATURE_ID = "smart-cart-savings";
+    var CART_KEY = "owl-park-cart";
+    var POLL_MS = 700;
+
+    // A membership that only pays for itself after this many visits is not a claim worth making,
+    // so the feature stays silent instead of making a weak one.
+    var MAX_PLAUSIBLE_BREAK_EVEN = 4;
+
+    var products = null;
+    var panelEl = null;
+    var pollId = null;
+    var itemsObserver = null;
+    var lastSerialized = null;
+
+    function readCart() {
+      try {
+        var raw = localStorage.getItem(CART_KEY);
+        var lines = raw ? JSON.parse(raw) : [];
+        return Array.isArray(lines) ? lines : [];
+      } catch (err) {
+        return [];
+      }
+    }
+
+    function writeCart(lines) {
+      localStorage.setItem(CART_KEY, JSON.stringify(lines));
+      window.dispatchEvent(new CustomEvent("owl-park-cart-changed"));
+    }
+
+    function money(n) {
+      return "$" + n.toFixed(2);
+    }
+
+    function ordinal(n) {
+      var rem100 = n % 100;
+      if (rem100 >= 11 && rem100 <= 13) return n + "th";
+      var suffix = { 1: "st", 2: "nd", 3: "rd" }[n % 10] || "th";
+      return n + suffix;
+    }
+
+    function article(name) {
+      return /^[aeiou]/i.test(name) ? "An " : "A ";
+    }
+
+    function productFor(line) {
+      for (var i = 0; i < products.length; i++) {
+        if (products[i].id === line.id) return products[i];
+      }
+      return null;
+    }
+
+    /** A line's effective price — an off-peak line carries its own discounted price. */
+    function linePrice(line, product) {
+      if (line.custom && typeof line.custom.price === "number") {
+        return line.custom.price;
+      }
+      return product.price;
+    }
+
+    function capacityOf(product) {
+      var cap = product.capacity || {};
+      var adults = cap.adults || 0;
+      var kids = cap.kids || 0;
+      return { adults: adults, kids: kids, heads: adults + kids };
+    }
+
+    /** Everything the offers are computed from: the cart's ticket lines, priced as they'll be charged. */
+    function readTicketBasket() {
+      var lines = readCart();
+      var subtotal = 0;
+      var heads = 0;
+      var count = 0;
+      var hasMembership = false;
+      var ticketKeys = [];
+
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        var product = productFor(line);
+        if (!product) continue;
+        if (product.category === "membership") hasMembership = true;
+        if (product.category !== "ticket") continue;
+        subtotal += linePrice(line, product) * line.qty;
+        heads += capacityOf(product).heads * line.qty;
+        count += line.qty;
+        ticketKeys.push(line.key || line.id);
+      }
+      return {
+        subtotal: subtotal,
+        heads: heads,
+        count: count,
+        hasMembership: hasMembership,
+        ticketKeys: ticketKeys,
+      };
+    }
+
+    function coverageText(product) {
+      var cap = capacityOf(product);
+      var parts = [];
+      if (cap.adults > 0) {
+        parts.push(cap.adults + (cap.adults === 1 ? " adult" : " adults"));
+      }
+      if (cap.kids > 0) {
+        parts.push("up to " + cap.kids + (cap.kids === 1 ? " kid" : " kids"));
+      }
+      return parts.join(" + ");
+    }
+
+    /**
+     * The cheapest membership that covers at least as many admissions as the cart, and pays for
+     * itself within a plausible number of visits at what the shopper is about to spend today.
+     */
+    function membershipOffer(basket) {
+      if (basket.subtotal <= 0 || basket.hasMembership) return null;
+
+      var best = null;
+      for (var i = 0; i < products.length; i++) {
+        var p = products[i];
+        if (p.category !== "membership") continue;
+        if (capacityOf(p).heads < basket.heads) continue; // would not cover the party in the cart
+        var breakEven = Math.ceil(p.price / basket.subtotal);
+        if (breakEven > MAX_PLAUSIBLE_BREAK_EVEN) continue;
+        if (!best || p.price < best.product.price) {
+          best = { product: p, breakEven: breakEven };
+        }
+      }
+      return best;
+    }
+
+    /**
+     * A single ticket product that admits everyone in the cart for strictly less than the cart's
+     * ticket subtotal. Only multi-person passes are considered — swapping one per-person ticket for
+     * a different per-person ticket is a different day out, not a better price for the same one.
+     */
+    function swapOffer(basket) {
+      if (basket.subtotal <= 0 || basket.heads <= 0) return null;
+
+      var best = null;
+      for (var i = 0; i < products.length; i++) {
+        var p = products[i];
+        if (p.category !== "ticket") continue;
+        var cap = capacityOf(p);
+        if (cap.heads <= 1) continue;
+        var qty = Math.ceil(basket.heads / cap.heads);
+        var cost = qty * p.price;
+        var saving = basket.subtotal - cost;
+        if (saving < 0.01) continue; // only when the math genuinely favours the shopper
+        if (!best || saving > best.saving) {
+          best = { product: p, qty: qty, cost: cost, saving: saving };
+        }
+      }
+      return best;
+    }
+
+    /** Replace every ticket line with `qty` of `productId`, leaving add-ons and donations alone. */
+    function swapTicketsFor(productId, qty) {
+      var basket = readTicketBasket();
+      var keep = readCart().filter(function (line) {
+        return basket.ticketKeys.indexOf(line.key || line.id) === -1;
+      });
+      var existing = null;
+      for (var i = 0; i < keep.length; i++) {
+        if ((keep[i].key || keep[i].id) === productId) existing = keep[i];
+      }
+      if (existing) {
+        existing.qty += qty;
+      } else {
+        keep.push({ id: productId, qty: qty });
+      }
+      writeCart(keep);
+    }
+
+    function card(titleText, buildBody) {
+      var el = document.createElement("div");
+      el.className = "scs-card";
+      var title = document.createElement("div");
+      title.className = "scs-title";
+      title.textContent = titleText;
+      el.appendChild(title);
+      buildBody(el);
+      return el;
+    }
+
+    function textLine(className, text) {
+      var el = document.createElement("div");
+      el.className = className;
+      el.textContent = text;
+      return el;
+    }
+
+    function render() {
+      if (!panelEl || !products) return;
+      panelEl.innerHTML = "";
+
+      var basket = readTicketBasket();
+      var membership = membershipOffer(basket);
+      var swap = swapOffer(basket);
+
+      if (membership) {
+        panelEl.appendChild(
+          card("🪶 Membership break-even", function (el) {
+            el.appendChild(
+              textLine(
+                "scs-line",
+                "Your day out is " +
+                  money(basket.subtotal) +
+                  ". " +
+                  article(membership.product.name) +
+                  membership.product.name +
+                  " is " +
+                  money(membership.product.price) +
+                  " — it pays for itself on your " +
+                  ordinal(membership.breakEven) +
+                  " visit at this price.",
+              ),
+            );
+            el.appendChild(
+              textLine(
+                "scs-fine",
+                "Covers " +
+                  coverageText(membership.product) +
+                  ", unlimited visits for 12 months.",
+              ),
+            );
+            var btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "scs-swap-btn";
+            btn.textContent =
+              "Swap my tickets for the membership (" +
+              money(membership.product.price) +
+              ")";
+            btn.addEventListener("click", function () {
+              swapTicketsFor(membership.product.id, 1);
+            });
+            el.appendChild(btn);
+          }),
+        );
+      }
+
+      if (swap) {
+        panelEl.appendChild(
+          card("🪺 Cheaper for the same group", function (el) {
+            el.appendChild(
+              textLine(
+                "scs-line",
+                "You have " +
+                  basket.count +
+                  (basket.count === 1 ? " ticket" : " tickets") +
+                  " — " +
+                  money(basket.subtotal) +
+                  ". " +
+                  (swap.qty === 1
+                    ? article(swap.product.name)
+                    : swap.qty + " × ") +
+                  swap.product.name +
+                  " covers " +
+                  coverageText(swap.product) +
+                  " for " +
+                  money(swap.cost) +
+                  ".",
+              ),
+            );
+            el.appendChild(
+              textLine(
+                "scs-fine",
+                "If that matches your group, swapping saves " +
+                  money(swap.saving) +
+                  ".",
+              ),
+            );
+            var btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "scs-swap-btn";
+            btn.textContent = "Swap and save " + money(swap.saving);
+            btn.addEventListener("click", function () {
+              swapTicketsFor(swap.product.id, swap.qty);
+            });
+            el.appendChild(btn);
+          }),
+        );
+      }
+
+      panelEl.hidden = !membership && !swap;
+    }
+
+    function sync() {
+      var serialized = localStorage.getItem(CART_KEY);
+      if (serialized === lastSerialized) return;
+      lastSerialized = serialized;
+      render();
+    }
+
+    /**
+     * The offers live in the scrolling #cart-items region, not the fixed footer, so the total and
+     * the checkout button stay reachable on a phone. `renderCart()` replaces that region's innerHTML
+     * on every cart change, so the panel is re-appended after each render.
+     */
+    function mount() {
+      var items = document.getElementById("cart-items");
+      if (!items || !panelEl) return;
+      if (!items.contains(panelEl)) items.appendChild(panelEl);
+    }
+
+    function activate() {
+      var items = document.getElementById("cart-items");
+      if (!items) return;
+
+      panelEl = document.createElement("div");
+      panelEl.className = "owlpark-feat-smart-cart-savings";
+      panelEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+      panelEl.hidden = true;
+      mount();
+
+      itemsObserver = new MutationObserver(mount);
+      itemsObserver.observe(items, { childList: true });
+
+      // Every number this feature shows is derived from live catalog prices, so nothing renders
+      // until they load — a wrong saving is worse than no saving.
+      fetch("data/products.json")
+        .then(function (res) {
+          if (!res.ok) throw new Error("products.json: " + res.status);
+          return res.json();
+        })
+        .then(function (data) {
+          products = data;
+          lastSerialized = null;
+          sync();
+        })
+        .catch(function (err) {
+          console.warn(
+            "[" + FEATURE_ID + "] no catalog prices, staying silent.",
+            err,
+          );
+        });
+
+      pollId = setInterval(sync, POLL_MS);
+      window.addEventListener("owl-park-cart-changed", sync);
+    }
+
+    function deactivate() {
+      if (pollId) {
+        clearInterval(pollId);
+        pollId = null;
+      }
+      if (itemsObserver) {
+        itemsObserver.disconnect();
+        itemsObserver = null;
+      }
+      window.removeEventListener("owl-park-cart-changed", sync);
+      document
+        .querySelectorAll('[data-owlpark-feature="' + FEATURE_ID + '"]')
+        .forEach(function (el) {
+          el.remove();
+        });
+      panelEl = null;
+      products = null;
+      lastSerialized = null;
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures[FEATURE_ID] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
+</script>

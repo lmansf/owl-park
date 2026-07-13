@@ -1,0 +1,411 @@
+<script type="application/json" data-owlpark-manifest>
+  {
+    "id": "conservation-roundup",
+    "name": "Conservation Round-Up",
+    "description": "Optional round-up donation and adopt-an-owl tiers for the Owl Rehabilitation Fund, attached at the cart. Never pre-selected.",
+    "category": "behavioral",
+    "enabledByDefault": false,
+    "requiresReload": false
+  }
+</script>
+
+<style>
+  .owlpark-feat-conservation-roundup {
+    flex-shrink: 0;
+    border: 1px solid #e0d3bb;
+    background: #fdf8ee;
+    border-radius: 12px;
+    padding: 0.7rem 0.75rem;
+  }
+  .owlpark-feat-conservation-roundup .cru-title {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #9a6a1a;
+    margin-bottom: 0.35rem;
+  }
+  .owlpark-feat-conservation-roundup .cru-line {
+    font-size: 0.86rem;
+    line-height: 1.35;
+    color: #2c2a26;
+  }
+  .owlpark-feat-conservation-roundup .cru-fine {
+    margin-top: 0.3rem;
+    font-size: 0.76rem;
+    line-height: 1.35;
+    color: #6d675c;
+  }
+  .owlpark-feat-conservation-roundup .cru-roundup-btn {
+    margin-top: 0.55rem;
+    width: 100%;
+    min-height: 44px;
+    border: none;
+    border-radius: 10px;
+    background: #9a6a1a;
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.88rem;
+    padding: 0.5rem 0.9rem;
+    cursor: pointer;
+  }
+  .owlpark-feat-conservation-roundup .cru-tiers {
+    margin-top: 0.55rem;
+    display: flex;
+    gap: 0.4rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.2rem;
+  }
+  .owlpark-feat-conservation-roundup .cru-tier-btn {
+    flex: 0 0 auto;
+    min-height: 44px;
+    min-width: 44px;
+    border: 1px solid #e0d3bb;
+    background: #fff;
+    border-radius: 10px;
+    padding: 0.35rem 0.7rem;
+    text-align: left;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .owlpark-feat-conservation-roundup .cru-tier-amount {
+    display: block;
+    font-weight: 800;
+    font-size: 0.9rem;
+    color: #9a6a1a;
+  }
+  .owlpark-feat-conservation-roundup .cru-tier-label {
+    display: block;
+    font-size: 0.72rem;
+    color: #6d675c;
+    white-space: nowrap;
+  }
+  .owlpark-feat-conservation-roundup .cru-given {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .owlpark-feat-conservation-roundup .cru-remove-btn {
+    min-height: 44px;
+    border: 1px solid #e0d3bb;
+    background: #fff;
+    border-radius: 10px;
+    padding: 0.4rem 0.9rem;
+    font-weight: 700;
+    font-size: 0.82rem;
+    color: #a8321f;
+    cursor: pointer;
+  }
+  @media (hover: hover) {
+    .owlpark-feat-conservation-roundup .cru-roundup-btn:hover {
+      background: #82590f;
+    }
+    .owlpark-feat-conservation-roundup .cru-tier-btn:hover {
+      border-color: #9a6a1a;
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    var FEATURE_ID = "conservation-roundup";
+    var CART_KEY = "owl-park-cart";
+    var POLL_MS = 700;
+
+    var DONATION_LINE_ID = "give-owl-rehab-fund";
+    var FUND_NAME = "Owl Rehabilitation Fund";
+    var ROUND_TO = 5; // round the order up to the next whole $5
+
+    // Suggested giving amounts, not prices — the shopper chooses one, or none.
+    var ADOPT_TIERS = [
+      { amount: 5, label: "A day of fish & mice" },
+      { amount: 10, label: "A week of feeding" },
+      { amount: 25, label: "Adopt an owl for a month" },
+    ];
+
+    var products = null;
+    var panelEl = null;
+    var pollId = null;
+    var itemsObserver = null;
+    var lastSerialized = null;
+
+    function readCart() {
+      try {
+        var raw = localStorage.getItem(CART_KEY);
+        var lines = raw ? JSON.parse(raw) : [];
+        return Array.isArray(lines) ? lines : [];
+      } catch (err) {
+        return [];
+      }
+    }
+
+    function writeCart(lines) {
+      localStorage.setItem(CART_KEY, JSON.stringify(lines));
+      window.dispatchEvent(new CustomEvent("owl-park-cart-changed"));
+    }
+
+    function money(n) {
+      return "$" + n.toFixed(2);
+    }
+
+    function isDonation(line) {
+      return !!(line.custom && line.custom.kind === "donation");
+    }
+
+    function currentDonation() {
+      var lines = readCart();
+      for (var i = 0; i < lines.length; i++) {
+        if (isDonation(lines[i])) return lines[i];
+      }
+      return null;
+    }
+
+    /** What the shopper is actually paying for the park, before any giving. */
+    function purchaseSubtotal() {
+      var lines = readCart();
+      var subtotal = 0;
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        if (isDonation(line)) continue;
+        var price = null;
+        if (line.custom && typeof line.custom.price === "number") {
+          price = line.custom.price;
+        } else {
+          for (var j = 0; j < products.length; j++) {
+            if (products[j].id === line.id) price = products[j].price;
+          }
+        }
+        if (price === null) continue;
+        subtotal += price * line.qty;
+      }
+      return subtotal;
+    }
+
+    /** The next whole $5 above what they're paying, and the gift that gets them there. */
+    function roundUp(subtotal) {
+      var target = (Math.floor(subtotal / ROUND_TO) + 1) * ROUND_TO;
+      return { target: target, gift: target - subtotal };
+    }
+
+    function setDonation(amount) {
+      var lines = readCart().filter(function (line) {
+        return !isDonation(line);
+      });
+      lines.push({
+        id: DONATION_LINE_ID,
+        key: DONATION_LINE_ID,
+        qty: 1,
+        custom: {
+          kind: "donation",
+          fixed: true,
+          name: FUND_NAME,
+          emoji: "🦉",
+          unit: "donation",
+          price: Math.round(amount * 100) / 100,
+        },
+      });
+      writeCart(lines);
+    }
+
+    function clearDonation() {
+      writeCart(
+        readCart().filter(function (line) {
+          return !isDonation(line);
+        }),
+      );
+    }
+
+    function textLine(className, text) {
+      var el = document.createElement("div");
+      el.className = className;
+      el.textContent = text;
+      return el;
+    }
+
+    function tierRow() {
+      var row = document.createElement("div");
+      row.className = "cru-tiers";
+      ADOPT_TIERS.forEach(function (tier) {
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "cru-tier-btn";
+
+        var amount = document.createElement("span");
+        amount.className = "cru-tier-amount";
+        amount.textContent = money(tier.amount);
+
+        var label = document.createElement("span");
+        label.className = "cru-tier-label";
+        label.textContent = tier.label;
+
+        btn.append(amount, label);
+        btn.addEventListener("click", function () {
+          setDonation(tier.amount);
+        });
+        row.appendChild(btn);
+      });
+      return row;
+    }
+
+    function render() {
+      if (!panelEl || !products) return;
+      panelEl.innerHTML = "";
+
+      var subtotal = purchaseSubtotal();
+      var donation = currentDonation();
+
+      if (subtotal <= 0 && !donation) {
+        panelEl.hidden = true;
+        return;
+      }
+      panelEl.hidden = false;
+
+      var title = document.createElement("div");
+      title.className = "cru-title";
+      title.textContent = "🦉 " + FUND_NAME;
+      panelEl.appendChild(title);
+
+      if (donation) {
+        var given = document.createElement("div");
+        given.className = "cru-given";
+        given.appendChild(
+          textLine(
+            "cru-line",
+            "You're giving " +
+              money(donation.custom.price) +
+              " to the " +
+              FUND_NAME +
+              ". Thank you.",
+          ),
+        );
+        var remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "cru-remove-btn";
+        remove.textContent = "Remove donation";
+        remove.addEventListener("click", clearDonation);
+        given.appendChild(remove);
+        panelEl.appendChild(given);
+        panelEl.appendChild(
+          textLine("cru-fine", "Or change the amount — every owl helps:"),
+        );
+        panelEl.appendChild(tierRow());
+        return;
+      }
+
+      panelEl.appendChild(
+        textLine(
+          "cru-line",
+          "Every rescued owl we rehabilitate is funded by visitors like you.",
+        ),
+      );
+
+      if (subtotal > 0) {
+        var up = roundUp(subtotal);
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "cru-roundup-btn";
+        btn.textContent =
+          "Round up to " + money(up.target) + " and give " + money(up.gift);
+        btn.addEventListener("click", function () {
+          setDonation(up.gift);
+        });
+        panelEl.appendChild(btn);
+      }
+
+      panelEl.appendChild(tierRow());
+      panelEl.appendChild(
+        textLine(
+          "cru-fine",
+          "Entirely optional — nothing is added to your total until you choose an amount.",
+        ),
+      );
+    }
+
+    function sync() {
+      var serialized = localStorage.getItem(CART_KEY);
+      if (serialized === lastSerialized) return;
+      lastSerialized = serialized;
+      render();
+    }
+
+    /**
+     * The ask lives in the scrolling #cart-items region, not the fixed footer, so the total and the
+     * checkout button stay reachable on a phone. `renderCart()` replaces that region's innerHTML on
+     * every cart change, so the panel is re-appended after each render.
+     */
+    function mount() {
+      var items = document.getElementById("cart-items");
+      if (!items || !panelEl) return;
+      if (!items.contains(panelEl)) items.appendChild(panelEl);
+    }
+
+    function activate() {
+      var items = document.getElementById("cart-items");
+      if (!items) return;
+
+      panelEl = document.createElement("div");
+      panelEl.className = "owlpark-feat-conservation-roundup";
+      panelEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+      panelEl.hidden = true;
+      mount();
+
+      itemsObserver = new MutationObserver(mount);
+      itemsObserver.observe(items, { childList: true });
+
+      // The round-up is computed from live prices; without them there is no honest number to show.
+      fetch("data/products.json")
+        .then(function (res) {
+          if (!res.ok) throw new Error("products.json: " + res.status);
+          return res.json();
+        })
+        .then(function (data) {
+          products = data;
+          lastSerialized = null;
+          sync();
+        })
+        .catch(function (err) {
+          console.warn(
+            "[" + FEATURE_ID + "] no catalog prices, staying hidden.",
+            err,
+          );
+        });
+
+      pollId = setInterval(sync, POLL_MS);
+      window.addEventListener("owl-park-cart-changed", sync);
+    }
+
+    function deactivate() {
+      if (pollId) {
+        clearInterval(pollId);
+        pollId = null;
+      }
+      if (itemsObserver) {
+        itemsObserver.disconnect();
+        itemsObserver = null;
+      }
+      window.removeEventListener("owl-park-cart-changed", sync);
+      document
+        .querySelectorAll('[data-owlpark-feature="' + FEATURE_ID + '"]')
+        .forEach(function (el) {
+          el.remove();
+        });
+      panelEl = null;
+      products = null;
+      lastSerialized = null;
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures[FEATURE_ID] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
+</script>
