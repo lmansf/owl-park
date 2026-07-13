@@ -2,7 +2,7 @@
   {
     "id": "urgency-stock-indicator",
     "name": "Urgency Stock Indicator",
-    "description": "\"Only a few left today\" urgency messaging on limited passes.",
+    "description": "Real per-ticket sold-out availability where the store publishes it; a demo scarcity nudge otherwise.",
     "category": "behavioral",
     "enabledByDefault": false,
     "requiresReload": false
@@ -26,6 +26,13 @@
   }
   .owlpark-feat-urgency-stock-indicator .urgency-icon {
     font-size: 0.85rem;
+  }
+  /* Real sold-out state (read from the store's live availability) reads as a
+     firmer negative than the amber scarcity nudge. */
+  .owlpark-feat-urgency-stock-indicator.owlpark-soldout {
+    color: #8a1c1c;
+    background: #fbe3e3;
+    border-color: #f0b3b3;
   }
 </style>
 
@@ -149,7 +156,28 @@
       return top ? [top] : [];
     }
 
-    function injectInto(row) {
+    // The zoo store publishes real per-PLU availability in a hidden field, so on
+    // that store we show a TRUTHFUL sold-out badge from live data instead of a
+    // fabricated "only N left" count. Owl Park has no such feed, so it keeps the
+    // demo nudge — there is no real stock signal to read there.
+    function isSoldOut(row) {
+      var f = row.querySelector('input[id$="PluNotAvailableHidden"]');
+      return !!f && String(f.value).toLowerCase() === "true";
+    }
+
+    function injectReal(row) {
+      if (row.querySelector('[data-owlpark-feature="' + FEATURE_ID + '"]'))
+        return;
+      if (!isSoldOut(row)) return; // available — do not invent scarcity
+      var line = document.createElement("div");
+      line.className = "owlpark-feat-urgency-stock-indicator owlpark-soldout";
+      line.setAttribute("data-owlpark-feature", FEATURE_ID);
+      line.innerHTML =
+        '<span class="urgency-icon">⛔</span><span>Sold out for this date</span>';
+      H.rowInfoCell(row).appendChild(line);
+    }
+
+    function injectMock(row) {
       if (row.querySelector('[data-owlpark-feature="' + FEATURE_ID + '"]'))
         return;
       var line = document.createElement("div");
@@ -163,7 +191,12 @@
     }
 
     function applyToRows() {
-      selectRows().forEach(injectInto);
+      // Real availability on the zoo store; the demo nudge everywhere else.
+      if (H.isZoo()) {
+        H.rows().forEach(injectReal);
+      } else {
+        selectRows().forEach(injectMock);
+      }
     }
 
     function activate() {
