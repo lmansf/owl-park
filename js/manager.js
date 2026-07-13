@@ -11,6 +11,68 @@ import "./products.js";
 
 let features = [];
 
+// Estimated potential financial impact of each module, 5 (adds items / raises
+// order value / captures otherwise-lost sales) down to 1 (comfort, delight, or
+// post-purchase polish). This is a curation heuristic used ONLY to order the
+// list below — not a measured figure — so adjust it freely. A module not listed
+// here falls back to a per-category baseline.
+const IMPACT = {
+  // 5 — direct revenue: add-ons, upsells, donations, yield capture
+  "visit-addons": 5,
+  "smart-cart-savings": 5,
+  "membership-upsell-modal": 5,
+  "conservation-roundup": 5,
+  "gift-mode": 5,
+  "offpeak-date-nudge": 5,
+  // 4 — strong conversion & cart-recovery levers
+  "exit-intent-offer": 4,
+  "promo-code-field": 4,
+  "flash-sale-timer": 4,
+  "sticky-mini-cart-bar": 4,
+  "cart-reminder-toast": 4,
+  "urgency-stock-indicator": 4,
+  "membership-glow": 4,
+  "loyalty-points-estimate": 4,
+  // 3 — merchandising & decision nudges
+  "product-badges": 3,
+  "discount-badge-strikethrough": 3,
+  "ticket-comparison-table": 3,
+  "product-info-tooltips": 3,
+  "recently-viewed": 3,
+  "live-visitor-counter": 3,
+  "wishlist-favorites": 3,
+  // 2 — engagement, trust, planning (indirect)
+  "seasonal-banner": 2,
+  "event-countdown": 2,
+  "weather-widget": 2,
+  "add-to-calendar-button": 2,
+  "share-your-visit": 2,
+  "park-guide-tour": 2,
+  "park-map-modal": 2,
+  "animal-spotlight": 2,
+  "species-fact-ticker": 2,
+  "order-history-log": 2,
+  // 1 — comfort, delight, post-purchase utility
+  "dark-mode": 1,
+  "accessibility-contrast": 1,
+  "font-size-adjuster": 1,
+  "keyboard-shortcuts-helper": 1,
+  "ambient-park-sounds": 1,
+  "paw-cursor-trail": 1,
+  "confetti-checkout": 1,
+  "printable-receipt": 1,
+  "copy-order-id-button": 1,
+};
+const CATEGORY_BASELINE = { behavioral: 3, visual: 2, utility: 1 };
+const IMPACT_LABEL = { 5: "Highest", 4: "High", 3: "Medium", 2: "Low", 1: "Minimal" };
+
+function impactScore(feature) {
+  if (Object.prototype.hasOwnProperty.call(IMPACT, feature.id)) {
+    return IMPACT[feature.id];
+  }
+  return CATEGORY_BASELINE[feature.category] || 2;
+}
+
 function render() {
   const list = document.getElementById("feature-list");
   if (features.length === 0) {
@@ -21,11 +83,13 @@ function render() {
   list.innerHTML = features
     .map((f) => {
       const enabled = isEnabled(f);
+      const score = impactScore(f);
       return `
       <div class="feature-row" data-feature-row="${f.id}">
         <div class="feature-row-info">
           <div class="feature-row-name">
             ${f.name}
+            <span class="feature-impact impact-${score}" title="Estimated potential financial impact (Highest → Minimal)">💵 ${IMPACT_LABEL[score]}</span>
             ${f.requiresReload ? '<span class="feature-tag reload">reload required</span>' : ""}
           </div>
           <p class="feature-row-desc">${f.description}</p>
@@ -73,6 +137,11 @@ async function resetDefaults() {
 
 async function init() {
   features = await discoverFeatures();
+  // Order the manager by estimated financial impact (highest first); ties fall
+  // back to alphabetical order so the list is stable.
+  features.sort(
+    (a, b) => impactScore(b) - impactScore(a) || a.name.localeCompare(b.name),
+  );
   await applyEnabledFeatures();
   render();
 
