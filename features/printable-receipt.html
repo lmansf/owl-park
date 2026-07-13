@@ -9,27 +9,187 @@
   }
 </script>
 
-<style>
+<style id="owlpark-printable-receipt-style">
+  /* Refined secondary/ghost action that sits above the primary "Done" pill in
+     Owl Park's confirmation card: ink label + muted glyph on a clean surface,
+     hairline border, teal focus ring. Never competes with the primary button. */
   .owlpark-feat-printable-receipt {
-    width: 100%;
-    margin-top: 0.6rem;
-    background: white;
-    color: var(--cove-teal-dark, #0a4d55);
-    border: 2px solid var(--cove-teal, #0f6f7a);
-    padding: 0.6rem;
-    border-radius: 999px;
-    font-weight: 700;
-    cursor: pointer;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: fit-content;
+    max-width: 100%;
+    margin: 0.75rem auto 0.9rem;
     min-height: 44px;
+    padding: 0 1.3rem;
+    background: #ffffff;
+    color: #17211f;
+    border: 1px solid rgba(17, 33, 31, 0.12);
+    border-radius: 999px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.005em;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.16s cubic-bezier(0.2, 0.6, 0.2, 1);
   }
   .owlpark-feat-printable-receipt:hover {
-    background: var(--cove-sand, #faf3e6);
+    background: #f7f8f7;
+    border-color: rgba(15, 111, 122, 0.35);
+    transform: translateY(-1px);
+  }
+  .owlpark-feat-printable-receipt:active {
+    transform: translateY(1px);
+  }
+  .owlpark-feat-printable-receipt:focus-visible {
+    outline: 2px solid #0f6f7a;
+    outline-offset: 2px;
+  }
+  .owlpark-feat-printable-receipt .pr-glyph {
+    flex-shrink: 0;
+    color: #67736f;
+    opacity: 0.85;
+    transition: opacity 0.16s ease;
+  }
+  .owlpark-feat-printable-receipt:hover .pr-glyph {
+    opacity: 1;
+  }
+  .owlpark-feat-printable-receipt .pr-label {
+    white-space: nowrap;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-printable-receipt {
+      background: #12181a;
+      color: #e9edec;
+      border-color: rgba(255, 255, 255, 0.14);
+    }
+    .owlpark-feat-printable-receipt:hover {
+      background: #1a2224;
+      border-color: rgba(91, 199, 207, 0.4);
+    }
+    .owlpark-feat-printable-receipt .pr-glyph {
+      color: #98a4a1;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-printable-receipt,
+    .owlpark-feat-printable-receipt .pr-glyph {
+      transition: none;
+    }
+    .owlpark-feat-printable-receipt:hover,
+    .owlpark-feat-printable-receipt:active {
+      transform: none;
+    }
   }
 </style>
 
 <script>
   (function () {
+    /* =========================================================================
+     * Printable Receipt  ·  utility
+     * -------------------------------------------------------------------------
+     * WHAT   A quiet "Print Receipt" secondary button on the order-confirmation
+     *        card that opens a clean, print-ready receipt in a new window and
+     *        fires the browser print dialog.
+     * HOW    On activate, mounts the button immediately before #close-modal-btn
+     *        inside Owl Park's #checkout-modal card. At click time it reads the
+     *        live order straight from the confirmation DOM — #order-id
+     *        (textContent) and #order-summary (innerHTML) — writes a self-styled
+     *        receipt document into window.open("", "_blank") and calls print()
+     *        (falls back to window.print() when the popup is blocked). It never
+     *        fetches products.json, so it can't block on that request.
+     * HOSTS  Owl Park only. The button mounts solely where #close-modal-btn
+     *        exists; the zoo ViewItems ticket-selection page has no confirmation
+     *        modal, so activate() no-ops (no button) there, as does any page
+     *        without the checkout modal.
+     * ===================================================================== */
+
+    var FEATURE_ID = "printable-receipt";
+
+    // ----- Configuration --------------------------------------------------
+    // Tunable copy, safe to edit. None of this is order data — the order id and
+    // the line items/total are always read live from the confirmation card.
+    var CONFIG = {
+      buttonLabel: "Print Receipt", // text on the trigger button
+      businessName: "Owl Park", // printed at the top of the receipt
+      receiptTitle: "Receipt", // small uppercase label under the business name
+      footerText: "Thank you for supporting Owl Park!", // closing line on the receipt
+    };
+
+    // Monochrome printer glyph (stroke follows the label's muted ink color).
+    var PRINTER_SVG =
+      '<svg class="pr-glyph" width="16" height="16" viewBox="0 0 24 24" ' +
+      'fill="none" stroke="currentColor" stroke-width="1.7" ' +
+      'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<path d="M6 9V2h12v7"/>' +
+      '<path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>' +
+      '<path d="M6 14h12v8H6z"/></svg>';
+
     var buttonEl = null;
+
+    // Clean, minimal, monochrome, print-friendly receipt. Structure/copy come
+    // from CONFIG; the order id and the summary markup are passed through live
+    // and unchanged. The Total line arrives with its own inline emphasis from
+    // js/main.js, so it reads as the clear total.
+    function buildReceiptHtml(orderId, summaryHtml) {
+      return (
+        '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' +
+        CONFIG.businessName +
+        " Receipt</title><style>" +
+        "*{box-sizing:border-box;}" +
+        "html,body{margin:0;padding:0;}" +
+        "body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto," +
+        "'Helvetica Neue',Arial,sans-serif;color:#17211f;line-height:1.5;" +
+        "-webkit-font-smoothing:antialiased;padding:3rem 1.5rem;}" +
+        ".receipt{max-width:420px;margin:0 auto;}" +
+        ".r-head{text-align:center;padding-bottom:1.25rem;" +
+        "border-bottom:1px solid rgba(17,33,31,0.16);}" +
+        ".r-business{font-size:1.4rem;font-weight:600;letter-spacing:-0.01em;}" +
+        ".r-title{margin-top:0.35rem;font-size:0.72rem;font-weight:600;" +
+        "text-transform:uppercase;letter-spacing:0.22em;color:#67736f;}" +
+        ".r-order{text-align:center;margin:1.25rem 0 1.75rem;" +
+        "font-size:0.82rem;color:#67736f;}" +
+        ".r-summary{font-size:0.9rem;}" +
+        ".r-summary .modal-summary-line{display:flex;align-items:flex-start;" +
+        "justify-content:space-between;gap:1.5rem;padding:0.55rem 0;" +
+        "border-bottom:1px solid rgba(17,33,31,0.08);}" +
+        ".r-summary .modal-summary-line:last-child{border-bottom:none;}" +
+        ".r-summary .modal-summary-line>span:last-child{white-space:nowrap;" +
+        "font-variant-numeric:tabular-nums;}" +
+        ".r-summary .modal-summary-line small{display:inline-block;" +
+        "margin-top:0.15rem;color:#67736f;font-size:0.78rem;}" +
+        ".r-foot{text-align:center;margin-top:2rem;padding-top:1.25rem;" +
+        "border-top:1px solid rgba(17,33,31,0.16);font-size:0.82rem;color:#67736f;}" +
+        "@media print{body{padding:0.5rem;}}" +
+        "</style></head><body>" +
+        '<div class="receipt">' +
+        '<header class="r-head">' +
+        '<div class="r-business">' +
+        CONFIG.businessName +
+        "</div>" +
+        '<div class="r-title">' +
+        CONFIG.receiptTitle +
+        "</div>" +
+        "</header>" +
+        '<div class="r-order">' +
+        orderId +
+        "</div>" +
+        '<div class="r-summary">' +
+        summaryHtml +
+        "</div>" +
+        '<footer class="r-foot">' +
+        CONFIG.footerText +
+        "</footer>" +
+        "</div>" +
+        "</body></html>"
+      );
+    }
 
     function printReceipt() {
       var orderIdEl = document.getElementById("order-id");
@@ -37,20 +197,7 @@
       var orderId = orderIdEl ? orderIdEl.textContent : "";
       var summaryHtml = summaryEl ? summaryEl.innerHTML : "";
 
-      var receiptHtml =
-        "<!DOCTYPE html><html><head><title>Owl Park Receipt</title><style>" +
-        'body { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 2rem; color: #1e2a2b; }' +
-        "h1 { color: #0a4d55; margin-bottom: 0.2rem; }" +
-        ".order-id { color: #6b7677; margin-bottom: 1.2rem; }" +
-        ".modal-summary-line { display: flex; justify-content: space-between; padding: 0.2rem 0; }" +
-        "</style></head><body>" +
-        "<h1>🦉 Owl Park</h1>" +
-        '<div class="order-id">' +
-        orderId +
-        "</div>" +
-        summaryHtml +
-        "<p>Thank you for supporting Owl Park!</p>" +
-        "</body></html>";
+      var receiptHtml = buildReceiptHtml(orderId, summaryHtml);
 
       var receiptWindow = window.open("", "_blank");
       if (receiptWindow) {
@@ -70,8 +217,10 @@
       buttonEl = document.createElement("button");
       buttonEl.type = "button";
       buttonEl.className = "owlpark-feat-printable-receipt";
-      buttonEl.setAttribute("data-owlpark-feature", "printable-receipt");
-      buttonEl.textContent = "🖨️ Print Receipt";
+      buttonEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+      buttonEl.innerHTML = PRINTER_SVG + '<span class="pr-label"></span>';
+      var labelEl = buttonEl.querySelector(".pr-label");
+      if (labelEl) labelEl.textContent = CONFIG.buttonLabel;
       buttonEl.addEventListener("click", printReceipt);
 
       closeBtn.parentElement.insertBefore(buttonEl, closeBtn);
@@ -87,7 +236,7 @@
     activate();
 
     window.__owlParkFeatures = window.__owlParkFeatures || {};
-    window.__owlParkFeatures["printable-receipt"] = {
+    window.__owlParkFeatures[FEATURE_ID] = {
       activate: activate,
       deactivate: deactivate,
     };
