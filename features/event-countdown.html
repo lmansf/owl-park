@@ -9,92 +9,349 @@
   }
 </script>
 
-<style>
+<style id="owlpark-event-countdown-style">
   .owlpark-feat-event-countdown {
     position: fixed;
-    top: 5.4rem;
-    left: 1.2rem;
+    top: calc(5.4rem + env(safe-area-inset-top, 0px));
+    left: calc(1.2rem + env(safe-area-inset-left, 0px));
     z-index: 30;
-    background: var(--cove-teal-dark);
-    color: white;
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-card);
-    padding: 0.55rem 0.9rem;
+    box-sizing: border-box;
+    max-width: 20rem;
     display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    font-size: 0.82rem;
-    font-weight: 600;
+    flex-direction: column;
+    gap: 0.7rem;
+    padding: 0.9rem 1rem;
+    background: rgba(255, 255, 255, 0.82);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    backdrop-filter: blur(16px) saturate(1.4);
+    border: 1px solid rgba(17, 33, 31, 0.1);
+    border-radius: 20px;
+    box-shadow: 0 6px 24px rgba(20, 40, 40, 0.09);
+    color: #17211f;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.45;
   }
 
+  .owlpark-feat-event-countdown .ec-head {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+  }
   .owlpark-feat-event-countdown .ec-icon {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
+    line-height: 1;
+    flex-shrink: 0;
   }
-  .owlpark-feat-event-countdown .ec-label {
-    opacity: 0.85;
+  .owlpark-feat-event-countdown .ec-titles {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
   }
-  .owlpark-feat-event-countdown .ec-time {
+  .owlpark-feat-event-countdown .ec-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .owlpark-feat-event-countdown .ec-caption {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #67736f;
+  }
+
+  .owlpark-feat-event-countdown .ec-groups {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+  .owlpark-feat-event-countdown .ec-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.28rem;
+  }
+  .owlpark-feat-event-countdown .ec-num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.4rem;
+    padding: 0.34rem 0.4rem;
+    box-sizing: border-box;
+    background: #f7f8f7;
+    border: 1px solid rgba(17, 33, 31, 0.06);
+    border-radius: 10px;
     font-variant-numeric: tabular-nums;
-    font-weight: 800;
-    background: rgba(255, 255, 255, 0.15);
-    padding: 0.1rem 0.45rem;
-    border-radius: 6px;
+    font-weight: 700;
+    font-size: 1.15rem;
+    letter-spacing: 0.01em;
+  }
+  .owlpark-feat-event-countdown .ec-unit {
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #67736f;
+  }
+  .owlpark-feat-event-countdown .ec-sep {
+    align-self: flex-start;
+    padding-top: 0.55rem;
+    color: #b3bbb8;
+    font-weight: 600;
+    font-size: 1rem;
+    line-height: 1;
+  }
+  /* The single teal accent: the live-ticking seconds. */
+  .owlpark-feat-event-countdown .ec-seconds .ec-num {
+    color: #0f6f7a;
+  }
+
+  @keyframes owlparkEcTick {
+    0% {
+      transform: scale(1);
+    }
+    35% {
+      transform: scale(1.07);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+  .owlpark-feat-event-countdown .ec-seconds .ec-num.ec-ticking {
+    animation: owlparkEcTick 0.5s cubic-bezier(0.2, 0.6, 0.2, 1);
   }
 
   @media (max-width: 700px) {
     .owlpark-feat-event-countdown {
       top: auto;
       /* Bottom-anchored on phones, so it has to clear the home indicator. */
-      bottom: calc(1.2rem + env(safe-area-inset-bottom, 0px));
+      bottom: calc(1.1rem + env(safe-area-inset-bottom, 0px));
       left: calc(1rem + env(safe-area-inset-left, 0px));
       right: calc(1rem + env(safe-area-inset-right, 0px));
+      max-width: none;
+      align-items: center;
+    }
+    .owlpark-feat-event-countdown .ec-head {
       justify-content: center;
+    }
+    .owlpark-feat-event-countdown .ec-groups {
+      justify-content: center;
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-event-countdown {
+      background: rgba(18, 24, 26, 0.8);
+      border-color: rgba(255, 255, 255, 0.11);
+      color: #e9edec;
+    }
+    .owlpark-feat-event-countdown .ec-caption,
+    .owlpark-feat-event-countdown .ec-unit {
+      color: #98a4a1;
+    }
+    .owlpark-feat-event-countdown .ec-num {
+      background: #1a2224;
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+    .owlpark-feat-event-countdown .ec-sep {
+      color: #55605d;
+    }
+    .owlpark-feat-event-countdown .ec-seconds .ec-num {
+      color: #5bc7cf;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-event-countdown .ec-seconds .ec-num.ec-ticking {
+      animation: none;
     }
   }
 </style>
 
-<div class="owlpark-feat-event-countdown">
-  <span class="ec-icon">🦉</span>
-  <span class="ec-label">Next owl feeding in</span>
-  <span class="ec-time">--:--</span>
+<div class="owlpark-feat-event-countdown" role="timer" aria-label="Event countdown">
+  <div class="ec-head">
+    <span class="ec-icon" aria-hidden="true">🦉</span>
+    <span class="ec-titles">
+      <span class="ec-name">Owl Feeding</span>
+      <span class="ec-caption">Starts in</span>
+    </span>
+  </div>
+  <div class="ec-groups" aria-hidden="true">
+    <div class="ec-group">
+      <span class="ec-num" data-ec="days">00</span>
+      <span class="ec-unit" data-unit="days">Days</span>
+    </div>
+    <span class="ec-sep">:</span>
+    <div class="ec-group">
+      <span class="ec-num" data-ec="hours">00</span>
+      <span class="ec-unit" data-unit="hours">Hrs</span>
+    </div>
+    <span class="ec-sep">:</span>
+    <div class="ec-group">
+      <span class="ec-num" data-ec="minutes">00</span>
+      <span class="ec-unit" data-unit="minutes">Min</span>
+    </div>
+    <span class="ec-sep">:</span>
+    <div class="ec-group ec-seconds">
+      <span class="ec-num" data-ec="seconds">00</span>
+      <span class="ec-unit" data-unit="seconds">Sec</span>
+    </div>
+  </div>
 </div>
 
 <script>
   (function () {
+    /* =========================================================================
+     * Feeding Time Countdown  ·  behavioral
+     * -------------------------------------------------------------------------
+     * WHAT   A slim frosted card, pinned top-left (a bottom strip on phones),
+     *        that counts down to an upcoming park event as clean DD:HH:MM:SS
+     *        digit groups with small unit labels and a subtle per-second tick.
+     * HOW    Reads only the clock — no store data or host DOM. Counts to
+     *        CONFIG.targetDate while that is a future date; otherwise it falls
+     *        back to the existing recurring next-feeding slot (the half-hour
+     *        boundary math in nextSlot), so an unset or already-passed event
+     *        date rolls straight into the live feeding countdown. Ticks once a
+     *        second on a setInterval; all copy/labels come from CONFIG.
+     * HOSTS  Renders on every host (self-contained; needs no store data).
+     * ===================================================================== */
+
     var FEATURE_ID = "event-countdown";
+
+    // ----- Configuration --------------------------------------------------
+    var CONFIG = {
+      icon: "🦉", // leading glyph in the header
+      eventName: "Owl Feeding", // headline of the upcoming event
+      caption: "Starts in", // small lead-in above the digits
+      // Explicit target date/time for the event (any Date-parseable string, or
+      // null). While this is a future moment the widget counts down to it; once
+      // null or already past it falls back to the recurring next-feeding slot
+      // below, so the countdown never stalls.
+      targetDate: "2026-07-18T18:30:00",
+      // Recurring fallback: minutes between keeper feedings (existing half-hour
+      // slot logic — the countdown rolls to the next boundary each time).
+      recurringSlotMinutes: 30,
+      // Unit labels shown under each digit group.
+      labels: { days: "Days", hours: "Hrs", minutes: "Min", seconds: "Sec" },
+      // Subtle scale pulse on the seconds each tick (auto-off under
+      // prefers-reduced-motion).
+      tickAnimation: true,
+    };
+
+    var rootEl = null;
+    var numEls = {};
+    var secNumEl = null;
+    var target = null;
     var intervalId = null;
 
+    // Existing date logic: the next recurring feeding boundary.
     function nextSlot(from) {
       var next = new Date(from);
       next.setSeconds(0, 0);
+      var interval = CONFIG.recurringSlotMinutes || 30;
       var minutes = next.getMinutes();
-      var addMinutes = minutes < 30 ? 30 - minutes : 60 - minutes;
-      next.setMinutes(minutes + (addMinutes === 0 ? 30 : addMinutes));
+      var rem = minutes % interval;
+      var addMinutes = rem === 0 ? interval : interval - rem;
+      next.setMinutes(minutes + addMinutes);
       return next;
     }
 
-    function formatRemaining(ms) {
-      var totalSeconds = Math.max(0, Math.floor(ms / 1000));
-      var mm = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
-      var ss = String(totalSeconds % 60).padStart(2, "0");
-      return mm + ":" + ss;
+    // Prefer a configured future event; else fall back to the recurring slot.
+    function resolveTarget() {
+      if (CONFIG.targetDate) {
+        var d = new Date(CONFIG.targetDate);
+        if (!isNaN(d.getTime()) && d.getTime() > Date.now()) return d;
+      }
+      return nextSlot(new Date());
+    }
+
+    function parts(ms) {
+      var total = Math.max(0, Math.floor(ms / 1000));
+      var days = Math.floor(total / 86400);
+      total -= days * 86400;
+      var hours = Math.floor(total / 3600);
+      total -= hours * 3600;
+      var minutes = Math.floor(total / 60);
+      var seconds = total - minutes * 60;
+      return { days: days, hours: hours, minutes: minutes, seconds: seconds };
+    }
+
+    function pad(n) {
+      return String(n).padStart(2, "0");
+    }
+
+    function pulseSeconds() {
+      if (!CONFIG.tickAnimation || !secNumEl) return;
+      secNumEl.classList.remove("ec-ticking");
+      void secNumEl.offsetWidth; // reflow so the keyframe restarts each second
+      secNumEl.classList.add("ec-ticking");
+    }
+
+    function render(ms) {
+      var p = parts(ms);
+      if (numEls.days) numEls.days.textContent = pad(p.days);
+      if (numEls.hours) numEls.hours.textContent = pad(p.hours);
+      if (numEls.minutes) numEls.minutes.textContent = pad(p.minutes);
+      if (numEls.seconds) numEls.seconds.textContent = pad(p.seconds);
+      if (rootEl) {
+        rootEl.setAttribute(
+          "aria-label",
+          CONFIG.eventName +
+            " " +
+            CONFIG.caption.toLowerCase() +
+            " " +
+            p.days +
+            " days, " +
+            p.hours +
+            " hours, " +
+            p.minutes +
+            " minutes, " +
+            p.seconds +
+            " seconds",
+        );
+      }
+      pulseSeconds();
+    }
+
+    function tick() {
+      var now = Date.now();
+      var remaining = target.getTime() - now;
+      if (remaining <= 0) {
+        target = resolveTarget();
+        remaining = Math.max(0, target.getTime() - now);
+      }
+      render(remaining);
+    }
+
+    function applyCopy() {
+      var iconEl = rootEl.querySelector(".ec-icon");
+      if (iconEl) iconEl.textContent = CONFIG.icon;
+      var nameEl = rootEl.querySelector(".ec-name");
+      if (nameEl) nameEl.textContent = CONFIG.eventName;
+      var capEl = rootEl.querySelector(".ec-caption");
+      if (capEl) capEl.textContent = CONFIG.caption;
+      Object.keys(CONFIG.labels).forEach(function (unit) {
+        var el = rootEl.querySelector('[data-unit="' + unit + '"]');
+        if (el) el.textContent = CONFIG.labels[unit];
+      });
     }
 
     function activate() {
-      var root = document.querySelector(".owlpark-feat-event-countdown");
-      if (!root) return;
-      var timeEl = root.querySelector(".ec-time");
-      var target = nextSlot(new Date());
+      rootEl = document.querySelector(".owlpark-feat-event-countdown");
+      if (!rootEl) return;
+      numEls = {
+        days: rootEl.querySelector('[data-ec="days"]'),
+        hours: rootEl.querySelector('[data-ec="hours"]'),
+        minutes: rootEl.querySelector('[data-ec="minutes"]'),
+        seconds: rootEl.querySelector('[data-ec="seconds"]'),
+      };
+      secNumEl = numEls.seconds;
 
-      function tick() {
-        var now = new Date();
-        var remaining = target.getTime() - now.getTime();
-        if (remaining <= 0) {
-          target = nextSlot(now);
-          remaining = target.getTime() - now.getTime();
-        }
-        if (timeEl) timeEl.textContent = formatRemaining(remaining);
-      }
+      applyCopy();
+      target = resolveTarget();
 
       tick();
       intervalId = setInterval(tick, 1000);

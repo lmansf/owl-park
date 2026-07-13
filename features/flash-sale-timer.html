@@ -9,68 +9,226 @@
   }
 </script>
 
-<style>
+<style id="owlpark-flash-sale-timer-style">
   .owlpark-feat-flash-sale-timer {
-    background: linear-gradient(90deg, #a8321f, #e2662d);
-    color: white;
-    text-align: center;
-    padding: 0.55rem 1rem;
-    font-size: 0.9rem;
-    font-weight: 700;
+    box-sizing: border-box;
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
     flex-wrap: wrap;
+    gap: 0.6rem;
+    padding: 0.62rem calc(1.25rem + env(safe-area-inset-right, 0px)) 0.62rem
+      calc(1.25rem + env(safe-area-inset-left, 0px));
+    background: rgba(255, 255, 255, 0.82);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    backdrop-filter: blur(16px) saturate(1.4);
+    border-bottom: 1px solid rgba(17, 33, 31, 0.1);
+    color: #17211f;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.45;
+    letter-spacing: -0.005em;
+    animation: owlpark-fst-in 0.2s cubic-bezier(0.2, 0.6, 0.2, 1) both;
+  }
+  @keyframes owlpark-fst-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .owlpark-feat-flash-sale-timer .fst-glyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #b8791f;
+    flex-shrink: 0;
+  }
+  .owlpark-feat-flash-sale-timer .fst-glyph svg {
+    display: block;
+  }
+  .owlpark-feat-flash-sale-timer .fst-copy {
+    text-align: center;
+  }
+  .owlpark-feat-flash-sale-timer .fst-copy .fst-label {
+    font-weight: 600;
+  }
+  .owlpark-feat-flash-sale-timer .fst-copy .fst-offer {
+    color: #67736f;
+  }
+  .owlpark-feat-flash-sale-timer .fst-sep {
+    color: #67736f;
+    opacity: 0.55;
+    margin: 0 0.32rem;
+  }
+  .owlpark-feat-flash-sale-timer .fst-countdown {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+  }
+  .owlpark-feat-flash-sale-timer .fst-ends {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #67736f;
+    letter-spacing: 0.01em;
   }
   .owlpark-feat-flash-sale-timer .fst-time {
+    font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas,
+      "Liberation Mono", monospace;
     font-variant-numeric: tabular-nums;
-    background: rgba(255, 255, 255, 0.2);
-    padding: 0.1rem 0.5rem;
-    border-radius: 6px;
+    font-feature-settings: "tnum" 1;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: #17211f;
+    background: rgba(184, 121, 31, 0.12);
+    border: 1px solid rgba(184, 121, 31, 0.22);
+    border-radius: 10px;
+    padding: 0.12rem 0.5rem;
+  }
+  @media (max-width: 560px) {
+    .owlpark-feat-flash-sale-timer {
+      font-size: 0.84rem;
+      gap: 0.45rem;
+      padding-top: 0.56rem;
+      padding-bottom: 0.56rem;
+    }
+  }
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-flash-sale-timer {
+      background: rgba(18, 24, 26, 0.8);
+      border-bottom-color: rgba(255, 255, 255, 0.11);
+      color: #e9edec;
+    }
+    .owlpark-feat-flash-sale-timer .fst-glyph {
+      color: #d8a24a;
+    }
+    .owlpark-feat-flash-sale-timer .fst-copy .fst-offer,
+    .owlpark-feat-flash-sale-timer .fst-sep,
+    .owlpark-feat-flash-sale-timer .fst-ends {
+      color: #98a4a1;
+    }
+    .owlpark-feat-flash-sale-timer .fst-time {
+      color: #e9edec;
+      background: rgba(216, 162, 74, 0.16);
+      border-color: rgba(216, 162, 74, 0.3);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-flash-sale-timer {
+      animation: none;
+    }
   }
 </style>
 
-<div class="owlpark-feat-flash-sale-timer">
-  <span>⚡ Flash Sale: 15% off memberships — ends in</span>
-  <span class="fst-time">--:--:--</span>
+<div class="owlpark-feat-flash-sale-timer" role="status">
+  <span class="fst-glyph" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7.5V12l3 2" /></svg>
+  </span>
+  <span class="fst-copy"><b class="fst-label">Flash Sale</b><span class="fst-sep" aria-hidden="true">·</span><span class="fst-offer">15% off memberships</span></span>
+  <span class="fst-countdown" aria-hidden="true">
+    <span class="fst-ends">ends in</span>
+    <span class="fst-time">--:--</span>
+  </span>
 </div>
 
 <script>
   (function () {
+    /* =========================================================================
+     * Flash Sale Timer  ·  behavioral
+     * -------------------------------------------------------------------------
+     * WHAT   A slim frosted strip announcing a limited-time flash sale: a clock
+     *        glyph, the offer copy, and a monospace MM:SS countdown chip that
+     *        ticks down and quietly restarts. A SIMULATED demo timer — there is
+     *        no real promotion backend; it invents nothing beyond a countdown.
+     * HOW    Renders the static strip the loader injects. activate() fills the
+     *        copy from CONFIG, then ticks the countdown once a second off a
+     *        sessionStorage-persisted end time (per browser session), formatting
+     *        the remainder as MM:SS. At zero it rolls a fresh CONFIG.durationMs
+     *        window and keeps going.
+     * HOSTS  Renders on every host; reads no store/cart data. Purely a
+     *        presentational urgency cue, identical on zoo / Owl Park / generic.
+     * ===================================================================== */
+
     var FEATURE_ID = "flash-sale-timer";
+
+    // ----- Configuration --------------------------------------------------
+    // Tunable values, safe to edit. Each explained inline.
+    var CONFIG = {
+      saleLabel: "Flash Sale", // bold lead-in on the strip
+      offerText: "15% off memberships", // what the (mock) flash sale discounts
+      endsCopy: "ends in", // connective shown just before the countdown chip
+      durationMs: 15 * 60 * 1000, // length of each simulated sale window; drives the MM:SS countdown
+    };
+
+    // Internal: sessionStorage namespace for the simulated sale end time.
     var STORAGE_KEY = "owl-park-flash-sale-end";
-    var DURATION_MS = 3 * 60 * 60 * 1000; // 3 hours
 
     var intervalId = null;
 
+    function readStoredEnd() {
+      try {
+        var stored = sessionStorage.getItem(STORAGE_KEY);
+        return stored ? parseInt(stored, 10) : NaN;
+      } catch (e) {
+        return NaN;
+      }
+    }
+
     function getEndTime() {
-      var stored = sessionStorage.getItem(STORAGE_KEY);
-      var end = stored ? parseInt(stored, 10) : NaN;
-      if (!end || end <= Date.now()) {
-        end = Date.now() + DURATION_MS;
-        sessionStorage.setItem(STORAGE_KEY, String(end));
+      var end = readStoredEnd();
+      var now = Date.now();
+      // (Re)start the window when there is no valid end, it has already passed,
+      // or a stale value would run longer than the configured duration.
+      if (!end || end <= now || end - now > CONFIG.durationMs) {
+        end = now + CONFIG.durationMs;
+        try {
+          sessionStorage.setItem(STORAGE_KEY, String(end));
+        } catch (e) {
+          /* private mode — run for this activation only */
+        }
       }
       return end;
     }
 
     function formatRemaining(ms) {
       var totalSeconds = Math.max(0, Math.floor(ms / 1000));
-      var hh = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
-      var mm = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
+      var mm = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
       var ss = String(totalSeconds % 60).padStart(2, "0");
-      return hh + ":" + mm + ":" + ss;
+      return mm + ":" + ss;
     }
 
     function activate() {
-      var timeEl = document.querySelector(".owlpark-feat-flash-sale-timer .fst-time");
+      var root = document.querySelector(".owlpark-feat-flash-sale-timer");
+      if (!root) return;
+      var timeEl = root.querySelector(".fst-time");
       if (!timeEl) return;
+
+      // Drive the visible copy from CONFIG so editing CONFIG updates the strip.
+      var labelEl = root.querySelector(".fst-label");
+      var offerEl = root.querySelector(".fst-offer");
+      var endsEl = root.querySelector(".fst-ends");
+      if (labelEl) labelEl.textContent = CONFIG.saleLabel;
+      if (offerEl) offerEl.textContent = CONFIG.offerText;
+      if (endsEl) endsEl.textContent = CONFIG.endsCopy;
+
       var end = getEndTime();
 
       function tick() {
         var remaining = end - Date.now();
         if (remaining <= 0) {
-          sessionStorage.removeItem(STORAGE_KEY);
+          try {
+            sessionStorage.removeItem(STORAGE_KEY);
+          } catch (e) {
+            /* ignore */
+          }
           end = getEndTime();
           remaining = end - Date.now();
         }
@@ -78,6 +236,7 @@
       }
 
       tick();
+      if (intervalId) clearInterval(intervalId);
       intervalId = setInterval(tick, 1000);
     }
 

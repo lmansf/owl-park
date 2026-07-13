@@ -9,56 +9,129 @@
   }
 </script>
 
-<style>
+<style id="owlpark-paw-cursor-trail-style">
+  /* A small, faint, teal-tinted mark dropped along the cursor path. Kept
+     understated: low opacity, a quiet teal glow, a quick fade + gentle
+     scale-down. Purely decorative, so it disables entirely for visitors
+     with no mouse (coarse/touch) or who prefer reduced motion. */
   .owlpark-feat-paw-cursor-trail {
     position: fixed;
-    font-size: 1.1rem;
-    pointer-events: none;
+    left: 0;
+    top: 0;
     z-index: 80;
+    pointer-events: none;
+    font-size: 0.8rem; /* fallback; CONFIG.size sets the real value inline */
+    line-height: 1;
+    color: #0f6f7a; /* teal accent (colours a non-emoji glyph) */
+    opacity: 0; /* the fade animation drives the visible opacity */
+    filter: saturate(0.55) drop-shadow(0 0 3px rgba(15, 111, 122, 0.5));
     transform: translate(-50%, -50%);
-    animation: owlpark-feather-fade 0.9s ease-out forwards;
+    animation: owlpark-paw-cursor-trail-fade 0.6s cubic-bezier(0.2, 0.6, 0.2, 1)
+      forwards;
+    will-change: transform, opacity;
   }
 
-  @keyframes owlpark-feather-fade {
+  @keyframes owlpark-paw-cursor-trail-fade {
     0% {
-      opacity: 0.8;
+      opacity: 0.5; /* soft, understated — never loud */
       transform: translate(-50%, -50%) scale(1);
     }
     100% {
       opacity: 0;
-      transform: translate(-50%, -50%) scale(0.4);
+      transform: translate(-50%, -50%) scale(0.72); /* gentle shrink */
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-paw-cursor-trail {
+      color: #5bc7cf;
+      filter: saturate(0.6) drop-shadow(0 0 4px rgba(91, 199, 207, 0.5));
+    }
+  }
+
+  /* Disable the trail entirely when there's no mouse or motion is unwelcome.
+     The behavior script also skips attaching its handler in these cases; this
+     is a belt-and-suspenders guard for any mark already on screen. */
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-paw-cursor-trail {
+      display: none !important;
+      animation: none !important;
+    }
+  }
+  @media (hover: none), (pointer: coarse) {
+    .owlpark-feat-paw-cursor-trail {
+      display: none !important;
     }
   }
 </style>
 
 <script>
   (function () {
-    var THROTTLE_MS = 120;
+    /* =========================================================================
+     * Feather Cursor Trail  ·  visual
+     * -------------------------------------------------------------------------
+     * WHAT   A small, faint, teal-tinted feather that trails the mouse — a quiet
+     *        cursor decoration whose marks fade and gently shrink away almost
+     *        immediately. Tasteful and understated, never loud.
+     * HOW    A throttled mousemove handler drops a fixed-position <span> at the
+     *        pointer; each mark is tagged data-owlpark-feature and self-removes
+     *        on animationend (with a timeout backstop). Glyph, spawn throttle,
+     *        fade duration and size live in CONFIG; CONFIG.fadeMs drives the CSS
+     *        animation duration inline.
+     * HOSTS  Host-agnostic (pure cursor decoration, reads no store data).
+     *        Disabled entirely for coarse/touch pointers (no mouse) and when the
+     *        visitor prefers reduced motion.
+     * ===================================================================== */
+
+    var FEATURE_ID = "paw-cursor-trail";
+
+    // ----- Configuration --------------------------------------------------
+    // Tunable values, safe to edit. Each explained inline.
+    var CONFIG = {
+      glyph: "🪶", // the small mark dropped along the cursor's path
+      throttleMs: 120, // minimum ms between marks while the pointer moves
+      fadeMs: 600, // lifetime of each mark — quick fade + gentle scale-down
+      size: "0.8rem", // font-size of each mark (kept small / understated)
+    };
+
     var lastSpawn = 0;
     var handler = null;
 
-    function spawnFeather(x, y) {
-      var feather = document.createElement("span");
-      feather.className = "owlpark-feat-paw-cursor-trail";
-      feather.setAttribute("data-owlpark-feature", "paw-cursor-trail");
-      feather.textContent = "🪶";
-      feather.style.left = x + "px";
-      feather.style.top = y + "px";
-      document.body.appendChild(feather);
-      feather.addEventListener("animationend", function () {
+    // The trail is purely decorative: turn it off completely for visitors with
+    // no mouse (coarse/touch pointers) or who prefer reduced motion.
+    function trailDisabled() {
+      if (!window.matchMedia) return false;
+      return (
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+        window.matchMedia("(hover: none), (pointer: coarse)").matches
+      );
+    }
+
+    function spawnMark(x, y) {
+      var mark = document.createElement("span");
+      mark.className = "owlpark-feat-paw-cursor-trail";
+      mark.setAttribute("data-owlpark-feature", FEATURE_ID);
+      mark.textContent = CONFIG.glyph;
+      mark.style.left = x + "px";
+      mark.style.top = y + "px";
+      mark.style.fontSize = CONFIG.size;
+      mark.style.animationDuration = CONFIG.fadeMs + "ms";
+      document.body.appendChild(mark);
+      mark.addEventListener("animationend", function () {
         this.remove();
       });
       setTimeout(function () {
-        feather.remove();
-      }, 1500);
+        mark.remove();
+      }, CONFIG.fadeMs + 400);
     }
 
     function activate() {
+      if (trailDisabled()) return; // no mouse / reduced motion → trail stays off
       handler = function (event) {
         var now = Date.now();
-        if (now - lastSpawn < THROTTLE_MS) return;
+        if (now - lastSpawn < CONFIG.throttleMs) return;
         lastSpawn = now;
-        spawnFeather(event.clientX, event.clientY);
+        spawnMark(event.clientX, event.clientY);
       };
       document.addEventListener("mousemove", handler);
     }
@@ -69,7 +142,7 @@
         handler = null;
       }
       document
-        .querySelectorAll('[data-owlpark-feature="paw-cursor-trail"]')
+        .querySelectorAll('[data-owlpark-feature="' + FEATURE_ID + '"]')
         .forEach(function (el) {
           el.remove();
         });
@@ -78,7 +151,7 @@
     activate();
 
     window.__owlParkFeatures = window.__owlParkFeatures || {};
-    window.__owlParkFeatures["paw-cursor-trail"] = {
+    window.__owlParkFeatures[FEATURE_ID] = {
       activate: activate,
       deactivate: deactivate,
     };
