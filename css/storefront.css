@@ -225,10 +225,10 @@ a {
   justify-content: space-between;
   max-width: 1100px;
   margin: 0 auto;
-  /* The notch insets are non-zero in landscape, where the viewport is far wider
-     than any phone breakpoint — so they belong on the base rule, not in a
-     max-width query. On a screen with no insets they resolve to 0px. */
-  padding: 0 calc(1.5rem + var(--safe-right)) 0 calc(1.5rem + var(--safe-left));
+  /* No safe-area inset here: this sits inside <main>, which already pads itself
+     clear of the notch. Adding it again indents the heading twice in landscape
+     and drifts it right of the catalog it labels. */
+  padding: 0 1.5rem;
 }
 
 .catalog-heading h2 {
@@ -782,8 +782,8 @@ main {
     padding-right: calc(1rem + var(--safe-right));
   }
   .catalog-heading {
-    padding-left: calc(1rem + var(--safe-left));
-    padding-right: calc(1rem + var(--safe-right));
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
   .cart-header,
   .cart-items,

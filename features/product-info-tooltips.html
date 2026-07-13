@@ -55,7 +55,9 @@
     visibility: hidden;
     opacity: 0;
     position: absolute;
-    top: calc(100% - 8px);
+    /* 100% is the 21px icon wrapper, so anything under it must clear the dot —
+       a negative offset here paints the panel over the bottom of the icon. */
+    top: calc(100% + 6px);
     left: 0;
     width: 15rem;
     max-width: 60vw;
@@ -81,20 +83,34 @@
   }
 
   @media (max-width: 560px) {
-    /* The title line wraps, so the icon can sit anywhere along the row and any
-       anchor relative to it runs off one edge or the other on a phone. Drop the
-       wrapper out of the positioning chain so the tooltip resolves against the
-       .product-row instead, gutter to gutter: its width no longer depends on
-       where the icon landed. */
+    /* The title line wraps, so the icon can sit anywhere along it and a floating
+       panel anchored to the icon runs off one edge or the other. On a phone the
+       panel stops floating altogether and becomes an in-flow disclosure inside
+       the row: `display: contents` on the wrapper promotes the icon and the
+       panel into flex items of .row-title-line, and a 100% flex-basis drops the
+       panel onto its own line directly under the title, pushing the rest of the
+       row down. Tapping reflows the row, which is honest and predictable —
+       unlike a panel that floats over whatever happens to be beneath it. */
     .owlpark-feat-product-info-tooltips.pit-info-wrap {
-      position: static;
+      display: contents;
     }
     .owlpark-feat-product-info-tooltips .pit-tooltip {
-      top: calc(100% - 0.6rem);
-      left: 1rem;
-      right: 1rem;
-      width: auto;
+      /* display:none, not visibility:hidden — an in-flow panel would otherwise
+         reserve its full height in the row while closed. */
+      display: none;
+      position: static;
+      flex: 0 0 100%;
+      width: 100%;
       max-width: none;
+      margin-top: 0.25rem;
+      box-shadow: none;
+      pointer-events: auto;
+      transition: none;
+    }
+    .owlpark-feat-product-info-tooltips.pit-info-wrap:hover .pit-tooltip,
+    .owlpark-feat-product-info-tooltips.pit-info-wrap.pit-open .pit-tooltip,
+    .owlpark-feat-product-info-tooltips .pit-info-icon:focus + .pit-tooltip {
+      display: block;
     }
   }
 </style>
