@@ -126,6 +126,16 @@ This file is the project's committed home for project-intrinsic agent knowledge:
   snippet pasted RAW into the saved `ViewItems.aspx` body shows its control on the floating bar
   (regardless of paste position) and self-heals when the host wipes it; `index.html` shows zero behavior
   change (buttons in `.header-actions`, floating bar never built, zero residue after disable-all).
+- Real vs demo data: several features read LIVE data — product-badges/discount/sticky-cart/compare price
+  off the store's own rows; `weather-widget` fetches current conditions from Open-Meteo (free, no key,
+  CORS — verified by mocking the response, since the sandbox proxy 403s the host; falls back to a neutral
+  message, never a fake temperature, if the fetch/host-CSP fails); `urgency-stock-indicator` reads the
+  zoo's real per-PLU `input[id$="PluNotAvailableHidden"]` and shows a truthful "Sold out for this date"
+  (no badge when everything's available), keeping the random "only N left" nudge ONLY on Owl Park where
+  no availability feed exists. The remaining demo mocks (`live-visitor-counter` concurrent-viewer count,
+  `flash-sale-timer`, `discount-badge-strikethrough`'s "was" price, `loyalty-points-estimate`) stay
+  simulated on purpose: a pasted client snippet has no real source for them (they'd need the store's
+  analytics / promotions / loyalty backend). Don't "integrate" those with invented numbers.
 - Verifying mobile with chrome-devtools-axi: `emulate --viewport "375x667x2,mobile,touch"` must be
   re-applied **after** every `open`/reload, and `window.innerWidth` lies under emulation — read
   `document.documentElement.clientWidth` instead. Chrome injects no real safe-area insets, so test

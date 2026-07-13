@@ -2,7 +2,7 @@
   {
     "id": "weather-widget",
     "name": "Park Weather Widget",
-    "description": "Fun mocked \"park weather\" badge encouraging visits on nice days.",
+    "description": "Live local weather for the park from Open-Meteo, with a graceful offline fallback.",
     "category": "visual",
     "enabledByDefault": false,
     "requiresReload": false
@@ -47,26 +47,76 @@
 </style>
 
 <div class="owlpark-feat-weather-widget">
-  <span class="ww-icon">☀️</span>
-  <span class="ww-text">72°F and sunny — perfect park weather!</span>
+  <span class="ww-icon">🌤️</span>
+  <span class="ww-text">Loading local weather…</span>
 </div>
 
 <script>
   (function () {
     var FEATURE_ID = "weather-widget";
-    var FORECASTS = [
-      { icon: "☀️", text: "72°F and sunny — perfect park weather!" },
-      { icon: "⛅", text: "68°F with light clouds — great day to visit!" },
-      { icon: "🌤️", text: "75°F, mild breeze — the owls approve." },
-      {
-        icon: "🌈",
-        text: "70°F after a morning shower — rainbows over the aviary!",
-      },
-    ];
+    // ZooTampa at Lowry Park (Tampa, FL). Live current conditions come from
+    // Open-Meteo — a free, no-key, CORS-enabled API — so this works pasted into
+    // any store's page. If the request fails (offline, or the host store's CSP
+    // blocks it), the badge shows a neutral message, never a fake temperature.
+    var LAT = 28.0106;
+    var LON = -82.4667;
+    var WEATHER_API =
+      "https://api.open-meteo.com/v1/forecast?latitude=" +
+      LAT +
+      "&longitude=" +
+      LON +
+      "&current=temperature_2m,weather_code,is_day" +
+      "&temperature_unit=fahrenheit&timezone=auto";
+    var REFRESH_MS = 15 * 60 * 1000;
 
-    var intervalId = null;
-    var watchdogId = null;
+    var iconEl = null;
+    var textEl = null;
     var rootEl = null;
+    var refreshId = null;
+    var watchdogId = null;
+
+    // WMO weather codes (open-meteo `weather_code`) -> a friendly icon + phrase.
+    function describeWeather(code, isDay) {
+      var clear = isDay ? "☀️" : "🌙";
+      if (code === 0) return { icon: clear, label: "clear" };
+      if (code === 1 || code === 2)
+        return { icon: isDay ? "🌤️" : "☁️", label: "partly cloudy" };
+      if (code === 3) return { icon: "☁️", label: "overcast" };
+      if (code === 45 || code === 48) return { icon: "🌫️", label: "foggy" };
+      if (code >= 51 && code <= 57) return { icon: "🌦️", label: "drizzly" };
+      if (code >= 61 && code <= 67) return { icon: "🌧️", label: "rainy" };
+      if (code >= 71 && code <= 77) return { icon: "🌨️", label: "snowy" };
+      if (code >= 80 && code <= 82) return { icon: "🌦️", label: "passing showers" };
+      if (code >= 85 && code <= 86) return { icon: "🌨️", label: "snow showers" };
+      if (code >= 95) return { icon: "⛈️", label: "stormy" };
+      return { icon: clear, label: "mild" };
+    }
+
+    function paint(icon, text) {
+      if (iconEl) iconEl.textContent = icon;
+      if (textEl) textEl.textContent = text;
+    }
+
+    function loadWeather() {
+      fetch(WEATHER_API, { cache: "no-store" })
+        .then(function (res) {
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          return res.json();
+        })
+        .then(function (data) {
+          var cur = data && data.current;
+          if (!cur || typeof cur.temperature_2m !== "number")
+            throw new Error("no current weather");
+          var d = describeWeather(cur.weather_code, cur.is_day);
+          paint(
+            d.icon,
+            Math.round(cur.temperature_2m) + "°F and " + d.label + " at the park",
+          );
+        })
+        .catch(function () {
+          paint("🦉", "Check today's forecast before your visit!");
+        });
+    }
 
     // The badge is position:fixed, so its on-screen spot never depends on where
     // it sits in the DOM. Lift it to be a direct child of <body> so a store that
@@ -89,24 +139,18 @@
       rootEl = document.querySelector(".owlpark-feat-weather-widget");
       if (!rootEl) return;
       ensureMounted();
-      var iconEl = rootEl.querySelector(".ww-icon");
-      var textEl = rootEl.querySelector(".ww-text");
+      iconEl = rootEl.querySelector(".ww-icon");
+      textEl = rootEl.querySelector(".ww-text");
 
-      function applyRandomForecast() {
-        var pick = FORECASTS[Math.floor(Math.random() * FORECASTS.length)];
-        if (iconEl) iconEl.textContent = pick.icon;
-        if (textEl) textEl.textContent = pick.text;
-      }
-
-      applyRandomForecast();
-      intervalId = setInterval(applyRandomForecast, 10000);
+      loadWeather();
+      refreshId = setInterval(loadWeather, REFRESH_MS);
       watchdogId = setInterval(ensureMounted, 1000);
     }
 
     function deactivate() {
-      if (intervalId) {
-        clearInterval(intervalId);
-        intervalId = null;
+      if (refreshId) {
+        clearInterval(refreshId);
+        refreshId = null;
       }
       if (watchdogId) {
         clearInterval(watchdogId);
