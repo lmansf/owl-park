@@ -26,6 +26,12 @@
     font-size: 0.85rem;
     cursor: pointer;
   }
+  /* An author `display` beats the user-agent [hidden] rule, so an element toggled with the `hidden`
+     property has to turn itself off here or it never hides. */
+  .owlpark-feat-gift-mode .gm-panel[hidden],
+  .owlpark-feat-gift-mode .gm-error[hidden] {
+    display: none;
+  }
   .owlpark-feat-gift-mode .gm-panel {
     margin-top: 0.7rem;
     display: grid;

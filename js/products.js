@@ -71,6 +71,19 @@ export function cartTotal(lines, products) {
   }, 0);
 }
 
+/** A charitable gift is given, not bought, so it is not one of the items a shopper is carrying. */
+export function isPurchasedItem(line) {
+  return !(line.custom && line.custom.kind === "donation");
+}
+
+/** How many items a set of cart lines holds — the one place "how many items" is decided. */
+export function itemCount(lines) {
+  return lines.reduce(
+    (sum, line) => (isPurchasedItem(line) ? sum + line.qty : sum),
+    0,
+  );
+}
+
 /**
  * Feature modules cannot `import` (see README, "The `features/` plugin system"), so the pricing rules
  * above are also published on `window.OwlPark` — a feature that prices cart lines must go through
@@ -80,6 +93,7 @@ if (typeof window !== "undefined") {
   window.OwlPark = Object.assign(window.OwlPark || {}, {
     resolveLine,
     cartTotal,
+    itemCount,
     discountOf,
   });
 }

@@ -1,3 +1,5 @@
+import { itemCount } from "./products.js";
+
 const CART_STORAGE_KEY = "owl-park-cart";
 
 /**
@@ -121,7 +123,7 @@ export const Cart = {
   },
 
   totalItemCount() {
-    return readCart().reduce((sum, l) => sum + l.qty, 0);
+    return itemCount(readCart());
   },
 
   /** Subscribe to cart changes. Returns an unsubscribe function. */

@@ -10,6 +10,9 @@
 </script>
 
 <style>
+  .owlpark-feat-conservation-roundup[hidden] {
+    display: none;
+  }
   .owlpark-feat-conservation-roundup {
     flex-shrink: 0;
     border: 1px solid #e0d3bb;
@@ -169,6 +172,27 @@
       return null;
     }
 
+    function hasPurchase() {
+      return readCart().some(function (line) {
+        return !isDonation(line);
+      });
+    }
+
+    /**
+     * A round-up belongs to the purchase it rounded: with nothing left in the cart to round, there is
+     * no order to bring to a whole $5 and nothing the shopper agreed to pay for, so the gift goes with
+     * it rather than sitting alone in an emptied cart and being charged. A tier gift promised nothing
+     * about a total — it is a deliberate standalone donation and stays. Dropping is not recomputing:
+     * a pinned amount is still never quietly changed.
+     */
+    function dropOrphanedRoundUp() {
+      var donation = currentDonation();
+      if (!donation || donation.custom.source !== "roundup") return false;
+      if (hasPurchase()) return false;
+      clearDonation();
+      return true;
+    }
+
     /**
      * What the shopper is actually paying for the park, before any giving — priced by core's own cart
      * arithmetic (window.OwlPark, js/products.js), so the round-up is computed off exactly the total
@@ -296,7 +320,7 @@
 
         btn.append(amount, label);
         btn.addEventListener("click", function () {
-          setDonation(tier.amount);
+          setDonation(tier.amount, "tier");
         });
         row.appendChild(btn);
       });
@@ -415,6 +439,8 @@
 
     function refresh() {
       lastSerialized = localStorage.getItem(CART_KEY);
+      // The write announces itself and re-enters here with the gift already gone, which renders.
+      if (dropOrphanedRoundUp()) return;
       render();
     }
 
