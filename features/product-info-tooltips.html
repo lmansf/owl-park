@@ -19,11 +19,12 @@
   }
   /* The *visible* dot stays 21px so the product title line still looks like a
      title line, and the 44pt thumb target is a transparent centred ::before
-     expander. The expander still overhangs the 21px icon by ~11px a side, so the
-     text it overlaps is part of this button's hit area and is not selectable —
-     that is inherent to a 44pt target on an inline icon. Keeping the expander
-     transparent and separate from the button box at least stops it painting over
-     the neighbouring title and description text. */
+     expander. Horizontally the expander still overhangs the dot by ~11.5px a
+     side and hit-tests over the adjacent title text, which is therefore not
+     selectable there — that is inherent to a 44pt target on an inline icon and
+     is not fixed here. What IS fixed is the vertical collision: the mobile
+     panel below clears the expander's lower overhang (see its margin-top), so
+     the target no longer reaches down over the panel it opens. */
   .owlpark-feat-product-info-tooltips .pit-info-icon {
     position: relative;
     width: 21px;
@@ -74,12 +75,20 @@
   }
   /* `pit-open` is the touch path: a phone has no hover, and iOS Safari does not
      reliably focus a <button> on tap, so hover/focus alone left this tooltip
-     completely unreachable on an iPhone. Tapping the icon toggles the class. */
-  .owlpark-feat-product-info-tooltips.pit-info-wrap:hover .pit-tooltip,
+     completely unreachable on an iPhone. Tapping the icon toggles the class.
+     Hover is gated on (hover: hover) and focus narrowed to :focus-visible, or
+     iOS Safari's sticky emulated hover and the focus a tap leaves behind would
+     keep the panel open and the second tap would never close it. */
   .owlpark-feat-product-info-tooltips.pit-info-wrap.pit-open .pit-tooltip,
-  .owlpark-feat-product-info-tooltips .pit-info-icon:focus + .pit-tooltip {
+  .owlpark-feat-product-info-tooltips .pit-info-icon:focus-visible + .pit-tooltip {
     visibility: visible;
     opacity: 1;
+  }
+  @media (hover: hover) {
+    .owlpark-feat-product-info-tooltips.pit-info-wrap:hover .pit-tooltip {
+      visibility: visible;
+      opacity: 1;
+    }
   }
 
   @media (max-width: 560px) {
@@ -102,14 +111,22 @@
       flex: 0 0 100%;
       width: 100%;
       max-width: none;
-      margin-top: 0.25rem;
+      /* The icon's ::before target hangs (44px - 21px) / 2 = 11.5px below the
+         dot and paints above this in-flow panel, so taps in the panel's first
+         few pixels would land on the icon and toggle it shut. Clear that
+         overhang with a real gap rather than shrinking the thumb target. */
+      margin-top: 14px;
       box-shadow: none;
       pointer-events: auto;
       transition: none;
     }
-    .owlpark-feat-product-info-tooltips.pit-info-wrap:hover .pit-tooltip,
     .owlpark-feat-product-info-tooltips.pit-info-wrap.pit-open .pit-tooltip,
-    .owlpark-feat-product-info-tooltips .pit-info-icon:focus + .pit-tooltip {
+    .owlpark-feat-product-info-tooltips .pit-info-icon:focus-visible + .pit-tooltip {
+      display: block;
+    }
+  }
+  @media (max-width: 560px) and (hover: hover) {
+    .owlpark-feat-product-info-tooltips.pit-info-wrap:hover .pit-tooltip {
       display: block;
     }
   }
@@ -176,8 +193,14 @@
         });
     }
 
+    function onDocumentClick(ev) {
+      var target = ev.target;
+      if (target && target.closest && target.closest(".pit-tooltip")) return;
+      closeAllTooltips();
+    }
+
     function activate() {
-      document.addEventListener("click", closeAllTooltips);
+      document.addEventListener("click", onDocumentClick);
       fetch("data/products.json")
         .then(function (res) {
           return res.json();
@@ -202,7 +225,7 @@
         observer.disconnect();
         observer = null;
       }
-      document.removeEventListener("click", closeAllTooltips);
+      document.removeEventListener("click", onDocumentClick);
       document
         .querySelectorAll('[data-owlpark-feature="product-info-tooltips"]')
         .forEach(function (el) {

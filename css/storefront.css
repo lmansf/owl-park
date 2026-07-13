@@ -464,8 +464,11 @@ main {
   .product-row {
     padding: 1.1rem 1rem;
   }
-  /* Hover lift is meaningless on touch and leaves rows stuck in the hovered
-     state after a tap on iOS. */
+}
+
+/* Hover lift is meaningless on touch and leaves rows stuck in the hovered state
+   after a tap on iOS — that is about the input device, not the window width. */
+@media (hover: none) {
   .product-row:hover {
     transform: none;
     box-shadow: var(--shadow-card);
