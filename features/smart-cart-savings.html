@@ -314,6 +314,7 @@
         var p = products[i];
         if (p.category !== "ticket") continue;
         var cap = capacityOf(p);
+        if (!cap) continue; // the catalog does not say who it admits, so it can cover no one
         if (cap.adults + cap.kids <= 1) continue;
         var qty = qtyToCover(p, basket);
         if (!qty) continue;

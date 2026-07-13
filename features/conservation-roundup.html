@@ -181,14 +181,19 @@
       return api.cartTotal(lines, products);
     }
 
-    /** The next whole $5 above what they're paying, and the gift that gets them there. */
-    function roundUp(subtotal) {
-      var target = (Math.floor(subtotal / ROUND_TO) + 1) * ROUND_TO;
-      return { target: target, gift: target - subtotal };
-    }
-
     function isRound(amount) {
       return Math.round(amount * 100) % (ROUND_TO * 100) === 0;
+    }
+
+    /**
+     * The next whole $5 above what they're paying, and the gift that gets them there — or null when
+     * the amount is already whole. Advancing a round total to the next multiple is not a rounding
+     * correction, it is a flat $5 ask wearing rounding clothes; the tiers below make that ask plainly.
+     */
+    function roundUp(subtotal) {
+      if (isRound(subtotal)) return null;
+      var target = (Math.floor(subtotal / ROUND_TO) + 1) * ROUND_TO;
+      return { target: target, gift: target - subtotal };
     }
 
     /**
@@ -231,7 +236,7 @@
         return;
       }
       var up = roundUp(subtotal);
-      if (Math.abs(up.gift - promised.gift) >= 0.005) {
+      if (!up || Math.abs(up.gift - promised.gift) >= 0.005) {
         refresh();
         return;
       }
@@ -325,12 +330,12 @@
         // Their cart changed after they rounded up, so the total they were promised is no longer the
         // one they'd pay. The gift stays exactly as they left it; re-rounding is theirs to choose.
         var orderTotal = subtotal + donation.custom.price;
+        var reUp = subtotal > 0 ? roundUp(subtotal) : null;
         if (
           donation.custom.source === "roundup" &&
-          subtotal > 0 &&
+          reUp &&
           !isRound(orderTotal)
         ) {
-          var reUp = roundUp(subtotal);
           panelEl.appendChild(
             textLine(
               "cru-fine",
@@ -364,8 +369,8 @@
         ),
       );
 
-      if (subtotal > 0) {
-        var up = roundUp(subtotal);
+      var up = subtotal > 0 ? roundUp(subtotal) : null;
+      if (up) {
         var btn = document.createElement("button");
         btn.type = "button";
         btn.className = "cru-roundup-btn";

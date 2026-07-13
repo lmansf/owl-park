@@ -68,6 +68,17 @@ function renderCatalog() {
  * Build one cart-drawer line. Anything that can come from storage — a custom line's name, a metadata
  * caption — is set with `textContent`, never concatenated into markup.
  */
+/**
+ * Move a line's quantity by `delta` against the cart as it is NOW, not as it was when the drawer was
+ * drawn: a cart mutated elsewhere (another tab, a feature panel) must not be overwritten by a count
+ * this render captured before that change.
+ */
+function stepQty(key, delta) {
+  const line = Cart.getLines().find((l) => lineKey(l) === key);
+  if (!line) return;
+  Cart.setQty(key, line.qty + delta);
+}
+
 function buildCartLine(line, resolved) {
   const key = lineKey(line);
   const subtotal = resolved.price * line.qty;
@@ -113,7 +124,7 @@ function buildCartLine(line, resolved) {
     down.setAttribute("aria-label", "Decrease quantity");
     down.setAttribute("data-qty-down", key);
     down.textContent = "-";
-    down.addEventListener("click", () => Cart.setQty(key, line.qty - 1));
+    down.addEventListener("click", () => stepQty(key, -1));
 
     const qty = document.createElement("span");
     qty.className = "qty-value";
@@ -125,7 +136,7 @@ function buildCartLine(line, resolved) {
     up.setAttribute("aria-label", "Increase quantity");
     up.setAttribute("data-qty-up", key);
     up.textContent = "+";
-    up.addEventListener("click", () => Cart.setQty(key, line.qty + 1));
+    up.addEventListener("click", () => stepQty(key, 1));
 
     controls.append(down, qty, up);
   }

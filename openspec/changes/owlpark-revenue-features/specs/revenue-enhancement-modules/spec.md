@@ -107,6 +107,13 @@ non-catalog cart line included in the cart total and the checkout summary.
 - **THEN** no donation is in the cart, no amount is pre-checked, and the cart total is unchanged until
   the shopper explicitly taps a donation amount
 
+#### Scenario: Nothing is rounded when there is nothing to round
+
+- **WHEN** the purchase subtotal is already an exact multiple of the rounding unit
+- **THEN** no round-up button is shown — only the plainly labelled adopt-an-owl tiers — because advancing
+  a whole total to the next multiple is a flat ask, not a rounding correction, and tapping a stale
+  round-up whose subtotal has since become whole adds nothing
+
 #### Scenario: Accepting a donation keeps every total correct
 
 - **WHEN** the shopper taps the round-up offer
