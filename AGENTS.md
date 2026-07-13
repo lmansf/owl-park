@@ -37,6 +37,15 @@ This file is the project's committed home for project-intrinsic agent knowledge:
   `features/park-map-modal.html` (dock button + modal) are the reference implementations — match them
   when adding or restyling a feature; `node --check` only catches syntax, so drive a feature in a real
   browser (activate → interact → deactivate) to catch runtime `ReferenceError`s and residue.
+- Every feature's bottom self-call is `if (document.readyState === "loading") addEventListener(
+  "DOMContentLoaded", activate, {once:true}); else activate();` — NOT a bare `activate();`. This lets a
+  snippet be pasted at the TOP of a foreign store's `<body>` and still find the header/grid/cart that
+  come LATER in the page (during parse they don't exist yet, so an observer keyed off `#catalog-grid`/
+  `#cart-items`/`#checkout-modal` would attach to nothing and never recover). The registration stays
+  immediate. The Owl Park loader injects after parse (readyState ≠ "loading", since `js/main.js` is a
+  deferred module), so `activate()` still runs synchronously there — no app-path change. Keep this
+  guard when authoring a new feature. `node --check` won't catch a mount that silently no-ops because
+  its target didn't exist yet — only a real-browser paste-at-top-of-body test will.
 - Features can't import `js/cart.js` (no imports allowed at all) — those that need cart contents
   read `localStorage.getItem("owl-park-cart")` directly and poll on an interval to react to changes.
   A feature that WRITES the cart writes that key and then dispatches `owl-park-cart-changed` on
