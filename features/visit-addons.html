@@ -1,0 +1,318 @@
+<script type="application/json" data-owlpark-manifest>
+  {
+    "id": "visit-addons",
+    "name": "Visit Add-Ons",
+    "description": "One-tap rail of visit add-ons (parking, fast-track, keeper experience, souvenir cup) shown in the cart once a ticket is in it.",
+    "category": "behavioral",
+    "enabledByDefault": false,
+    "requiresReload": false
+  }
+</script>
+
+<style>
+  .owlpark-feat-visit-addons[hidden] {
+    display: none;
+  }
+  .owlpark-feat-visit-addons {
+    flex-shrink: 0;
+    border-top: 1px dashed #d8cfae;
+    padding-top: 0.6rem;
+  }
+  .owlpark-feat-visit-addons .vao-title {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #6d675c;
+    margin-bottom: 0.45rem;
+  }
+  .owlpark-feat-visit-addons .vao-rail {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.3rem;
+  }
+  .owlpark-feat-visit-addons .vao-card {
+    flex: 0 0 10.5rem;
+    border: 1px solid var(--cove-border, #e4ddca);
+    border-radius: 12px;
+    background: #fff;
+    padding: 0.55rem 0.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  .owlpark-feat-visit-addons .vao-card.vao-in-cart {
+    border-color: #2f8f4e;
+    background: #f2f9f3;
+  }
+  .owlpark-feat-visit-addons .vao-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.3rem;
+  }
+  .owlpark-feat-visit-addons .vao-emoji {
+    font-size: 1rem;
+  }
+  .owlpark-feat-visit-addons .vao-name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #2c2a26;
+  }
+  .owlpark-feat-visit-addons .vao-tagline {
+    font-size: 0.72rem;
+    line-height: 1.25;
+    color: #6d675c;
+    flex: 1;
+  }
+  .owlpark-feat-visit-addons .vao-in-cart-note {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #2f8f4e;
+  }
+  .owlpark-feat-visit-addons .vao-add-btn {
+    min-height: 44px;
+    width: 100%;
+    border: none;
+    border-radius: 10px;
+    background: #0f6f7a;
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.82rem;
+    padding: 0.4rem 0.6rem;
+    cursor: pointer;
+  }
+  .owlpark-feat-visit-addons .vao-add-btn:active {
+    transform: translateY(1px);
+  }
+  @media (hover: hover) {
+    .owlpark-feat-visit-addons .vao-add-btn:hover {
+      background: #0c5a63;
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    var FEATURE_ID = "visit-addons";
+    var CART_KEY = "owl-park-cart";
+    var POLL_MS = 700;
+
+    var products = null;
+    var panelEl = null;
+    var pollId = null;
+    // Bumped on every activate and deactivate: an in-flight catalog fetch whose generation no longer
+    // matches belongs to an activation that has since been torn down, and must touch nothing.
+    var generation = 0;
+    var itemsObserver = null;
+    var lastSerialized = null;
+
+    function readCart() {
+      try {
+        var raw = localStorage.getItem(CART_KEY);
+        var lines = raw ? JSON.parse(raw) : [];
+        return Array.isArray(lines) ? lines : [];
+      } catch (err) {
+        return [];
+      }
+    }
+
+    function writeCart(lines) {
+      localStorage.setItem(CART_KEY, JSON.stringify(lines));
+      window.dispatchEvent(new CustomEvent("owl-park-cart-changed"));
+    }
+
+    function money(n) {
+      return "$" + n.toFixed(2);
+    }
+
+    function byCategory(category) {
+      return products.filter(function (p) {
+        return p.category === category;
+      });
+    }
+
+    function cartHasTicket() {
+      var tickets = byCategory("ticket").map(function (p) {
+        return p.id;
+      });
+      return readCart().some(function (line) {
+        return tickets.indexOf(line.id) !== -1;
+      });
+    }
+
+    function qtyInCart(productId) {
+      return readCart().reduce(function (sum, line) {
+        return line.id === productId ? sum + line.qty : sum;
+      }, 0);
+    }
+
+    /** One tap: an add-on joins the cart as an ordinary catalog line. No modal, no interstitial. */
+    function addAddon(productId) {
+      var lines = readCart();
+      var existing = null;
+      for (var i = 0; i < lines.length; i++) {
+        if ((lines[i].key || lines[i].id) === productId) existing = lines[i];
+      }
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        lines.push({ id: productId, qty: 1 });
+      }
+      writeCart(lines);
+    }
+
+    function addonCard(product) {
+      var inCart = qtyInCart(product.id);
+
+      var card = document.createElement("div");
+      card.className = "vao-card" + (inCart ? " vao-in-cart" : "");
+
+      var head = document.createElement("div");
+      head.className = "vao-head";
+      var emoji = document.createElement("span");
+      emoji.className = "vao-emoji";
+      emoji.textContent = product.emoji;
+      var name = document.createElement("span");
+      name.className = "vao-name";
+      name.textContent = product.name;
+      head.append(emoji, name);
+
+      var tagline = document.createElement("div");
+      tagline.className = "vao-tagline";
+      tagline.textContent = product.tagline;
+
+      card.append(head, tagline);
+
+      if (inCart) {
+        var note = document.createElement("div");
+        note.className = "vao-in-cart-note";
+        note.textContent = "✓ " + inCart + " in cart";
+        card.appendChild(note);
+      }
+
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "vao-add-btn";
+      btn.textContent =
+        (inCart ? "Add another · " : "Add · ") + money(product.price);
+      btn.setAttribute("data-addon-id", product.id);
+      btn.addEventListener("click", function () {
+        addAddon(product.id);
+      });
+      card.appendChild(btn);
+
+      return card;
+    }
+
+    function render() {
+      if (!panelEl || !products) return;
+      panelEl.innerHTML = "";
+
+      var addons = byCategory("addon");
+      if (!addons.length || !cartHasTicket()) {
+        panelEl.hidden = true;
+        return;
+      }
+      panelEl.hidden = false;
+
+      var title = document.createElement("div");
+      title.className = "vao-title";
+      title.textContent = "Make a day of it";
+      panelEl.appendChild(title);
+
+      var rail = document.createElement("div");
+      rail.className = "vao-rail";
+      addons.forEach(function (product) {
+        rail.appendChild(addonCard(product));
+      });
+      panelEl.appendChild(rail);
+    }
+
+    function sync() {
+      var serialized = localStorage.getItem(CART_KEY);
+      if (serialized === lastSerialized) return;
+      lastSerialized = serialized;
+      render();
+    }
+
+    /**
+     * The rail lives in the scrolling #cart-items region, not the fixed footer, so the total and the
+     * checkout button stay reachable on a phone. `renderCart()` replaces that region's innerHTML on
+     * every cart change, so the rail is re-appended after each render.
+     */
+    function mount() {
+      var items = document.getElementById("cart-items");
+      if (!items || !panelEl) return;
+      if (!items.contains(panelEl)) items.appendChild(panelEl);
+    }
+
+    function activate() {
+      var items = document.getElementById("cart-items");
+      if (!items) return;
+      var gen = ++generation;
+
+      panelEl = document.createElement("div");
+      panelEl.className = "owlpark-feat-visit-addons";
+      panelEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+      panelEl.hidden = true;
+      mount();
+
+      itemsObserver = new MutationObserver(mount);
+      itemsObserver.observe(items, { childList: true });
+
+      // Add-on names and prices come from the catalog; show nothing rather than a stale price.
+      fetch("data/products.json")
+        .then(function (res) {
+          if (!res.ok) throw new Error("products.json: " + res.status);
+          return res.json();
+        })
+        .then(function (data) {
+          if (gen !== generation) return;
+          products = data;
+          lastSerialized = null;
+          sync();
+        })
+        .catch(function (err) {
+          console.warn(
+            "[" + FEATURE_ID + "] no catalog, add-on rail stays hidden.",
+            err,
+          );
+        });
+
+      pollId = setInterval(sync, POLL_MS);
+      window.addEventListener("owl-park-cart-changed", sync);
+    }
+
+    function deactivate() {
+      generation++;
+      if (pollId) {
+        clearInterval(pollId);
+        pollId = null;
+      }
+      if (itemsObserver) {
+        itemsObserver.disconnect();
+        itemsObserver = null;
+      }
+      window.removeEventListener("owl-park-cart-changed", sync);
+      document
+        .querySelectorAll('[data-owlpark-feature="' + FEATURE_ID + '"]')
+        .forEach(function (el) {
+          el.remove();
+        });
+      panelEl = null;
+      products = null;
+      lastSerialized = null;
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures[FEATURE_ID] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
+</script>

@@ -30,6 +30,33 @@ This file is the project's committed home for project-intrinsic agent knowledge:
   after disabling) — re-run that style of check after touching the loader or any feature.
 - Features can't import `js/cart.js` (no imports allowed at all) — those that need cart contents
   read `localStorage.getItem("owl-park-cart")` directly and poll on an interval to react to changes.
+  A feature that WRITES the cart writes that key and then dispatches `owl-park-cart-changed` on
+  `window`; `js/cart.js` listens and re-notifies so the storefront re-renders. `js/cart.js`'s own
+  `writeCart()` raises that same event, so a core mutation reaches feature panels at once instead of
+  up to one poll interval later (a write made from inside that dispatch is re-announced once it
+  unwinds, so no listener is left rendering superseded lines, capped so two feuding listeners can't
+  loop). It's a
+  latency fix, not a guarantee: a feature panel whose button mutates the cart must still recompute its
+  offer from a fresh cart read AT CLICK TIME and decline an offer the cart no longer supports. A cart
+  line is
+  `{ id, qty }` plus optional `key` / `meta` / `custom` — `resolveLine()` (`js/products.js`) is the
+  only place a line's price and display fields are decided, so every total agrees. A discounted line
+  (off-peak) stores `custom.discountRate`, a basis re-applied to the live catalog price on every
+  render — never a discounted amount, which a persisted cart would outlive; `custom.price` is an
+  absolute only for a line with no catalog product (the donation). A donation isn't an item, so
+  `itemCount()` skips it and a gift-only cart badges as 🎁 (`isGiftOnly()`); `readCart()` drops a
+  `custom.source === "roundup"` donation once the cart holds no purchased line (`withoutOrphanedGifts()`)
+  — a CORE rule, so it holds with `conservation-roundup` switched off. Since features can't import
+  `js/products.js` either, those rules are published on `window.OwlPark` (`resolveLine`, `cartTotal`,
+  `itemCount`, `isGiftOnly`, `discountOf`) — a feature that prices cart lines MUST use them instead of `product.price × qty`,
+  which drops donation lines and ignores off-peak discounts. That API is an import side effect of
+  `js/products.js`, so EVERY page that activates features must import it: `js/main.js` does, and
+  `js/manager.js` imports it purely for that (features-manager.html activates default-on features
+  too, and a feature that reached for `window.OwlPark` there used to throw on every poll tick).
+  See README.md's "The cart line model".
+- Only product categories that have a filter tab in `index.html` are rendered in the catalog
+  (`renderCatalog()` derives the list from `.tab-btn[data-filter]`), which is what keeps the `addon`
+  products out of the storefront — they're attached from the cart by `visit-addons`.
 - Sharp edge in `js/feature-loader.js`'s `injectSnippet`: it parses a feature's raw text with
   `DOMParser`, wrapped in a manually-built `<html><body>...</body></html>` shell before parsing —
   don't remove that wrapper. Without it, a feature file whose first elements are `<script>`/`<style>`
@@ -43,7 +70,10 @@ This file is the project's committed home for project-intrinsic agent knowledge:
   `membership-glow`, `wishlist-favorites`, `discount-badge-strikethrough`) re-apply via a
   `MutationObserver` on `#catalog-grid` guarded by an idempotency check. `js/main.js` likewise
   overwrites `#order-id`'s `textContent` on every checkout (`copy-order-id-button` and
-  `order-history-log` observe and re-apply) — see README.md's "Authoring a new feature" section.
+  `order-history-log` observe and re-apply) and replaces `#cart-items`' `innerHTML` on every cart
+  change (`smart-cart-savings`, `conservation-roundup`, `visit-addons` re-mount the same way) — see
+  README.md's "Authoring a new feature" section. Mount cart panels in `#cart-items` (it scrolls), not
+  `.cart-footer` (it doesn't — tall content there pushes Total and Checkout off a phone screen).
 - CI (`.github/workflows/ci.yml`) runs on every push/PR: JSON validity, `node --check` on `js/` and
   on each feature's extracted behavior script, a `features/index.json` <-> `features/*.html`
   consistency check, and an HTTP smoke test of key pages/assets over `python3 -m http.server`.

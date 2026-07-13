@@ -1,17 +1,91 @@
+import { itemCount, withoutOrphanedGifts } from "./products.js";
+
 const CART_STORAGE_KEY = "owl-park-cart";
 
+/**
+ * A cart line is `{ id, qty }` plus three optional fields:
+ *   - `key`    a unique line key. Absent means the line is "plain" and its key IS its product id, so
+ *              a cart stored before these fields existed keeps working untouched. Two lines of the
+ *              same product with different metadata (two gift memberships, one ticket on two dates)
+ *              get distinct keys and never merge.
+ *   - `meta`   a namespaced map, one entry per feature (`{ gift: {...}, visit: {...} }`). Each entry
+ *              may carry a `note` string, which the storefront renders as a caption on the line.
+ *   - `custom` self-describing overrides: `discountRate` (a share off the live catalog price, e.g. an
+ *              off-peak ticket) or `price` (the whole price of a non-catalog line such as a donation),
+ *              plus `name`/`emoji`/`unit`/`plu`/`kind`/`fixed`/`source` (`kind: "donation"` marks a
+ *              line that is money but not an item, so `itemCount()` skips it; `source` records the
+ *              offer a line came from, and a `"roundup"` gift is dropped once nothing is left to round
+ *              — see `withoutOrphanedGifts`). `resolveLine()` in js/products.js is the single place
+ *              these win over the catalog.
+ */
+
+/**
+ * The one place the stored cart becomes lines. A gift left orphaned by the purchase it was attached to
+ * is dropped here (see `withoutOrphanedGifts`) rather than in the feature that offered it, so the rule
+ * holds with every feature switched off. The pruned cart is written straight back to storage without
+ * announcing it: this runs from inside `notify()`, and re-announcing a change from within the dispatch
+ * of that change is the re-entrant write `writeCart()` warns about. Every reader — the drawer, the
+ * badge, checkout, and any feature polling the storage key — reads the pruned cart anyway.
+ */
 function readCart() {
   try {
     const raw = localStorage.getItem(CART_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    const stored = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(stored)) return [];
+    const lines = withoutOrphanedGifts(stored);
+    if (lines !== stored) {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(lines));
+    }
+    return lines;
   } catch (err) {
     console.warn("Cart storage was corrupt, resetting.", err);
     return [];
   }
 }
 
+let dispatching = false;
+let restated = false;
+
+/** How many times one write may be re-announced before we stop and assume two listeners are feuding. */
+const MAX_RESTATEMENTS = 5;
+
+/**
+ * Persist the lines and announce them on the same channel a feature uses, so a core mutation (Add to
+ * Cart, the drawer's +/-/Remove, `clear`) reaches feature panels at once rather than up to one poll
+ * interval later — a panel acting on a cart it has not seen yet acts on the wrong one.
+ *
+ * The event dispatches synchronously, so a listener that writes the cart back re-enters here while
+ * earlier listeners have already run against the older lines. That nested write is stored and then
+ * re-announced once the dispatch in flight unwinds, rather than dropped — otherwise the drawer, whose
+ * listener runs first, would keep rendering lines a later listener has already replaced. Two listeners
+ * writing at each other would recur forever, so the restatements are capped — a cap that bounds writes
+ * made through this module only; a feature writing the storage key and dispatching the event itself
+ * recurses through `dispatchEvent` without passing through here, and must not write from its own
+ * `owl-park-cart-changed` handler.
+ */
 function writeCart(lines) {
   localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(lines));
+  if (dispatching) {
+    restated = true;
+    return;
+  }
+  dispatching = true;
+  try {
+    for (let round = 0; round <= MAX_RESTATEMENTS; round++) {
+      restated = false;
+      window.dispatchEvent(new CustomEvent("owl-park-cart-changed"));
+      if (!restated) return;
+    }
+    console.warn("Cart changes kept re-announcing; stopping to avoid a loop.");
+  } finally {
+    dispatching = false;
+    restated = false;
+  }
+}
+
+/** The key a line is addressed by. A plain line is addressed by its product id, as before. */
+export function lineKey(line) {
+  return line.key || line.id;
 }
 
 const listeners = new Set();
@@ -21,50 +95,52 @@ function notify() {
   listeners.forEach((fn) => fn(lines));
 }
 
+// Features can't `import` this module (the single-file plugin contract forbids imports), so a feature
+// that mutates the cart writes localStorage directly and dispatches this event to make the page
+// re-render from the new lines. `writeCart()` raises it too, so every cart change — core's or a
+// feature's — travels the one channel and this is the single place a change is announced.
+window.addEventListener("owl-park-cart-changed", notify);
+
 export const Cart = {
-  /** @returns {{id: string, qty: number}[]} */
+  /** @returns {{id: string, qty: number, key?: string, meta?: object, custom?: object}[]} */
   getLines() {
     return readCart();
   },
 
+  /** Add a product to the cart, merging into the plain line for that product. */
   addItem(productId) {
     const lines = readCart();
-    const existing = lines.find((l) => l.id === productId);
+    const existing = lines.find((l) => lineKey(l) === productId);
     if (existing) {
       existing.qty += 1;
     } else {
       lines.push({ id: productId, qty: 1 });
     }
     writeCart(lines);
-    notify();
   },
 
-  removeItem(productId) {
-    const lines = readCart().filter((l) => l.id !== productId);
-    writeCart(lines);
-    notify();
+  removeItem(key) {
+    writeCart(readCart().filter((l) => lineKey(l) !== key));
   },
 
-  setQty(productId, qty) {
+  setQty(key, qty) {
     const lines = readCart();
-    const line = lines.find((l) => l.id === productId);
+    const line = lines.find((l) => lineKey(l) === key);
     if (!line) return;
     if (qty <= 0) {
-      writeCart(lines.filter((l) => l.id !== productId));
+      writeCart(lines.filter((l) => lineKey(l) !== key));
     } else {
       line.qty = qty;
       writeCart(lines);
     }
-    notify();
   },
 
   clear() {
     writeCart([]);
-    notify();
   },
 
   totalItemCount() {
-    return readCart().reduce((sum, l) => sum + l.qty, 0);
+    return itemCount(readCart());
   },
 
   /** Subscribe to cart changes. Returns an unsubscribe function. */

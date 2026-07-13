@@ -167,6 +167,32 @@
       return tr;
     }
 
+    /**
+     * The categories the storefront actually sells from its tabs — the same list `renderCatalog()`
+     * derives, so a catalog category with no tab (the add-ons a feature attaches from the cart) is not
+     * offered for comparison in a table headed "Compare Tickets & Memberships", where it cannot be
+     * bought. With no tabs on the page, nothing is filtered out.
+     */
+    function shoppableCategories() {
+      var tabs = document.querySelectorAll(".tab-btn[data-filter]");
+      if (!tabs.length) return null;
+      var categories = [];
+      tabs.forEach(function (tab) {
+        var filter = tab.getAttribute("data-filter");
+        if (filter && filter !== "all") categories.push(filter);
+      });
+      return categories.length ? categories : null;
+    }
+
+    function comparable(list) {
+      var categories = shoppableCategories();
+      var products = Array.isArray(list) ? list : [];
+      if (!categories) return products;
+      return products.filter(function (p) {
+        return p && categories.indexOf(p.category) !== -1;
+      });
+    }
+
     function showOverlay(list) {
       var overlay = document.createElement("div");
       overlay.className = "owlpark-feat-ticket-comparison-table-overlay";
@@ -181,7 +207,7 @@
         '<button type="button" class="owlpark-feat-ticket-comparison-table-close">Close</button>' +
         "</div>";
       var tbody = overlay.querySelector("tbody");
-      (Array.isArray(list) ? list : []).forEach(function (p) {
+      comparable(list).forEach(function (p) {
         if (p && typeof p === "object") tbody.appendChild(buildRow(p));
       });
       document.body.appendChild(overlay);

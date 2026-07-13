@@ -1,0 +1,378 @@
+<script type="application/json" data-owlpark-manifest>
+  {
+    "id": "offpeak-date-nudge",
+    "name": "Off-Peak Date Nudge",
+    "description": "Visit-date picker on ticket rows showing demo demand per date, with a real off-peak discount on quiet days carried onto the cart line.",
+    "category": "behavioral",
+    "enabledByDefault": false,
+    "requiresReload": false
+  }
+</script>
+
+<style>
+  .owlpark-feat-offpeak-date-nudge {
+    margin-top: 0.8rem;
+    border-top: 1px dashed #d8cfae;
+    padding-top: 0.7rem;
+  }
+  .owlpark-feat-offpeak-date-nudge .odn-open-btn {
+    min-height: 44px;
+    border: 1px solid #cfd8e8;
+    background: #f4f7fd;
+    color: #3a4d8f;
+    border-radius: 10px;
+    padding: 0.5rem 0.9rem;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .owlpark-feat-offpeak-date-nudge .odn-panel {
+    margin-top: 0.7rem;
+  }
+  .owlpark-feat-offpeak-date-nudge .odn-panel[hidden] {
+    display: none;
+  }
+  .owlpark-feat-offpeak-date-nudge .odn-rail {
+    display: flex;
+    gap: 0.45rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.35rem;
+  }
+  .owlpark-feat-offpeak-date-nudge .odn-day {
+    flex: 0 0 auto;
+    min-width: 6.4rem;
+    min-height: 44px;
+    border: 1px solid #e4ddca;
+    background: #fff;
+    border-radius: 12px;
+    padding: 0.45rem 0.6rem;
+    text-align: left;
+    cursor: pointer;
+    line-height: 1.25;
+  }
+  .owlpark-feat-offpeak-date-nudge .odn-day-date {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #2c2a26;
+  }
+  .owlpark-feat-offpeak-date-nudge .odn-day-demand {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .owlpark-feat-offpeak-date-nudge .odn-day-price {
+    display: block;
+    font-size: 0.76rem;
+    color: #6d675c;
+    white-space: nowrap;
+  }
+  .owlpark-feat-offpeak-date-nudge .odn-quiet {
+    border-color: #2f8f4e;
+    background: #f2f9f3;
+  }
+  .owlpark-feat-offpeak-date-nudge .odn-quiet .odn-day-demand {
+    color: #2f8f4e;
+  }
+  .owlpark-feat-offpeak-date-nudge .odn-steady .odn-day-demand {
+    color: #6d675c;
+  }
+  .owlpark-feat-offpeak-date-nudge .odn-busy .odn-day-demand {
+    color: #c9891b;
+  }
+  .owlpark-feat-offpeak-date-nudge .odn-full .odn-day-demand {
+    color: #a8321f;
+  }
+  .owlpark-feat-offpeak-date-nudge .odn-fine {
+    margin-top: 0.4rem;
+    font-size: 0.72rem;
+    color: #8a8478;
+    line-height: 1.35;
+  }
+  @media (hover: hover) {
+    .owlpark-feat-offpeak-date-nudge .odn-day:hover {
+      border-color: #3a4d8f;
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    var FEATURE_ID = "offpeak-date-nudge";
+    var CART_KEY = "owl-park-cart";
+
+    var DAYS_AHEAD = 14;
+    // A quiet day is discounted by this share of the ticket's catalog price. The saving shown on the
+    // chip and the price the line is actually added at both come from this one number.
+    var OFFPEAK_DISCOUNT_RATE = 0.12;
+
+    // MOCK DEMAND DATA. This is a demo storefront with no capacity service behind it. Demand is a
+    // deterministic function of the date itself (a hash of the ISO string, plus a weekend bias), so
+    // a given date always shows the same level, on every device, forever. It is not, and is never
+    // presented as, live availability.
+    var DEMAND_LEVELS = [
+      { key: "quiet", label: "quiet", discounted: true },
+      { key: "steady", label: "steady", discounted: false },
+      { key: "busy", label: "busy", discounted: false },
+      { key: "full", label: "nearly full", discounted: false },
+    ];
+
+    var products = null;
+    var gridObserver = null;
+    // Bumped on every activate and deactivate: an in-flight catalog fetch whose generation no longer
+    // matches belongs to an activation that has since been torn down, and must touch nothing.
+    var generation = 0;
+
+    function readCart() {
+      try {
+        var raw = localStorage.getItem(CART_KEY);
+        var lines = raw ? JSON.parse(raw) : [];
+        return Array.isArray(lines) ? lines : [];
+      } catch (err) {
+        return [];
+      }
+    }
+
+    function writeCart(lines) {
+      localStorage.setItem(CART_KEY, JSON.stringify(lines));
+      window.dispatchEvent(new CustomEvent("owl-park-cart-changed"));
+    }
+
+    function money(n) {
+      return "$" + n.toFixed(2);
+    }
+
+    function isoOf(date) {
+      var m = String(date.getMonth() + 1).padStart(2, "0");
+      var d = String(date.getDate()).padStart(2, "0");
+      return date.getFullYear() + "-" + m + "-" + d;
+    }
+
+    function demandFor(date) {
+      var iso = isoOf(date);
+      var hash = 0;
+      for (var i = 0; i < iso.length; i++) {
+        hash = (hash * 31 + iso.charCodeAt(i)) >>> 0;
+      }
+      var day = date.getDay();
+      var weekendBias = day === 0 || day === 6 ? 2 : 0; // weekends run hot at the park
+      var index = Math.min((hash % 3) + weekendBias, DEMAND_LEVELS.length - 1);
+      return DEMAND_LEVELS[index];
+    }
+
+    /**
+     * The real discount for a date: 0 unless the date is quiet, and always whole dollars. The chip
+     * label, the cart note and the price the line is charged at all come from this one number, which
+     * is core's own rounding (js/products.js), so the advertised saving is exactly what is charged.
+     */
+    function discountFor(product, demand) {
+      if (!demand.discounted) return 0;
+      var api = window.OwlPark;
+      if (!api || typeof api.discountOf !== "function") return 0;
+      return api.discountOf(product.price, OFFPEAK_DISCOUNT_RATE);
+    }
+
+    function upcomingDates() {
+      var dates = [];
+      var start = new Date();
+      start.setHours(0, 0, 0, 0);
+      for (var i = 0; i < DAYS_AHEAD; i++) {
+        var date = new Date(start.getTime());
+        date.setDate(start.getDate() + i);
+        dates.push(date);
+      }
+      return dates;
+    }
+
+    function shortDay(date) {
+      return date.toLocaleDateString(undefined, {
+        weekday: "short",
+        day: "numeric",
+      });
+    }
+
+    function longDay(date) {
+      return date.toLocaleDateString(undefined, {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+      });
+    }
+
+    function addDatedTicket(product, date, demand) {
+      var discount = discountFor(product, demand);
+      // The note is stored, and a stored cart outlives the catalog it was priced against, so it
+      // carries no amount: the off-peak price itself is re-resolved from the live catalog on render.
+      var note =
+        "📅 Visit " +
+        longDay(date) +
+        " · " +
+        demand.label +
+        (discount > 0 ? " · off-peak rate" : "");
+
+      var line = {
+        id: product.id,
+        key: product.id + "#visit-" + isoOf(date),
+        qty: 1,
+        meta: {
+          visit: { date: isoOf(date), demand: demand.key, note: note },
+        },
+      };
+      if (discount > 0) line.custom = { discountRate: OFFPEAK_DISCOUNT_RATE };
+
+      // Same ticket, same date => same line: bump its quantity instead of stacking a duplicate.
+      var lines = readCart();
+      for (var i = 0; i < lines.length; i++) {
+        if ((lines[i].key || lines[i].id) === line.key) {
+          lines[i].qty += 1;
+          writeCart(lines);
+          return;
+        }
+      }
+      lines.push(line);
+      writeCart(lines);
+    }
+
+    function dayButton(product, date) {
+      var demand = demandFor(date);
+      var discount = discountFor(product, demand);
+      var price = product.price - discount;
+
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "odn-day odn-" + demand.key;
+      btn.setAttribute("data-visit-date", isoOf(date));
+
+      var dateEl = document.createElement("span");
+      dateEl.className = "odn-day-date";
+      dateEl.textContent = shortDay(date);
+
+      var demandEl = document.createElement("span");
+      demandEl.className = "odn-day-demand";
+      demandEl.textContent =
+        demand.label + (discount > 0 ? " · save " + money(discount) : "");
+
+      var priceEl = document.createElement("span");
+      priceEl.className = "odn-day-price";
+      priceEl.textContent = money(price);
+
+      btn.append(dateEl, demandEl, priceEl);
+      btn.addEventListener("click", function () {
+        addDatedTicket(product, date, demand);
+      });
+      return btn;
+    }
+
+    function buildDateBlock(row, product) {
+      var block = document.createElement("div");
+      block.className = "owlpark-feat-offpeak-date-nudge";
+      block.setAttribute("data-owlpark-feature", FEATURE_ID);
+
+      var openBtn = document.createElement("button");
+      openBtn.type = "button";
+      openBtn.className = "odn-open-btn";
+      openBtn.textContent = "📅 Pick a visit date";
+      openBtn.setAttribute("aria-expanded", "false");
+      block.appendChild(openBtn);
+
+      var panel = document.createElement("div");
+      panel.className = "odn-panel";
+      panel.hidden = true;
+
+      var rail = document.createElement("div");
+      rail.className = "odn-rail";
+      upcomingDates().forEach(function (date) {
+        rail.appendChild(dayButton(product, date));
+      });
+
+      var fine = document.createElement("div");
+      fine.className = "odn-fine";
+      fine.textContent =
+        "Quiet days cost less because they cost us less. Demand shown is demo data generated from the date — this storefront has no live capacity feed.";
+
+      panel.append(rail, fine);
+      block.appendChild(panel);
+
+      openBtn.addEventListener("click", function () {
+        panel.hidden = !panel.hidden;
+        openBtn.setAttribute("aria-expanded", String(!panel.hidden));
+      });
+
+      row.appendChild(block);
+    }
+
+    /**
+     * `renderCatalog()` replaces #catalog-grid's innerHTML on every tab switch, so the date block is
+     * re-applied after each render, guarded so a row that already has one is left alone.
+     */
+    function decorateRows() {
+      if (!products) return;
+      var rows = document.querySelectorAll(
+        "#catalog-grid .product-row[data-product-id]",
+      );
+      rows.forEach(function (row) {
+        if (row.querySelector('[data-owlpark-feature="' + FEATURE_ID + '"]')) {
+          return;
+        }
+        var id = row.getAttribute("data-product-id");
+        var product = products.filter(function (p) {
+          return p.id === id;
+        })[0];
+        if (!product || product.category !== "ticket") return;
+        buildDateBlock(row, product);
+      });
+    }
+
+    function activate() {
+      var gen = ++generation;
+      // Every price and saving on a date chip is the catalog price minus a computed discount, so
+      // nothing renders until the catalog is in hand.
+      fetch("data/products.json")
+        .then(function (res) {
+          if (!res.ok) throw new Error("products.json: " + res.status);
+          return res.json();
+        })
+        .then(function (data) {
+          if (gen !== generation) return;
+          products = data;
+          decorateRows();
+        })
+        .catch(function (err) {
+          console.warn(
+            "[" + FEATURE_ID + "] no catalog prices, date picker stays off.",
+            err,
+          );
+        });
+
+      var grid = document.getElementById("catalog-grid");
+      if (grid) {
+        gridObserver = new MutationObserver(decorateRows);
+        gridObserver.observe(grid, { childList: true });
+      }
+    }
+
+    function deactivate() {
+      generation++;
+      if (gridObserver) {
+        gridObserver.disconnect();
+        gridObserver = null;
+      }
+      products = null;
+      document
+        .querySelectorAll('[data-owlpark-feature="' + FEATURE_ID + '"]')
+        .forEach(function (el) {
+          el.remove();
+        });
+    }
+
+    activate();
+
+    window.__owlParkFeatures = window.__owlParkFeatures || {};
+    window.__owlParkFeatures[FEATURE_ID] = {
+      activate: activate,
+      deactivate: deactivate,
+    };
+  })();
+</script>

@@ -156,22 +156,36 @@
       if (!bar || !summary) return;
 
       var lines = readCartLines();
-      if (!productsLoaded || lines.length === 0) {
+      var api = window.OwlPark;
+      var canPrice = !!api && typeof api.cartTotal === "function";
+      if (!productsLoaded || !canPrice || lines.length === 0) {
         bar.hidden = true;
         return;
       }
 
-      var count = 0;
-      var total = 0;
-      lines.forEach(function (line) {
-        var p = products.find(function (prod) {
-          return prod.id === line.id;
-        });
-        count += line.qty;
-        if (p) total += p.price * line.qty;
-      });
+      // Counted by core's own rule (window.OwlPark, js/products.js), so a charitable gift attached to
+      // the order is not tallied as one of the items the shopper is buying.
+      var count =
+        typeof api.itemCount === "function"
+          ? api.itemCount(lines)
+          : lines.reduce(function (sum, line) {
+              return sum + line.qty;
+            }, 0);
 
-      summary.textContent = count + (count === 1 ? " item · $" : " items · $") + total.toFixed(2);
+      // Priced by core's own cart arithmetic (window.OwlPark, js/products.js), so this bar can never
+      // show a different total from the cart drawer: it honours a line's off-peak discount, and
+      // counts a line with no catalog product behind it at all, such as a donation. A page that does
+      // not publish that API cannot be priced honestly, so the bar stays hidden rather than guessing.
+      var total = api.cartTotal(lines, products);
+
+      // A cart holding only a gift carries money but no items, so name it rather than announce
+      // "0 items" beside a real total.
+      var giftOnly =
+        typeof api.isGiftOnly === "function" ? api.isGiftOnly(lines) : false;
+
+      summary.textContent = giftOnly
+        ? "Donation · $" + total.toFixed(2)
+        : count + (count === 1 ? " item · $" : " items · $") + total.toFixed(2);
       bar.hidden = false;
     }
 

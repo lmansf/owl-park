@@ -8,6 +8,7 @@
     "description": "A full day of access to every aviary at Owl Park, from the Canopy Walk to the Barn Owl Loft.",
     "price": 34.0,
     "unit": "per adult",
+    "capacity": { "adults": 1, "kids": 0 },
     "emoji": "🎟️",
     "accent": "#2f8f4e"
   },
@@ -20,6 +21,7 @@
     "description": "Skip the per-person math: a single-day pass covering two adults and up to three children (ages 3-12).",
     "price": 99.0,
     "unit": "per family (5)",
+    "capacity": { "adults": 2, "kids": 3 },
     "emoji": "🪺",
     "accent": "#e2662d"
   },
@@ -32,6 +34,7 @@
     "description": "Entry from 4pm to close, right as our owls start stirring and the after-dark keeper talks begin.",
     "price": 22.0,
     "unit": "per adult",
+    "capacity": { "adults": 1, "kids": 0 },
     "emoji": "🌙",
     "accent": "#3a4d8f"
   },
@@ -44,6 +47,7 @@
     "description": "12 months of unlimited general admission for one member, plus member pricing on keeper experiences.",
     "price": 89.0,
     "unit": "per year",
+    "capacity": { "adults": 1, "kids": 0 },
     "emoji": "🪶",
     "accent": "#0f9aa8"
   },
@@ -56,8 +60,57 @@
     "description": "12 months of unlimited admission for 2 adults and up to 4 dependents at the same address, plus guest passes.",
     "price": 179.0,
     "unit": "per year",
+    "capacity": { "adults": 2, "kids": 4 },
     "emoji": "🌳",
     "accent": "#a8321f",
     "featured": true
+  },
+  {
+    "id": "prod-addon-parking",
+    "plu": "A201",
+    "category": "addon",
+    "name": "Parking",
+    "tagline": "Reserved spot by the Barn Owl gate",
+    "description": "A pre-paid space in the main lot, held until noon — no loop around the overflow field.",
+    "price": 12.0,
+    "unit": "per vehicle",
+    "emoji": "🅿️",
+    "accent": "#5a6b7a"
+  },
+  {
+    "id": "prod-addon-fast-track",
+    "plu": "A202",
+    "category": "addon",
+    "name": "Fast-Track Entry",
+    "tagline": "Straight through the keeper's gate",
+    "description": "Skip the main queue and enter through the keeper's gate any time on the day of your visit.",
+    "price": 9.0,
+    "unit": "per person",
+    "emoji": "⚡",
+    "accent": "#c9891b"
+  },
+  {
+    "id": "prod-addon-keeper-experience",
+    "plu": "A203",
+    "category": "addon",
+    "name": "Behind-the-Scenes Keeper Experience",
+    "tagline": "Meet the owls off-exhibit",
+    "description": "A 45-minute small-group tour of the rehabilitation barn with a keeper, including a flight demo.",
+    "price": 45.0,
+    "unit": "per person",
+    "emoji": "🧤",
+    "accent": "#7a4d9f"
+  },
+  {
+    "id": "prod-addon-souvenir-cup",
+    "plu": "A204",
+    "category": "addon",
+    "name": "Souvenir Owl Cup",
+    "tagline": "Free refills all day",
+    "description": "A reusable Owl Park cup with free refills at every kiosk for the whole of your visit.",
+    "price": 14.0,
+    "unit": "each",
+    "emoji": "🥤",
+    "accent": "#2f8f4e"
   }
 ]
