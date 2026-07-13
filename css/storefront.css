@@ -428,7 +428,10 @@ main {
     overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    width: 100%;
+    /* Claim only the space left beside the brand and scroll inside it, so the
+       strip shares the brand's row rather than forcing a second 44px row. */
+    flex: 1 1 0;
+    min-width: 0;
     justify-content: flex-start;
     /* Room for the pinned cart button to overlay the strip as it scrolls. */
     padding-right: 0.25rem;
@@ -447,6 +450,11 @@ main {
 }
 
 @media (max-width: 560px) {
+  /* A portrait phone is too narrow to share the line: the brand alone eats most
+     of it, so the strip drops to a full-width row of its own. */
+  .header-actions {
+    flex-basis: 100%;
+  }
   .row-header {
     flex-direction: column;
   }
