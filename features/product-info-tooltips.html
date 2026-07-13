@@ -84,6 +84,13 @@
   .owlpark-feat-product-info-tooltips.pit-info-wrap.pit-open .pit-tooltip {
     visibility: visible;
     opacity: 1;
+    /* An open panel is a persistent disclosure, not a transient hover tooltip, so
+       it has to take its own clicks: with pointer-events:none they fall through
+       to the product row beneath, where the document listener's
+       .closest('.pit-tooltip') dismiss guard can never match — so reading the
+       fine print, or selecting it, would close the panel. The panel is a child of
+       .pit-info-wrap, so this keeps the hover path intact. */
+    pointer-events: auto;
   }
   @media (hover: hover) {
     .owlpark-feat-product-info-tooltips.pit-info-wrap:hover .pit-tooltip {
