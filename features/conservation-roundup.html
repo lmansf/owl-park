@@ -132,6 +132,9 @@
     var products = null;
     var panelEl = null;
     var pollId = null;
+    // Bumped on every activate and deactivate: an in-flight catalog fetch whose generation no longer
+    // matches belongs to an activation that has since been torn down, and must touch nothing.
+    var generation = 0;
     var itemsObserver = null;
     var lastSerialized = null;
 
@@ -434,6 +437,7 @@
     function activate() {
       var items = document.getElementById("cart-items");
       if (!items) return;
+      var gen = ++generation;
 
       panelEl = document.createElement("div");
       panelEl.className = "owlpark-feat-conservation-roundup";
@@ -451,6 +455,7 @@
           return res.json();
         })
         .then(function (data) {
+          if (gen !== generation) return;
           products = data;
           lastSerialized = null;
           sync();
@@ -467,6 +472,7 @@
     }
 
     function deactivate() {
+      generation++;
       if (pollId) {
         clearInterval(pollId);
         pollId = null;

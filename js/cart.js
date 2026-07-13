@@ -39,7 +39,10 @@ const MAX_RESTATEMENTS = 5;
  * earlier listeners have already run against the older lines. That nested write is stored and then
  * re-announced once the dispatch in flight unwinds, rather than dropped — otherwise the drawer, whose
  * listener runs first, would keep rendering lines a later listener has already replaced. Two listeners
- * writing at each other would recur forever, so the restatements are capped.
+ * writing at each other would recur forever, so the restatements are capped — a cap that bounds writes
+ * made through this module only; a feature writing the storage key and dispatching the event itself
+ * recurses through `dispatchEvent` without passing through here, and must not write from its own
+ * `owl-park-cart-changed` handler.
  */
 function writeCart(lines) {
   localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(lines));

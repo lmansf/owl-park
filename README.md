@@ -218,7 +218,11 @@ Purely static shells (headings, close buttons) can keep using `innerHTML`.
 **Gotcha for features that fetch `data/products.json`:** cart lines in `localStorage` carry only
 `{ id, qty }`, so any price or total is derived from a product list your feature fetched itself.
 Don't render that derived value until the fetch resolves — show nothing rather than a wrong number
-(see `sticky-mini-cart-bar`, which stays hidden, and logs to the console, if its fetch fails).
+(see `sticky-mini-cart-bar`, which stays hidden, and logs to the console, if its fetch fails). The
+feature can also be disabled while that request is in flight, so bump an activation counter in
+`activate()`/`deactivate()` and have the `.then` bail when it no longer matches — otherwise a late
+response re-injects the feature's nodes after the loader's cleanup pass has already run (see
+`smart-cart-savings`).
 
 **Gotcha for mobile ergonomics in a feature file:** a feature must keep working when pasted
 standalone into a page that has none of the storefront's CSS, so it can't lean on the `--safe-*` and

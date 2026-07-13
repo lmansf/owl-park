@@ -15,6 +15,9 @@ module SHALL use `import`/`export` or `type="module"`, or reference a second fil
 - **THEN** every node it added (including nodes it injected onto product rows, the cart drawer, or the
   checkout modal), every `<style>` it added, and every interval, observer and listener it registered is
   removed, and no `[data-owlpark-feature="<id>"]` node remains in the document
+- **AND WHEN** the module is disabled while its `data/products.json` fetch is still in flight
+- **THEN** the late response injects nothing and repopulates no state, since the activation it belongs
+  to has been torn down
 
 #### Scenario: Modules do not modify the module they supersede
 
@@ -42,7 +45,8 @@ only when — the arithmetic favours the shopper.
 An offer SHALL only be made when the target **strictly covers** the cart: its `capacity.adults` is at
 least the cart's adults and its `capacity.kids` is at least the cart's kids, each summed from the
 ticket lines' product capacity × qty. The two dimensions SHALL NOT be summed into a single head count.
-A product with no `capacity` in the catalog admits an **unknown** party, never a party of zero.
+A product whose catalog `capacity` is missing — or present but admitting nobody (`adults` and `kids`
+both zero) — admits an **unknown** party, never a party of zero.
 
 With the shipped catalog only the membership half of this module can fire: the Family Day Pass is the
 sole ticket admitting more than one person, and it never costs less than a cart it can cover, so no
@@ -84,7 +88,8 @@ nobody should read the code as exercised.
 
 #### Scenario: A ticket whose capacity the catalog does not state suppresses every offer
 
-- **WHEN** the cart holds a `ticket` product carrying no `capacity`
+- **WHEN** the cart holds a `ticket` product carrying no `capacity`, or one whose `capacity` admits
+  neither adults nor kids
 - **THEN** the module makes no offer at all, since the party in the cart is unknown and any coverage
   check against it would pass vacuously — recommending a target that admits nobody it needs to
 

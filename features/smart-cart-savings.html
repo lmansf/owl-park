@@ -85,6 +85,9 @@
     var products = null;
     var panelEl = null;
     var pollId = null;
+    // Bumped on every activate and deactivate: an in-flight catalog fetch whose generation no longer
+    // matches belongs to an activation that has since been torn down, and must touch nothing.
+    var generation = 0;
     var itemsObserver = null;
     var lastSerialized = null;
 
@@ -150,9 +153,10 @@
     }
 
     /**
-     * Who a product admits, or null when the catalog does not say. A missing capacity is unknown, not
-     * zero: counting it as zero people would make every coverage check below vacuously true and offer
-     * a membership that does not admit the visitor whose ticket is in the cart.
+     * Who a product admits, or null when the catalog does not say. A missing — or all-zero — capacity
+     * is unknown, not a party of nobody: counting it as zero people would make every coverage check
+     * below vacuously true and offer a membership that does not admit the visitor whose ticket is in
+     * the cart.
      */
     function capacityOf(product) {
       var cap = product.capacity;
@@ -160,6 +164,7 @@
       var adults = typeof cap.adults === "number" ? cap.adults : 0;
       var kids = typeof cap.kids === "number" ? cap.kids : 0;
       if (adults < 0 || kids < 0) return null;
+      if (adults + kids <= 0) return null;
       return { adults: adults, kids: kids };
     }
 
@@ -279,6 +284,7 @@
     function membershipOffer(basket) {
       if (basket.subtotal <= 0 || basket.hasMembership) return null;
       if (basket.unknownParty) return null;
+      if (basket.adults + basket.kids <= 0) return null;
 
       var best = null;
       for (var i = 0; i < products.length; i++) {
@@ -544,6 +550,7 @@
     function activate() {
       var items = document.getElementById("cart-items");
       if (!items) return;
+      var gen = ++generation;
 
       panelEl = document.createElement("div");
       panelEl.className = "owlpark-feat-smart-cart-savings";
@@ -562,6 +569,7 @@
           return res.json();
         })
         .then(function (data) {
+          if (gen !== generation) return;
           products = data;
           lastSerialized = null;
           sync();
@@ -578,6 +586,7 @@
     }
 
     function deactivate() {
+      generation++;
       if (pollId) {
         clearInterval(pollId);
         pollId = null;

@@ -107,6 +107,9 @@
     var orderObserver = null;
     var pendingGifts = [];
     var products = null;
+    // Bumped on every activate and deactivate: an in-flight catalog fetch whose generation no longer
+    // matches belongs to an activation that has since been torn down, and must touch nothing.
+    var generation = 0;
 
     function readCart() {
       try {
@@ -397,6 +400,7 @@
     }
 
     function activate() {
+      var gen = ++generation;
       // A row is a membership because the catalog says so, not because of how the row is labelled.
       fetch("data/products.json")
         .then(function (res) {
@@ -404,6 +408,7 @@
           return res.json();
         })
         .then(function (data) {
+          if (gen !== generation) return;
           products = data;
           decorateRows();
         })
@@ -430,6 +435,7 @@
     }
 
     function deactivate() {
+      generation++;
       if (gridObserver) {
         gridObserver.disconnect();
         gridObserver = null;

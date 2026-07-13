@@ -118,6 +118,9 @@
 
     var products = null;
     var gridObserver = null;
+    // Bumped on every activate and deactivate: an in-flight catalog fetch whose generation no longer
+    // matches belongs to an activation that has since been torn down, and must touch nothing.
+    var generation = 0;
 
     function readCart() {
       try {
@@ -320,6 +323,7 @@
     }
 
     function activate() {
+      var gen = ++generation;
       // Every price and saving on a date chip is the catalog price minus a computed discount, so
       // nothing renders until the catalog is in hand.
       fetch("data/products.json")
@@ -328,6 +332,7 @@
           return res.json();
         })
         .then(function (data) {
+          if (gen !== generation) return;
           products = data;
           decorateRows();
         })
@@ -346,6 +351,7 @@
     }
 
     function deactivate() {
+      generation++;
       if (gridObserver) {
         gridObserver.disconnect();
         gridObserver = null;
