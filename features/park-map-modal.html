@@ -9,87 +9,338 @@
   }
 </script>
 
-<style>
+<style id="owlpark-park-map-modal-style">
+  /* Standard docked-utility button: a quiet glass pill that reads on the dark
+     floating bar and on Owl Park's header alike. */
   .owlpark-feat-park-map-modal-link {
-    background: #0a4d55 !important;
-    border: 1px solid rgba(255, 255, 255, 0.35) !important;
-    color: #ffffff !important;
-    text-decoration: none;
-    cursor: pointer;
-    font-size: 0.85rem;
-    font-weight: 700;
-    padding: 0.4rem 0.7rem;
-    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
     min-height: 44px;
     box-sizing: border-box;
+    padding: 0 0.9rem;
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.22) !important;
+    border-radius: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.1px;
+    text-decoration: none;
+    cursor: pointer;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    transition:
+      transform 0.16s cubic-bezier(0.2, 0.6, 0.2, 1),
+      background 0.16s ease;
   }
   .owlpark-feat-park-map-modal-link:hover {
-    background: #0c5b64 !important;
+    background: rgba(255, 255, 255, 0.2) !important;
+    transform: translateY(-1px);
   }
+  .owlpark-feat-park-map-modal-link:active {
+    transform: translateY(0);
+  }
+  .owlpark-feat-park-map-modal-link:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.85);
+    outline-offset: 2px;
+  }
+
   .owlpark-feat-park-map-modal-overlay {
     position: fixed;
     inset: 0;
-    /* inset: 0 sizes this against the *large* viewport on iOS Safari, so 100% of
-       it is taller than what you can see. 100dvh pins it to the visible one. */
     height: 100dvh;
     box-sizing: border-box;
-    background: rgba(10, 30, 32, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 65;
-    padding: calc(1rem + env(safe-area-inset-top, 0px))
-      calc(1rem + env(safe-area-inset-right, 0px))
-      calc(1rem + env(safe-area-inset-bottom, 0px))
-      calc(1rem + env(safe-area-inset-left, 0px));
+    z-index: 2147483200;
+    padding: calc(1.25rem + env(safe-area-inset-top, 0px))
+      calc(1.25rem + env(safe-area-inset-right, 0px))
+      calc(1.25rem + env(safe-area-inset-bottom, 0px))
+      calc(1.25rem + env(safe-area-inset-left, 0px));
+    background: rgba(16, 22, 24, 0.38);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    transition: opacity 0.18s ease;
+  }
+  .owlpark-feat-park-map-modal-overlay.is-open {
+    opacity: 1;
   }
   .owlpark-feat-park-map-modal-card {
-    background: white;
-    border-radius: var(--radius-lg, 14px);
-    padding: 1.4rem;
-    max-width: 480px;
+    position: relative;
+    background: #ffffff;
+    border: 1px solid rgba(17, 33, 31, 0.08);
+    border-radius: 20px;
+    padding: 2rem;
+    max-width: 500px;
     width: 100%;
     box-sizing: border-box;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 18px 50px rgba(15, 30, 33, 0.18);
     text-align: center;
-    /* Cap to the overlay box — the visible viewport, minus its safe-area
-       padding — so a short landscape screen can still reach Close. */
     max-height: 100%;
     overflow-y: auto;
+    color: #17211f;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    transform: scale(0.98);
+    opacity: 0;
+    transition:
+      transform 0.2s cubic-bezier(0.2, 0.6, 0.2, 1),
+      opacity 0.2s ease;
+  }
+  .owlpark-feat-park-map-modal-overlay.is-open .owlpark-feat-park-map-modal-card {
+    transform: scale(1);
+    opacity: 1;
   }
   .owlpark-feat-park-map-modal-card h3 {
-    margin-top: 0;
-    color: var(--cove-teal-dark, #0a4d55);
+    margin: 0 0 1.25rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #17211f;
   }
   .owlpark-feat-park-map-modal-card svg {
     width: 100%;
     height: auto;
-    background: #eef6ec;
-    border-radius: 10px;
+    background: #f7f8f7;
+    border-radius: 14px;
+    border: 1px solid rgba(17, 33, 31, 0.06);
+  }
+  .owlpark-feat-park-map-modal-x {
+    position: absolute;
+    top: 0.9rem;
+    right: 0.9rem;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: #67736f;
+    font-size: 1.35rem;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      background 0.16s ease,
+      color 0.16s ease;
+  }
+  .owlpark-feat-park-map-modal-x:hover {
+    background: rgba(17, 33, 31, 0.05);
+    color: #17211f;
   }
   .owlpark-feat-park-map-modal-close {
-    margin-top: 1rem;
-    background: var(--cove-teal, #0f6f7a);
-    color: white;
-    border: none;
-    padding: 0.5rem 1.1rem;
-    border-radius: 999px;
-    font-weight: 700;
-    cursor: pointer;
+    margin-top: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     min-height: 44px;
+    padding: 0 1.5rem;
+    background: #0f6f7a;
+    color: #ffffff;
+    border: none;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+      background 0.16s ease,
+      transform 0.16s ease;
+  }
+  .owlpark-feat-park-map-modal-close:hover {
+    background: #0c5f69;
+    transform: translateY(-1px);
+  }
+  .owlpark-feat-park-map-modal-card :focus-visible {
+    outline: 2px solid #0f6f7a;
+    outline-offset: 2px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-park-map-modal-card {
+      background: #12181a;
+      border-color: rgba(255, 255, 255, 0.1);
+      color: #e9edec;
+    }
+    .owlpark-feat-park-map-modal-card h3 {
+      color: #e9edec;
+    }
+    .owlpark-feat-park-map-modal-card svg {
+      background: #1a2224;
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+    .owlpark-feat-park-map-modal-x {
+      color: #98a4a1;
+    }
+    .owlpark-feat-park-map-modal-x:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #e9edec;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-park-map-modal-overlay,
+    .owlpark-feat-park-map-modal-card,
+    .owlpark-feat-park-map-modal-link,
+    .owlpark-feat-park-map-modal-close,
+    .owlpark-feat-park-map-modal-x {
+      transition: none;
+    }
+    .owlpark-feat-park-map-modal-card {
+      transform: none;
+    }
   }
 </style>
 
 <script>
   (function () {
+    /* =========================================================================
+     * Park Map Modal  ·  visual
+     * -------------------------------------------------------------------------
+     * WHAT   A docked "Park Map" button that opens a clean, illustrated map of
+     *        the park in an accessible modal dialog.
+     * HOW    Docks the button into Owl Park's .header-actions, else a self-owned
+     *        frosted floating bar on <body> (surviving host re-renders via a 1s
+     *        watchdog). The map SVG is generated from CONFIG.locations/paths. The
+     *        dialog fades/scales in, traps focus, closes on Esc / scrim / × / Close,
+     *        and restores focus to the opener.
+     * HOSTS  Renders on every host (self-contained; needs no store data).
+     * ===================================================================== */
+
     var FEATURE_ID = "park-map-modal";
+
+    // ----- Configuration --------------------------------------------------
+    var CONFIG = {
+      buttonLabel: "🗺️ Park Map",
+      title: "Owl Park Map",
+      // Each stop is a labelled node on a 300×200 canvas; paths connect stop
+      // indices with a walking route. Edit freely to re-map the park.
+      locations: [
+        { x: 70, y: 60, r: 28, label: "Canopy Walk" },
+        { x: 220, y: 55, r: 28, label: "Barn Owl Loft" },
+        { x: 150, y: 128, r: 32, label: "Aviary Plaza", accent: true },
+        { x: 50, y: 162, r: 24, label: "Entrance" },
+        { x: 250, y: 162, r: 24, label: "Gift Shop" },
+      ],
+      paths: [
+        [3, 2],
+        [2, 1],
+        [2, 0],
+        [2, 4],
+      ],
+    };
+
     var linkBtn = null;
     var overlayEl = null;
     var watchdogId = null;
+    var lastFocus = null;
+    var keyHandler = null;
 
-    // Host-agnostic mount point. Prefer the storefront's own header, but fall
-    // back to a shared floating bar on <body> so this snippet still shows its
-    // control when pasted anywhere in ANY page's body (not just Owl Park's).
+    function buildMapSvg() {
+      var loc = CONFIG.locations;
+      var s = '<svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Illustrated park map">';
+      CONFIG.paths.forEach(function (p) {
+        var a = loc[p[0]];
+        var b = loc[p[1]];
+        if (a && b) {
+          s += '<path d="M' + a.x + "," + a.y + " L" + b.x + "," + b.y +
+            '" stroke="#0f6f7a" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.6"/>';
+        }
+      });
+      loc.forEach(function (n) {
+        var fill = n.accent ? "rgba(15,111,122,0.14)" : "#e7ece9";
+        s += '<circle cx="' + n.x + '" cy="' + n.y + '" r="' + n.r + '" fill="' + fill + '"/>';
+        s += '<text x="' + n.x + '" y="' + (n.y + 4) + '" font-size="10" font-family="sans-serif" font-weight="500" text-anchor="middle" fill="#4a5754">' +
+          n.label + "</text>";
+      });
+      s += "</svg>";
+      return s;
+    }
+
+    // ----- Modal dialog ---------------------------------------------------
+    function focusable() {
+      if (!overlayEl) return [];
+      return [].slice.call(
+        overlayEl.querySelectorAll('button, [href], input, [tabindex]:not([tabindex="-1"])'),
+      );
+    }
+
+    function onKey(e) {
+      if (e.key === "Escape" || e.key === "Esc") {
+        e.preventDefault();
+        closeMap();
+        return;
+      }
+      if (e.key === "Tab") {
+        var f = focusable();
+        if (!f.length) return;
+        var first = f[0];
+        var last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+
+    function openMap() {
+      if (overlayEl) return;
+      lastFocus = document.activeElement;
+      overlayEl = document.createElement("div");
+      overlayEl.className = "owlpark-feat-park-map-modal-overlay";
+      overlayEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+      overlayEl.setAttribute("role", "dialog");
+      overlayEl.setAttribute("aria-modal", "true");
+      overlayEl.setAttribute("aria-label", CONFIG.title);
+      overlayEl.innerHTML =
+        '<div class="owlpark-feat-park-map-modal-card">' +
+        '<button type="button" class="owlpark-feat-park-map-modal-x" aria-label="Close">&times;</button>' +
+        "<h3>" + CONFIG.title + "</h3>" +
+        buildMapSvg() +
+        '<div><button type="button" class="owlpark-feat-park-map-modal-close">Close</button></div>' +
+        "</div>";
+      document.body.appendChild(overlayEl);
+
+      overlayEl.querySelector(".owlpark-feat-park-map-modal-close").addEventListener("click", closeMap);
+      overlayEl.querySelector(".owlpark-feat-park-map-modal-x").addEventListener("click", closeMap);
+      overlayEl.addEventListener("click", function (e) {
+        if (e.target === overlayEl) closeMap();
+      });
+      keyHandler = onKey;
+      document.addEventListener("keydown", keyHandler);
+
+      requestAnimationFrame(function () {
+        if (overlayEl) overlayEl.classList.add("is-open");
+        var x = overlayEl && overlayEl.querySelector(".owlpark-feat-park-map-modal-x");
+        if (x) x.focus();
+      });
+    }
+
+    function closeMap() {
+      if (!overlayEl) return;
+      var el = overlayEl;
+      overlayEl = null;
+      if (keyHandler) {
+        document.removeEventListener("keydown", keyHandler);
+        keyHandler = null;
+      }
+      el.classList.remove("is-open");
+      setTimeout(function () {
+        el.remove();
+      }, 180);
+      if (lastFocus && typeof lastFocus.focus === "function") lastFocus.focus();
+      lastFocus = null;
+    }
+
+    // ----- Docked button (host-agnostic mount + watchdog) -----------------
     function owlparkFallbackBar() {
       var bar = document.getElementById("owlpark-fallback-actions");
       if (bar) return bar;
@@ -101,8 +352,10 @@
         "align-items:center;justify-content:flex-end;max-width:calc(100vw - 20px);" +
         "top:calc(10px + env(safe-area-inset-top, 0px));" +
         "right:calc(10px + env(safe-area-inset-right, 0px));" +
-        "padding:8px 10px;background:rgba(10,77,85,0.96);border-radius:12px;" +
-        "box-shadow:0 8px 24px rgba(0,0,0,0.28);";
+        "padding:8px;background:rgba(18,26,28,0.72);border-radius:16px;" +
+        "border:1px solid rgba(255,255,255,0.12);" +
+        "-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);" +
+        "box-shadow:0 8px 30px rgba(8,20,22,0.28);";
       var barStyle = document.createElement("style");
       barStyle.id = "owlpark-fallback-actions-style";
       barStyle.setAttribute("data-owlpark-fallback", "actions");
@@ -120,72 +373,23 @@
       var barStyle = document.getElementById("owlpark-fallback-actions-style");
       if (barStyle) barStyle.remove();
     }
-
-    var MAP_SVG =
-      '<svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">' +
-      '<rect width="300" height="200" fill="#eef6ec"/>' +
-      '<circle cx="70" cy="60" r="28" fill="#cfe8c9"/><text x="70" y="64" font-size="10" text-anchor="middle">Canopy Walk</text>' +
-      '<circle cx="220" cy="55" r="28" fill="#cfe8c9"/><text x="220" y="59" font-size="10" text-anchor="middle">Barn Owl Loft</text>' +
-      '<circle cx="150" cy="130" r="32" fill="#f7dfc0"/><text x="150" y="126" font-size="10" text-anchor="middle">Aviary</text>' +
-      '<text x="150" y="142" font-size="10" text-anchor="middle">Plaza</text>' +
-      '<circle cx="50" cy="160" r="24" fill="#dce8f5"/><text x="50" y="164" font-size="9" text-anchor="middle">Entrance</text>' +
-      '<circle cx="250" cy="160" r="24" fill="#dce8f5"/><text x="250" y="164" font-size="9" text-anchor="middle">Gift Shop</text>' +
-      '<path d="M50,160 L150,130 L220,55" stroke="#0f6f7a" stroke-width="3" fill="none"/>' +
-      '<path d="M150,130 L250,160" stroke="#0f6f7a" stroke-width="3" fill="none"/>' +
-      '<path d="M150,130 L70,60" stroke="#0f6f7a" stroke-width="3" fill="none"/>' +
-      "</svg>";
-
-    function removeOverlay() {
-      if (overlayEl) {
-        overlayEl.remove();
-        overlayEl = null;
-      }
-    }
-
-    function openMap() {
-      if (overlayEl) return;
-      overlayEl = document.createElement("div");
-      overlayEl.className = "owlpark-feat-park-map-modal-overlay";
-      overlayEl.setAttribute("data-owlpark-feature", FEATURE_ID);
-      overlayEl.innerHTML =
-        '<div class="owlpark-feat-park-map-modal-card">' +
-        "<h3>🗺️ Owl Park Map</h3>" +
-        MAP_SVG +
-        '<button type="button" class="owlpark-feat-park-map-modal-close">Close</button>' +
-        "</div>";
-      document.body.appendChild(overlayEl);
-      overlayEl
-        .querySelector(".owlpark-feat-park-map-modal-close")
-        .addEventListener("click", removeOverlay);
-      overlayEl.addEventListener("click", function (e) {
-        if (e.target === overlayEl) removeOverlay();
-      });
-    }
-
-    // Owl Park's header is stable, so dock there. On any OTHER store the header
-    // chrome may be hidden before the host reveals its body, re-rendered from a
-    // template after load, or styled unpredictably — so use the self-owned
-    // floating bar, which is a direct child of <body> (a sibling of the host's
-    // own content wrapper) and therefore survives the host re-rendering itself.
     function resolveDock() {
       return document.querySelector(".header-actions") || owlparkFallbackBar();
     }
-
     function ensureButton() {
       if (linkBtn && linkBtn.isConnected) return;
       linkBtn = document.createElement("button");
       linkBtn.type = "button";
       linkBtn.className = "owlpark-feat-park-map-modal-link";
       linkBtn.setAttribute("data-owlpark-feature", FEATURE_ID);
-      linkBtn.textContent = "🗺️ Park Map";
+      linkBtn.setAttribute("aria-haspopup", "dialog");
+      linkBtn.textContent = CONFIG.buttonLabel;
       linkBtn.addEventListener("click", openMap);
       resolveDock().prepend(linkBtn);
     }
 
     function activate() {
       ensureButton();
-      // Re-assert the control if the host removes or replaces it after load
-      // (body reveal, template re-render); cheap isConnected check.
       watchdogId = setInterval(ensureButton, 1000);
     }
 
@@ -194,7 +398,7 @@
         clearInterval(watchdogId);
         watchdogId = null;
       }
-      removeOverlay();
+      closeMap();
       if (linkBtn) {
         linkBtn.removeEventListener("click", openMap);
         linkBtn.remove();
