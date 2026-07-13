@@ -39,6 +39,12 @@
   background: var(--cove-sand);
 }
 
+.manager-sortnote {
+  margin: 0 0 0.9rem;
+  font-size: 0.8rem;
+  color: #62706f;
+}
+
 .feature-list {
   display: flex;
   flex-direction: column;
@@ -80,6 +86,37 @@
 .feature-tag.reload {
   background: #fde3d0;
   color: #9a4a1a;
+}
+/* Estimated financial-impact tier (see js/manager.js). Dark green = highest
+   revenue potential, fading to grey for pure UX/polish. */
+.feature-impact {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.feature-impact.impact-5 {
+  background: #0f6f3f;
+  color: #ffffff;
+}
+.feature-impact.impact-4 {
+  background: #2f8f4e;
+  color: #ffffff;
+}
+.feature-impact.impact-3 {
+  background: #e7a52e;
+  color: #3a2c00;
+}
+.feature-impact.impact-2 {
+  background: #e4ddca;
+  color: #6b5f3a;
+}
+.feature-impact.impact-1 {
+  background: #ece9e0;
+  color: #857c6b;
 }
 .feature-row-desc {
   margin: 0.2rem 0 0;
