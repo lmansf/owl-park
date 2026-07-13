@@ -188,6 +188,27 @@ dispatches `owl-park-cart-changed` on `window` so the storefront re-renders.
 `fetch("data/products.json")` remains fine to call from a feature — that's a data fetch, not a code
 import.
 
+### Feature structure & visual standard
+
+Beyond the mechanical four parts above, every shipped feature follows two conventions so the whole
+set reads as one codebase and stays easy to tune:
+
+- **A header doc block** is the first thing inside the behavior IIFE — a short `WHAT` / `HOW` /
+  `HOSTS` comment saying what the user sees, how it mounts and adapts per host, and where it no-ops.
+- **A `var CONFIG = { … }` section** right after it collects every tunable (copy, thresholds,
+  durations, coordinates, storage keys, colour/label maps) with an inline comment each, so behaviour
+  can be adjusted without reading the logic. A genuinely parameterless feature says so in one line.
+
+Visually the features share one **sleek / minimal** system: frosted / near-white surfaces
+(`rgba(255,255,255,.82)` + `backdrop-filter: blur(16px)`), hairline borders (`rgba(17,33,31,.10)`),
+ink `#17211f` / muted `#67736f` text, a single restrained teal accent `#0f6f7a`, soft diffuse
+shadows, generous whitespace, and subtle motion — plus a `@media (prefers-color-scheme: dark)` and a
+`@media (prefers-reduced-motion: reduce)` block on anything that themes or animates. Controls keep a
+44px tap target and a visible `:focus-visible` ring. `features/seasonal-banner.html` (a below-header
+strip) and `features/park-map-modal.html` (a docked utility button + modal) are the canonical
+reference implementations — copy their patterns when authoring or restyling a feature. Because a
+feature must survive being pasted standalone, these are literal values, not the storefront's CSS vars.
+
 ### Authoring a new feature
 
 1. Create `features/my-feature.html` with the four parts above: a `data-owlpark-manifest` script

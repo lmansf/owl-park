@@ -9,57 +9,185 @@
   }
 </script>
 
-<style>
+<style id="owlpark-promo-code-field-style">
   .owlpark-feat-promo-code-field {
-    margin-bottom: 0.7rem;
+    margin-bottom: 0.75rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
   }
   .owlpark-feat-promo-code-field .pcf-row {
     display: flex;
-    gap: 0.4rem;
+    align-items: stretch;
+    gap: 0.5rem;
   }
   .owlpark-feat-promo-code-field .pcf-input {
     flex: 1;
     min-width: 0;
-    border: 1px solid var(--cove-border, #e4ddca);
-    border-radius: 8px;
-    padding: 0.45rem 0.6rem;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+    border: 1px solid rgba(17, 33, 31, 0.1);
+    border-radius: 12px;
+    padding: 0.6rem 0.8rem;
+    background: #ffffff;
+    color: #17211f;
     /* Must stay at 16px: iOS Safari zooms the whole page in on focus for any
        field with a smaller font-size, and the shopper lands mid-checkout with
        a zoomed, sideways-scrolling storefront. */
     font-size: 16px;
+    font-family: inherit;
+    line-height: 1.2;
     min-height: 44px;
+    transition:
+      border-color 0.16s cubic-bezier(0.2, 0.6, 0.2, 1),
+      box-shadow 0.16s cubic-bezier(0.2, 0.6, 0.2, 1);
+  }
+  .owlpark-feat-promo-code-field .pcf-input::placeholder {
+    color: #67736f;
+  }
+  .owlpark-feat-promo-code-field .pcf-input:hover {
+    border-color: rgba(17, 33, 31, 0.2);
+  }
+  .owlpark-feat-promo-code-field .pcf-input:focus-visible {
+    border-color: #0f6f7a;
+    outline: 2px solid #0f6f7a;
+    outline-offset: 2px;
   }
   .owlpark-feat-promo-code-field .pcf-apply-btn {
-    background: var(--cove-teal, #0f6f7a);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 0.45rem 0.9rem;
-    font-weight: 700;
-    font-size: 0.9rem;
-    cursor: pointer;
-    white-space: nowrap;
-    min-height: 44px;
     flex-shrink: 0;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 1.1rem;
+    background: #0f6f7a;
+    color: #ffffff;
+    border: none;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.1px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background 0.16s ease,
+      transform 0.16s cubic-bezier(0.2, 0.6, 0.2, 1);
+  }
+  .owlpark-feat-promo-code-field .pcf-apply-btn:hover {
+    background: #0c5f69;
+    transform: translateY(-1px);
+  }
+  .owlpark-feat-promo-code-field .pcf-apply-btn:active {
+    transform: translateY(1px);
+  }
+  .owlpark-feat-promo-code-field .pcf-apply-btn:focus-visible {
+    outline: 2px solid #0f6f7a;
+    outline-offset: 2px;
   }
   .owlpark-feat-promo-code-field .pcf-message {
-    margin-top: 0.4rem;
-    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.5rem;
+    font-size: 0.82rem;
     font-weight: 600;
-    color: var(--cove-green, #2f8f4e);
+    line-height: 1.4;
+    color: #2f8f4e;
   }
   .owlpark-feat-promo-code-field .pcf-message.pcf-error {
-    color: #a8321f;
+    color: #c0341d;
+  }
+  .owlpark-feat-promo-code-field .pcf-msg-icon {
+    flex-shrink: 0;
+    font-size: 0.9rem;
+    line-height: 1;
+  }
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-promo-code-field .pcf-input {
+      background: #12181a;
+      border-color: rgba(255, 255, 255, 0.11);
+      color: #e9edec;
+    }
+    .owlpark-feat-promo-code-field .pcf-input::placeholder {
+      color: #98a4a1;
+    }
+    .owlpark-feat-promo-code-field .pcf-input:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .owlpark-feat-promo-code-field .pcf-input:focus-visible {
+      border-color: #5bc7cf;
+    }
+    .owlpark-feat-promo-code-field .pcf-message {
+      color: #57c07d;
+    }
+    .owlpark-feat-promo-code-field .pcf-message.pcf-error {
+      color: #e46a56;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-promo-code-field .pcf-input,
+    .owlpark-feat-promo-code-field .pcf-apply-btn {
+      transition: none;
+    }
+    .owlpark-feat-promo-code-field .pcf-apply-btn:hover,
+    .owlpark-feat-promo-code-field .pcf-apply-btn:active {
+      transform: none;
+    }
   }
 </style>
 
 <script>
   (function () {
+    /* =========================================================================
+     * Promo Code Field  ·  behavioral
+     * -------------------------------------------------------------------------
+     * WHAT   A refined promo-code input + Apply button in the cart footer that
+     *        validates a typed code and shows a quiet inline result: the new
+     *        discounted total for a valid code, or a gentle error for an unknown
+     *        one. The mock discount is display-only — it never rewrites the cart.
+     * HOW    Injects its markup just above the cart's total row (.cart-total-row
+     *        inside .cart-footer). Apply trims + upper-cases the input and looks
+     *        it up in CONFIG.codes; a MutationObserver on #cart-total re-computes
+     *        the quoted total whenever the cart changes so the figure stays live.
+     * HOSTS  Owl Park storefront only — it anchors on .cart-footer /
+     *        .cart-total-row / #cart-total, which the zoo ViewItems ticket page
+     *        has no equivalent of, so it stays a no-op there (activate returns
+     *        early when those landmarks are absent).
+     * ===================================================================== */
+
     var FEATURE_ID = "promo-code-field";
-    var CODES = { OWL10: 10, NIGHTOWL: 15 };
+
+    // ----- Configuration --------------------------------------------------
+    var CONFIG = {
+      // Accepted promo codes → the % discount each applies. Lookup is
+      // case-insensitive (input is trimmed + upper-cased before matching).
+      // Changing these does NOT auto-update errorText below.
+      codes: { OWL10: 10, NIGHTOWL: 15 },
+
+      // Accessible label + placeholder for the single text input.
+      inputLabel: "Promo code",
+      placeholder: "Promo code",
+
+      // Apply button caption.
+      applyLabel: "Apply",
+
+      // Feedback copy + icons. Icon is paired with colour so colour is never
+      // the only signal. successText receives the code, the formatted new
+      // total and the percent off.
+      successIcon: "🎟️",
+      successText: function (code, newTotal, percent) {
+        return code + " applied — new total " + newTotal + " (-" + percent + "%)";
+      },
+      errorIcon: "⚠️",
+      errorText: "That code isn't valid. Try OWL10 or NIGHTOWL.",
+    };
 
     var wrapEl = null;
     var messageEl = null;
+    var msgIconEl = null;
+    var msgTextEl = null;
     var observer = null;
     var appliedCode = "";
     var appliedPercent = 0;
@@ -72,21 +200,24 @@
       return "$" + n.toFixed(2);
     }
 
+    function showMessage(isError, icon, text) {
+      if (!messageEl) return;
+      messageEl.hidden = false;
+      messageEl.classList.toggle("pcf-error", !!isError);
+      if (msgIconEl) msgIconEl.textContent = icon;
+      if (msgTextEl) msgTextEl.textContent = text;
+    }
+
     function refreshMessage() {
       if (!messageEl || !appliedCode) return;
       var totalEl = document.getElementById("cart-total");
       var raw = totalEl ? parsePrice(totalEl.textContent) : 0;
       var discounted = raw * (1 - appliedPercent / 100);
-      messageEl.classList.remove("pcf-error");
-      messageEl.hidden = false;
-      messageEl.textContent =
-        "🎟️ " +
-        appliedCode +
-        " applied — new total " +
-        formatPrice(discounted) +
-        " (-" +
-        appliedPercent +
-        "%)";
+      showMessage(
+        false,
+        CONFIG.successIcon,
+        CONFIG.successText(appliedCode, formatPrice(discounted), appliedPercent),
+      );
     }
 
     function activate() {
@@ -99,20 +230,31 @@
       wrapEl.setAttribute("data-owlpark-feature", FEATURE_ID);
       wrapEl.innerHTML =
         '<div class="pcf-row">' +
-        '<input type="text" class="pcf-input" placeholder="Promo code" maxlength="20" />' +
-        '<button type="button" class="pcf-apply-btn">Apply</button>' +
+        '<input type="text" class="pcf-input" aria-label="' +
+        CONFIG.inputLabel +
+        '" placeholder="' +
+        CONFIG.placeholder +
+        '" maxlength="20" autocomplete="off" />' +
+        '<button type="button" class="pcf-apply-btn">' +
+        CONFIG.applyLabel +
+        "</button>" +
         "</div>" +
-        '<div class="pcf-message" hidden></div>';
+        '<div class="pcf-message" role="status" aria-live="polite" hidden>' +
+        '<span class="pcf-msg-icon" aria-hidden="true"></span>' +
+        '<span class="pcf-msg-text"></span>' +
+        "</div>";
 
       totalRow.insertAdjacentElement("beforebegin", wrapEl);
 
       messageEl = wrapEl.querySelector(".pcf-message");
+      msgIconEl = wrapEl.querySelector(".pcf-msg-icon");
+      msgTextEl = wrapEl.querySelector(".pcf-msg-text");
       var input = wrapEl.querySelector(".pcf-input");
       var btn = wrapEl.querySelector(".pcf-apply-btn");
 
       btn.addEventListener("click", function () {
         var code = input.value.trim().toUpperCase();
-        var pct = CODES[code];
+        var pct = CONFIG.codes[code];
         if (pct) {
           appliedCode = code;
           appliedPercent = pct;
@@ -120,9 +262,7 @@
         } else {
           appliedCode = "";
           appliedPercent = 0;
-          messageEl.hidden = false;
-          messageEl.classList.add("pcf-error");
-          messageEl.textContent = "That code isn't valid. Try OWL10 or NIGHTOWL.";
+          showMessage(true, CONFIG.errorIcon, CONFIG.errorText);
         }
       });
 
@@ -143,6 +283,8 @@
       appliedCode = "";
       appliedPercent = 0;
       messageEl = null;
+      msgIconEl = null;
+      msgTextEl = null;
       document
         .querySelectorAll('[data-owlpark-feature="' + FEATURE_ID + '"]')
         .forEach(function (el) {

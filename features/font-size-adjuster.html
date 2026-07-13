@@ -9,111 +9,325 @@
   }
 </script>
 
-<style>
+<style id="owlpark-font-size-adjuster-style">
+  /* Docked text-size stepper. Three quiet glass pills that read on the dark
+     floating bar and on Owl Park's teal header alike — the standard
+     docked-utility button, matched to park-map-modal. */
   .owlpark-feat-font-size-adjuster {
-    position: fixed;
-    right: calc(1.2rem + env(safe-area-inset-right, 0px));
-    /* Clear the iPhone home indicator. */
-    bottom: calc(1.2rem + env(safe-area-inset-bottom, 0px));
-    display: flex;
-    gap: 0.35rem;
-    background: white;
-    border: 1px solid #e4ddca;
-    border-radius: 999px;
-    padding: 0.4rem;
-    box-shadow: 0 8px 24px rgba(15, 60, 65, 0.18);
-    z-index: 45;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
   }
   .owlpark-feat-font-size-adjuster .fsa-btn {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    border: none;
-    background: var(--cove-sand, #faf3e6);
-    color: var(--cove-teal-dark, #0a4d55);
-    font-weight: 700;
-    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    box-sizing: border-box;
+    padding: 0 0.5rem;
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.22) !important;
+    border-radius: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1px;
+    line-height: 1;
     cursor: pointer;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    transition:
+      transform 0.16s cubic-bezier(0.2, 0.6, 0.2, 1),
+      background 0.16s ease;
+  }
+  /* Clean type-size glyphs: the A grows across the stepper. */
+  .owlpark-feat-font-size-adjuster .fsa-dec {
+    font-size: 0.78rem;
+  }
+  .owlpark-feat-font-size-adjuster .fsa-reset {
+    font-size: 0.95rem;
+  }
+  .owlpark-feat-font-size-adjuster .fsa-inc {
+    font-size: 1.15rem;
   }
   .owlpark-feat-font-size-adjuster .fsa-btn:hover {
-    background: var(--cove-teal, #0f6f7a);
-    color: white;
+    background: rgba(255, 255, 255, 0.2) !important;
+    transform: translateY(-1px);
+  }
+  .owlpark-feat-font-size-adjuster .fsa-btn:active {
+    transform: translateY(0);
+  }
+  .owlpark-feat-font-size-adjuster .fsa-btn:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.85);
+    outline-offset: 2px;
+  }
+  /* Quiet active state: a control at its limit (or already at default) reads as
+     spent rather than shouting. */
+  .owlpark-feat-font-size-adjuster .fsa-btn:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+  .owlpark-feat-font-size-adjuster .fsa-btn:disabled:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    transform: none;
+  }
+  /* Spoken-only current-level readout. */
+  .owlpark-feat-font-size-adjuster .fsa-live {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-font-size-adjuster .fsa-btn {
+      border-color: rgba(255, 255, 255, 0.26) !important;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-font-size-adjuster .fsa-btn {
+      transition: none;
+    }
+    .owlpark-feat-font-size-adjuster .fsa-btn:hover {
+      transform: none;
+    }
   }
 </style>
 
-<div class="owlpark-feat-font-size-adjuster">
-  <button
-    type="button"
-    class="fsa-btn"
-    id="fsa-decrease"
-    aria-label="Decrease font size"
-  >
-    A-
-  </button>
-  <button
-    type="button"
-    class="fsa-btn"
-    id="fsa-reset"
-    aria-label="Reset font size"
-  >
-    A
-  </button>
-  <button
-    type="button"
-    class="fsa-btn"
-    id="fsa-increase"
-    aria-label="Increase font size"
-  >
-    A+
-  </button>
-</div>
-
 <script>
   (function () {
-    var MIN_PX = 14;
-    var MAX_PX = 22;
-    var STEP_PX = 2;
-    var DEFAULT_PX = 16;
+    /* =========================================================================
+     * Font Size Adjuster  ·  utility
+     * -------------------------------------------------------------------------
+     * WHAT   A compact A- / A / A+ stepper, docked as a utility control, that
+     *        scales the whole page's text up or down and remembers the choice.
+     * HOW    Sets the root font-size (document.documentElement.style.fontSize)
+     *        in CONFIG.stepPx steps, clamped to [minPx, maxPx] and persisted to
+     *        localStorage. Docks into Owl Park's .header-actions, else a self-
+     *        owned frosted floating bar on <body> (kept alive by a 1s watchdog
+     *        that re-creates the control if the host removes it). Disabling the
+     *        feature restores the page's original inline font-size.
+     * HOSTS  Renders on every host (self-contained; root font-size scales any
+     *        page, so it needs no store data).
+     * ===================================================================== */
 
-    var currentPx = DEFAULT_PX;
-    var previousInlineSize = "";
+    var FEATURE_ID = "font-size-adjuster";
+    var STYLE_ID = "owlpark-font-size-adjuster-style";
 
+    // ----- Configuration --------------------------------------------------
+    var CONFIG = {
+      stepPx: 2, // px added/removed per A-/A+ press
+      minPx: 14, // smallest level the text can shrink to
+      maxPx: 22, // largest level the text can grow to
+      defaultPx: 16, // baseline / reset level (matches the site default)
+      storageKey: "owl-park-font-size-px", // remembered level (px), in localStorage
+      labels: {
+        decrease: "A−", // shrink glyph (true minus)
+        reset: "A", // reset-to-default glyph
+        increase: "A+", // grow glyph
+        group: "Text size", // group/aria label + spoken level prefix
+      },
+    };
+
+    var groupEl = null;
+    var decBtn = null;
+    var resetBtn = null;
+    var incBtn = null;
+    var liveEl = null;
+    var watchdogId = null;
+    var currentPx = CONFIG.defaultPx;
+    var previousInlineSize = null; // the page's inline root font-size before we touched it
+
+    // ----- Font-size mechanism (preserved: sets the root font-size) -------
+    function clampPx(px) {
+      return Math.max(CONFIG.minPx, Math.min(CONFIG.maxPx, px));
+    }
     function apply() {
       document.documentElement.style.fontSize = currentPx + "px";
     }
 
-    function activate() {
-      var mount = document.querySelector(".owlpark-feat-font-size-adjuster");
-      if (!mount) return;
-      previousInlineSize = document.documentElement.style.fontSize;
-      currentPx = DEFAULT_PX;
+    // ----- Level persistence (localStorage) -------------------------------
+    function loadLevel() {
+      try {
+        var px = parseInt(localStorage.getItem(CONFIG.storageKey), 10);
+        if (!isNaN(px)) return clampPx(px);
+      } catch (e) {
+        /* private mode / blocked storage — fall through to default */
+      }
+      return CONFIG.defaultPx;
+    }
+    function saveLevel() {
+      try {
+        localStorage.setItem(CONFIG.storageKey, String(currentPx));
+      } catch (e) {
+        /* private mode — level holds for this activation only */
+      }
+    }
 
-      mount
-        .querySelector("#fsa-increase")
-        .addEventListener("click", function () {
-          currentPx = Math.min(MAX_PX, currentPx + STEP_PX);
-          apply();
-        });
-      mount
-        .querySelector("#fsa-decrease")
-        .addEventListener("click", function () {
-          currentPx = Math.max(MIN_PX, currentPx - STEP_PX);
-          apply();
-        });
-      mount.querySelector("#fsa-reset").addEventListener("click", function () {
-        currentPx = DEFAULT_PX;
-        apply();
-      });
+    // ----- Control state --------------------------------------------------
+    function refresh() {
+      apply();
+      if (decBtn) decBtn.disabled = currentPx <= CONFIG.minPx;
+      if (incBtn) incBtn.disabled = currentPx >= CONFIG.maxPx;
+      if (resetBtn) resetBtn.disabled = currentPx === CONFIG.defaultPx;
+      if (liveEl) {
+        liveEl.textContent =
+          CONFIG.labels.group +
+          " " +
+          Math.round((currentPx / CONFIG.defaultPx) * 100) +
+          "%";
+      }
+    }
+    function setPx(px) {
+      currentPx = clampPx(px);
+      saveLevel();
+      refresh();
+    }
+
+    // ----- Docked control (host-agnostic mount + watchdog) ----------------
+    // Prefer the storefront's own header, but fall back to a shared frosted
+    // floating bar on <body> so this snippet still shows its control when
+    // pasted into ANY page's body (not just Owl Park's).
+    function owlparkFallbackBar() {
+      var bar = document.getElementById("owlpark-fallback-actions");
+      if (bar) return bar;
+      bar = document.createElement("div");
+      bar.id = "owlpark-fallback-actions";
+      bar.setAttribute("data-owlpark-fallback", "actions");
+      bar.style.cssText =
+        "position:fixed;z-index:2147483000;display:flex;flex-wrap:wrap;gap:8px;" +
+        "align-items:center;justify-content:flex-end;max-width:calc(100vw - 20px);" +
+        "top:calc(10px + env(safe-area-inset-top, 0px));" +
+        "right:calc(10px + env(safe-area-inset-right, 0px));" +
+        "padding:8px;background:rgba(18,26,28,0.72);border-radius:16px;" +
+        "border:1px solid rgba(255,255,255,0.12);" +
+        "-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);" +
+        "box-shadow:0 8px 30px rgba(8,20,22,0.28);";
+      var barStyle = document.createElement("style");
+      barStyle.id = "owlpark-fallback-actions-style";
+      barStyle.setAttribute("data-owlpark-fallback", "actions");
+      barStyle.textContent =
+        "#owlpark-fallback-actions>button,#owlpark-fallback-actions>a" +
+        "{min-height:44px;box-sizing:border-box;}";
+      document.head.appendChild(barStyle);
+      document.body.appendChild(bar);
+      return bar;
+    }
+    function owlparkPruneFallbackBar() {
+      var bar = document.getElementById("owlpark-fallback-actions");
+      if (!bar || bar.children.length) return;
+      bar.remove();
+      var barStyle = document.getElementById("owlpark-fallback-actions-style");
+      if (barStyle) barStyle.remove();
+    }
+    function resolveDock() {
+      return document.querySelector(".header-actions") || owlparkFallbackBar();
+    }
+
+    // The <style> ships in the file body; relocate it to <head> so it survives
+    // the host re-rendering its content region (and when pasted standalone).
+    function relocateStyle() {
+      var st = document.getElementById(STYLE_ID);
+      if (st && st.parentElement !== document.head) document.head.appendChild(st);
+    }
+
+    function makeButton(cls, glyph, ariaLabel, onClick) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "fsa-btn " + cls;
+      b.setAttribute("data-owlpark-feature", FEATURE_ID);
+      b.setAttribute("aria-label", ariaLabel);
+      b.textContent = glyph;
+      b.addEventListener("click", onClick);
+      return b;
+    }
+
+    function ensureControl() {
+      relocateStyle();
+      if (groupEl && groupEl.isConnected) return;
+      groupEl = document.createElement("div");
+      groupEl.className = "owlpark-feat-font-size-adjuster";
+      groupEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+      groupEl.setAttribute("role", "group");
+      groupEl.setAttribute("aria-label", CONFIG.labels.group);
+
+      decBtn = makeButton(
+        "fsa-dec",
+        CONFIG.labels.decrease,
+        "Decrease text size",
+        function () {
+          setPx(currentPx - CONFIG.stepPx);
+        },
+      );
+      resetBtn = makeButton(
+        "fsa-reset",
+        CONFIG.labels.reset,
+        "Reset text size to default",
+        function () {
+          setPx(CONFIG.defaultPx);
+        },
+      );
+      incBtn = makeButton(
+        "fsa-inc",
+        CONFIG.labels.increase,
+        "Increase text size",
+        function () {
+          setPx(currentPx + CONFIG.stepPx);
+        },
+      );
+
+      liveEl = document.createElement("span");
+      liveEl.className = "fsa-live";
+      liveEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+      liveEl.setAttribute("aria-live", "polite");
+      liveEl.setAttribute("aria-atomic", "true");
+
+      groupEl.appendChild(decBtn);
+      groupEl.appendChild(resetBtn);
+      groupEl.appendChild(incBtn);
+      groupEl.appendChild(liveEl);
+
+      resolveDock().prepend(groupEl);
+      refresh();
+    }
+
+    function activate() {
+      if (previousInlineSize === null) {
+        previousInlineSize = document.documentElement.style.fontSize;
+      }
+      currentPx = loadLevel();
+      ensureControl();
+      refresh(); // apply the loaded level + sync button/live state
+      if (watchdogId) clearInterval(watchdogId);
+      // Re-assert the control if the host removes or replaces it after load.
+      watchdogId = setInterval(ensureControl, 1000);
     }
 
     function deactivate() {
-      document.documentElement.style.fontSize = previousInlineSize;
+      if (watchdogId) {
+        clearInterval(watchdogId);
+        watchdogId = null;
+      }
+      document.documentElement.style.fontSize = previousInlineSize || "";
+      previousInlineSize = null;
+      if (groupEl) {
+        groupEl.remove();
+        groupEl = null;
+      }
+      decBtn = resetBtn = incBtn = liveEl = null;
+      owlparkPruneFallbackBar();
     }
 
     activate();
 
     window.__owlParkFeatures = window.__owlParkFeatures || {};
-    window.__owlParkFeatures["font-size-adjuster"] = {
+    window.__owlParkFeatures[FEATURE_ID] = {
       activate: activate,
       deactivate: deactivate,
     };

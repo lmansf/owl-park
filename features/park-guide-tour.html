@@ -9,88 +9,295 @@
   }
 </script>
 
-<style>
+<style id="owlpark-park-guide-tour-style">
+  /* Header trigger — quiet glass pill that reads on Owl Park's dark header
+     (matches the standard docked-utility button style). */
   .owlpark-feat-park-guide-tour-btn {
-    background: rgba(255, 255, 255, 0.15);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    padding: 0.4rem 0.7rem;
-    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 44px;
+    box-sizing: border-box;
+    padding: 0 0.9rem;
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.22) !important;
+    border-radius: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
     font-size: 0.85rem;
-    font-weight: 700;
+    font-weight: 600;
+    letter-spacing: 0.1px;
     cursor: pointer;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    transition:
+      transform 0.16s cubic-bezier(0.2, 0.6, 0.2, 1),
+      background 0.16s ease;
   }
   .owlpark-feat-park-guide-tour-btn:hover {
-    background: rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.2) !important;
+    transform: translateY(-1px);
   }
+  .owlpark-feat-park-guide-tour-btn:active {
+    transform: translateY(0);
+  }
+  .owlpark-feat-park-guide-tour-btn:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.85);
+    outline-offset: 2px;
+  }
+
+  /* Spotlight ring around the active target; the huge outset shadow dims the
+     rest of the page (subtle scrim) while leaving the target bright. */
   .owlpark-feat-park-guide-tour-highlight {
     position: fixed;
-    border-radius: 10px;
-    box-shadow: 0 0 0 9999px rgba(10, 30, 32, 0.55);
-    z-index: 90;
+    border-radius: 12px;
+    box-shadow:
+      0 0 0 2px rgba(15, 111, 122, 0.55),
+      0 0 0 9999px rgba(16, 22, 24, 0.45);
+    z-index: 2147483000;
     pointer-events: none;
     transition:
-      top 0.25s ease,
-      left 0.25s ease,
-      width 0.25s ease,
-      height 0.25s ease;
+      top 0.25s cubic-bezier(0.2, 0.6, 0.2, 1),
+      left 0.25s cubic-bezier(0.2, 0.6, 0.2, 1),
+      width 0.25s cubic-bezier(0.2, 0.6, 0.2, 1),
+      height 0.25s cubic-bezier(0.2, 0.6, 0.2, 1);
   }
   .owlpark-feat-park-guide-tour-highlight.pgt-instant {
     transition: none;
   }
+
+  /* Frosted coach-mark popover. */
   .owlpark-feat-park-guide-tour-tooltip {
     position: fixed;
-    z-index: 91;
-    background: white;
-    color: var(--cove-ink, #1e2a2b);
-    border-radius: var(--radius-md, 10px);
-    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.3);
-    padding: 0.9rem 1rem;
-    max-width: 260px;
-    font-size: 0.85rem;
+    z-index: 2147483001;
+    box-sizing: border-box;
+    width: min(300px, calc(100vw - 24px));
+    padding: 1.15rem 1.25rem 1.1rem;
+    background: rgba(255, 255, 255, 0.82);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    backdrop-filter: blur(16px) saturate(1.4);
+    border: 1px solid rgba(17, 33, 31, 0.1);
+    border-radius: 20px;
+    box-shadow: 0 18px 50px rgba(15, 30, 33, 0.18);
+    color: #17211f;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    opacity: 0;
+    transform: translateY(6px);
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s cubic-bezier(0.2, 0.6, 0.2, 1);
+  }
+  .owlpark-feat-park-guide-tour-tooltip.pgt-in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .owlpark-feat-park-guide-tour-tooltip .pgt-progress {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-bottom: 0.7rem;
+  }
+  .owlpark-feat-park-guide-tour-tooltip .pgt-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(17, 33, 31, 0.18);
+    transition:
+      background 0.16s ease,
+      transform 0.16s ease;
+  }
+  .owlpark-feat-park-guide-tour-tooltip .pgt-dot.is-active {
+    background: #0f6f7a;
+    transform: scale(1.3);
+  }
+  .owlpark-feat-park-guide-tour-tooltip .pgt-title {
+    font-size: 1.02rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+    color: #17211f;
+  }
+  .owlpark-feat-park-guide-tour-tooltip .pgt-body {
+    margin-top: 0.35rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.45;
+    color: #67736f;
   }
   .owlpark-feat-park-guide-tour-tooltip .pgt-actions {
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    margin-top: 0.7rem;
+    gap: 0.6rem;
+    margin-top: 1.1rem;
+  }
+  .owlpark-feat-park-guide-tour-tooltip .pgt-nav {
+    display: flex;
+    align-items: center;
     gap: 0.5rem;
   }
   .owlpark-feat-park-guide-tour-tooltip button {
-    border: none;
-    border-radius: 999px;
-    padding: 0.35rem 0.8rem;
-    font-size: 0.78rem;
-    font-weight: 700;
-    cursor: pointer;
     min-height: 44px;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 1rem;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+      background 0.16s ease,
+      color 0.16s ease,
+      transform 0.16s ease;
   }
   .owlpark-feat-park-guide-tour-tooltip .pgt-next {
-    background: var(--cove-teal, #0f6f7a);
-    color: white;
+    background: #0f6f7a;
+    color: #ffffff;
+    border: none;
+  }
+  .owlpark-feat-park-guide-tour-tooltip .pgt-next:hover {
+    background: #0c5f69;
+    transform: translateY(-1px);
+  }
+  .owlpark-feat-park-guide-tour-tooltip .pgt-next:active {
+    transform: translateY(0);
+  }
+  .owlpark-feat-park-guide-tour-tooltip .pgt-back {
+    background: transparent;
+    color: #17211f;
+    border: 1px solid rgba(17, 33, 31, 0.1);
+    padding: 0 0.9rem;
+  }
+  .owlpark-feat-park-guide-tour-tooltip .pgt-back:hover {
+    background: rgba(17, 33, 31, 0.05);
   }
   .owlpark-feat-park-guide-tour-tooltip .pgt-skip {
     background: transparent;
-    color: #6b7677;
+    color: #67736f;
+    border: none;
+    padding: 0 0.55rem;
+  }
+  .owlpark-feat-park-guide-tour-tooltip .pgt-skip:hover {
+    color: #17211f;
+    background: rgba(17, 33, 31, 0.05);
+  }
+  .owlpark-feat-park-guide-tour-tooltip :focus-visible {
+    outline: 2px solid #0f6f7a;
+    outline-offset: 2px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-park-guide-tour-tooltip {
+      background: rgba(18, 24, 26, 0.8);
+      border-color: rgba(255, 255, 255, 0.11);
+      color: #e9edec;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+    }
+    .owlpark-feat-park-guide-tour-tooltip .pgt-title {
+      color: #e9edec;
+    }
+    .owlpark-feat-park-guide-tour-tooltip .pgt-body {
+      color: #98a4a1;
+    }
+    .owlpark-feat-park-guide-tour-tooltip .pgt-dot {
+      background: rgba(255, 255, 255, 0.24);
+    }
+    .owlpark-feat-park-guide-tour-tooltip .pgt-dot.is-active {
+      background: #5bc7cf;
+    }
+    .owlpark-feat-park-guide-tour-tooltip .pgt-back {
+      color: #e9edec;
+      border-color: rgba(255, 255, 255, 0.14);
+    }
+    .owlpark-feat-park-guide-tour-tooltip .pgt-back:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .owlpark-feat-park-guide-tour-tooltip .pgt-skip {
+      color: #98a4a1;
+    }
+    .owlpark-feat-park-guide-tour-tooltip .pgt-skip:hover {
+      color: #e9edec;
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .owlpark-feat-park-guide-tour-highlight {
+      box-shadow:
+        0 0 0 2px rgba(91, 199, 207, 0.6),
+        0 0 0 9999px rgba(0, 0, 0, 0.6);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-park-guide-tour-btn,
+    .owlpark-feat-park-guide-tour-highlight,
+    .owlpark-feat-park-guide-tour-tooltip,
+    .owlpark-feat-park-guide-tour-tooltip button,
+    .owlpark-feat-park-guide-tour-tooltip .pgt-dot {
+      transition: none;
+    }
+    .owlpark-feat-park-guide-tour-tooltip {
+      transform: none;
+    }
   }
 </style>
 
 <script>
   (function () {
+    /* =========================================================================
+     * Park Guide Tour  ·  behavioral
+     * -------------------------------------------------------------------------
+     * WHAT   A "Take a Tour" button in the header launches a guided coach-mark
+     *        walkthrough: a sequence of frosted popovers that spotlight the
+     *        catalog, cart and Enhancement Manager, with dot progress and quiet
+     *        Back / Next / Skip controls.
+     * HOW    Docks a trigger button into Owl Park's .header-actions. Each step
+     *        spotlights CONFIG.steps[].selector with a dimming outset-shadow ring
+     *        and anchors a role="dialog" popover beside it (below, flipping above
+     *        when it would overflow), repositioning on scroll/resize via rAF.
+     *        The dialog traps focus; Esc / Skip / Done end the tour and restore
+     *        focus to the trigger. No auto-start — it runs only when clicked.
+     * HOSTS  Owl Park only: mounts solely where .header-actions exists and its
+     *        step selectors resolve. No-op on the zoo ViewItems page and generic
+     *        hosts (no header-actions, no matching anchors).
+     * ===================================================================== */
+
     var FEATURE_ID = "park-guide-tour";
-    var STEPS = [
-      {
-        selector: ".catalog-heading",
-        text: "Browse tickets and memberships here, and use the tabs below to filter.",
-      },
-      {
-        selector: "#open-cart-btn",
-        text: "Your cart lives here. Add a ticket or membership, then check out when ready.",
-      },
-      {
-        selector: '.header-link[href="features-manager.html"]',
-        text: "Toggle enhancements like this tour from the Enhancement Manager.",
-      },
-    ];
+
+    // ----- Configuration --------------------------------------------------
+    // Tunable values, safe to edit. Each explained inline.
+    var CONFIG = {
+      buttonLabel: "🧭 Take a Tour", // header trigger copy
+      startDelayMs: 0, // delay before the first step appears (0 = immediate)
+      skipLabel: "Skip tour", // ghost control — ends the tour
+      backLabel: "Back", // ghost control — previous step (hidden on step 1)
+      nextLabel: "Next", // solid teal control — advance a step
+      doneLabel: "Done", // solid teal control — shown on the last step
+      // Ordered walkthrough. Each step spotlights `selector` and shows a
+      // `title` + `body` in the popover, in this sequence.
+      steps: [
+        {
+          selector: ".catalog-heading",
+          title: "Browse the catalog",
+          body: "Browse tickets and memberships here, and use the tabs below to filter.",
+        },
+        {
+          selector: "#open-cart-btn",
+          title: "Your cart",
+          body: "Your cart lives here. Add a ticket or membership, then check out when ready.",
+        },
+        {
+          selector: '.header-link[href="features-manager.html"]',
+          title: "Enhancement Manager",
+          body: "Toggle enhancements like this tour from the Enhancement Manager.",
+        },
+      ],
+    };
+
+    var STEPS = CONFIG.steps;
+    var TITLE_ID = "owlpark-pgt-title";
 
     var tourBtn = null;
     var highlightEl = null;
@@ -98,6 +305,9 @@
     var stepIndex = -1;
     var repositionFrame = 0;
     var anchoredGeometry = "";
+    var keyHandler = null;
+    var lastFocus = null;
+    var startTimer = 0;
 
     function geometryKey(rect) {
       return [
@@ -120,15 +330,20 @@
     }
 
     function positionTooltip(target) {
+      if (!tooltipEl) return;
       var rect = target.getBoundingClientRect();
-      var top = rect.bottom + 12;
-      var left = Math.min(
-        Math.max(rect.left, 12),
-        window.innerWidth - 280,
-      );
-      if (top + 140 > window.innerHeight) {
-        top = Math.max(12, rect.top - 150);
+      var margin = 12;
+      var tipW = tooltipEl.offsetWidth || 300;
+      var tipH = tooltipEl.offsetHeight || 170;
+      var top = rect.bottom + margin;
+      if (top + tipH > window.innerHeight - margin) {
+        var above = rect.top - tipH - margin;
+        top = above >= margin
+          ? above
+          : Math.max(margin, window.innerHeight - tipH - margin);
       }
+      var maxLeft = Math.max(margin, window.innerWidth - tipW - margin);
+      var left = Math.min(Math.max(rect.left, margin), maxLeft);
       tooltipEl.style.top = top + "px";
       tooltipEl.style.left = left + "px";
     }
@@ -149,15 +364,53 @@
       repositionFrame = window.requestAnimationFrame(applyReposition);
     }
 
+    // ----- Focus trap + Esc (role="dialog" aria-modal semantics) ----------
+    function focusable() {
+      if (!tooltipEl) return [];
+      return [].slice.call(tooltipEl.querySelectorAll("button:not([disabled])"));
+    }
+
+    function onKey(e) {
+      if (e.key === "Escape" || e.key === "Esc") {
+        e.preventDefault();
+        endTour();
+        return;
+      }
+      if (e.key === "Tab") {
+        var f = focusable();
+        if (!f.length) return;
+        var first = f[0];
+        var last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        } else if (f.indexOf(document.activeElement) === -1) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+
     function endTour() {
       stepIndex = -1;
       anchoredGeometry = "";
+      if (startTimer) {
+        window.clearTimeout(startTimer);
+        startTimer = 0;
+      }
       if (repositionFrame) {
         window.cancelAnimationFrame(repositionFrame);
         repositionFrame = 0;
       }
       window.removeEventListener("scroll", repositionStep);
       window.removeEventListener("resize", repositionStep);
+      if (keyHandler) {
+        document.removeEventListener("keydown", keyHandler);
+        keyHandler = null;
+      }
       if (highlightEl) {
         highlightEl.remove();
         highlightEl = null;
@@ -166,9 +419,64 @@
         tooltipEl.remove();
         tooltipEl = null;
       }
+      if (lastFocus && typeof lastFocus.focus === "function") lastFocus.focus();
+      lastFocus = null;
+    }
+
+    function renderTooltip(i) {
+      var step = STEPS[i];
+      var isLast = i === STEPS.length - 1;
+      var isFirst = i === 0;
+
+      var dots = "";
+      for (var d = 0; d < STEPS.length; d++) {
+        dots += '<span class="pgt-dot' + (d === i ? " is-active" : "") + '"></span>';
+      }
+
+      tooltipEl.setAttribute("aria-labelledby", TITLE_ID);
+      tooltipEl.innerHTML =
+        '<div class="pgt-progress" role="img" aria-label="Step ' +
+        (i + 1) +
+        " of " +
+        STEPS.length +
+        '">' +
+        dots +
+        "</div>" +
+        '<div class="pgt-title" id="' +
+        TITLE_ID +
+        '">' +
+        step.title +
+        "</div>" +
+        '<div class="pgt-body">' +
+        step.body +
+        "</div>" +
+        '<div class="pgt-actions">' +
+        '<button type="button" class="pgt-skip">' +
+        CONFIG.skipLabel +
+        "</button>" +
+        '<div class="pgt-nav">' +
+        (isFirst
+          ? ""
+          : '<button type="button" class="pgt-back">' + CONFIG.backLabel + "</button>") +
+        '<button type="button" class="pgt-next">' +
+        (isLast ? CONFIG.doneLabel : CONFIG.nextLabel) +
+        "</button>" +
+        "</div></div>";
+
+      tooltipEl.querySelector(".pgt-skip").addEventListener("click", endTour);
+      tooltipEl.querySelector(".pgt-next").addEventListener("click", function () {
+        showStep(i + 1);
+      });
+      var backBtn = tooltipEl.querySelector(".pgt-back");
+      if (backBtn) {
+        backBtn.addEventListener("click", function () {
+          showStep(i - 1);
+        });
+      }
     }
 
     function showStep(i) {
+      if (i < 0) return;
       if (i >= STEPS.length) {
         endTour();
         return;
@@ -190,40 +498,50 @@
         highlightEl = document.createElement("div");
         highlightEl.className = "owlpark-feat-park-guide-tour-highlight";
         highlightEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+        highlightEl.setAttribute("aria-hidden", "true");
         document.body.appendChild(highlightEl);
       }
+      var fresh = false;
       if (!tooltipEl) {
+        fresh = true;
         tooltipEl = document.createElement("div");
         tooltipEl.className = "owlpark-feat-park-guide-tour-tooltip";
         tooltipEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+        tooltipEl.setAttribute("role", "dialog");
+        tooltipEl.setAttribute("aria-modal", "true");
         document.body.appendChild(tooltipEl);
       }
 
       highlightEl.classList.remove("pgt-instant");
       positionOn(highlightEl, target);
-      var isLast = i === STEPS.length - 1;
-      tooltipEl.innerHTML =
-        "<div>" +
-        step.text +
-        '</div><div class="pgt-actions">' +
-        '<button type="button" class="pgt-skip">Skip tour</button>' +
-        '<button type="button" class="pgt-next">' +
-        (isLast ? "Done" : "Next") +
-        "</button>" +
-        "</div>";
+      renderTooltip(i);
       positionTooltip(target);
 
-      tooltipEl.querySelector(".pgt-skip").addEventListener("click", endTour);
-      tooltipEl.querySelector(".pgt-next").addEventListener("click", function () {
-        showStep(i + 1);
-      });
+      var nextBtn = tooltipEl.querySelector(".pgt-next");
+      if (nextBtn) nextBtn.focus();
+
+      if (fresh) {
+        window.requestAnimationFrame(function () {
+          if (tooltipEl) tooltipEl.classList.add("pgt-in");
+        });
+      }
     }
 
     function startTour() {
       endTour();
+      lastFocus = document.activeElement;
       window.addEventListener("scroll", repositionStep, { passive: true });
       window.addEventListener("resize", repositionStep);
-      showStep(0);
+      keyHandler = onKey;
+      document.addEventListener("keydown", keyHandler);
+      if (CONFIG.startDelayMs > 0) {
+        startTimer = window.setTimeout(function () {
+          startTimer = 0;
+          showStep(0);
+        }, CONFIG.startDelayMs);
+      } else {
+        showStep(0);
+      }
     }
 
     function activate() {
@@ -234,7 +552,8 @@
       tourBtn.type = "button";
       tourBtn.className = "owlpark-feat-park-guide-tour-btn";
       tourBtn.setAttribute("data-owlpark-feature", FEATURE_ID);
-      tourBtn.textContent = "🧭 Take a Tour";
+      tourBtn.setAttribute("aria-haspopup", "dialog");
+      tourBtn.textContent = CONFIG.buttonLabel;
       tourBtn.addEventListener("click", startTour);
       actions.prepend(tourBtn);
     }

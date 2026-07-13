@@ -9,56 +9,172 @@
   }
 </script>
 
-<style>
+<style id="owlpark-cart-reminder-toast-style">
   .owlpark-feat-cart-reminder-toast {
     position: fixed;
-    bottom: 1.4rem;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--cove-ink);
-    color: white;
-    padding: 0.75rem 1.3rem;
-    border-radius: 999px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    font-size: 0.9rem;
-    font-weight: 600;
-    z-index: 50;
+    bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+    right: calc(1.25rem + env(safe-area-inset-right, 0px));
+    box-sizing: border-box;
+    max-width: min(360px, calc(100vw - 1.5rem));
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-    animation: owlpark-cart-reminder-toast-in 0.25s ease;
+    gap: 0.5rem;
+    padding: 0.4rem 0.5rem 0.4rem 1rem;
+    background: rgba(255, 255, 255, 0.82);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    backdrop-filter: blur(16px) saturate(1.4);
+    border: 1px solid rgba(17, 33, 31, 0.1);
+    border-radius: 20px;
+    box-shadow: 0 6px 24px rgba(20, 40, 40, 0.09);
+    color: #17211f;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.45;
+    letter-spacing: -0.005em;
+    z-index: 2147483000;
+    opacity: 0;
+    transform: translateY(6px);
+    transition:
+      opacity 0.2s cubic-bezier(0.2, 0.6, 0.2, 1),
+      transform 0.2s cubic-bezier(0.2, 0.6, 0.2, 1);
   }
-
-  @keyframes owlpark-cart-reminder-toast-in {
-    from {
-      opacity: 0;
-      transform: translate(-50%, 12px);
-    }
-    to {
-      opacity: 1;
-      transform: translate(-50%, 0);
-    }
+  .owlpark-feat-cart-reminder-toast.crt-in {
+    opacity: 1;
+    transform: translateY(0);
   }
-
-  .owlpark-feat-cart-reminder-toast .crt-dismiss {
-    background: rgba(255, 255, 255, 0.15);
-    border: none;
-    color: white;
-    border-radius: 999px;
-    width: 1.4rem;
-    height: 1.4rem;
-    cursor: pointer;
-    font-size: 0.85rem;
+  .owlpark-feat-cart-reminder-toast .crt-icon {
+    flex-shrink: 0;
+    font-size: 1rem;
     line-height: 1;
+  }
+  .owlpark-feat-cart-reminder-toast .crt-msg {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .owlpark-feat-cart-reminder-toast .crt-view {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 0.9rem;
+    background: #0f6f7a;
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.1px;
+    cursor: pointer;
+    transition:
+      background 0.16s ease,
+      transform 0.16s cubic-bezier(0.2, 0.6, 0.2, 1);
+  }
+  .owlpark-feat-cart-reminder-toast .crt-view:hover {
+    background: #0c5f69;
+    transform: translateY(-1px);
+  }
+  .owlpark-feat-cart-reminder-toast .crt-view:active {
+    transform: translateY(0);
+  }
+  .owlpark-feat-cart-reminder-toast .crt-dismiss {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: #67736f;
+    font-size: 1.15rem;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      background 0.16s ease,
+      color 0.16s ease;
+  }
+  .owlpark-feat-cart-reminder-toast .crt-dismiss:hover {
+    background: rgba(17, 33, 31, 0.05);
+    color: #17211f;
+  }
+  .owlpark-feat-cart-reminder-toast :focus-visible {
+    outline: 2px solid #0f6f7a;
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 560px) {
+    .owlpark-feat-cart-reminder-toast {
+      left: calc(0.75rem + env(safe-area-inset-left, 0px));
+      right: calc(0.75rem + env(safe-area-inset-right, 0px));
+      bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+      max-width: none;
+    }
+  }
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-cart-reminder-toast {
+      background: rgba(18, 24, 26, 0.8);
+      border-color: rgba(255, 255, 255, 0.11);
+      color: #e9edec;
+    }
+    .owlpark-feat-cart-reminder-toast .crt-dismiss {
+      color: #98a4a1;
+    }
+    .owlpark-feat-cart-reminder-toast .crt-dismiss:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #e9edec;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-cart-reminder-toast {
+      transform: none;
+      transition: none;
+    }
+    .owlpark-feat-cart-reminder-toast .crt-view,
+    .owlpark-feat-cart-reminder-toast .crt-dismiss {
+      transition: none;
+    }
   }
 </style>
 
 <script>
   (function () {
+    /* =========================================================================
+     * Cart Reminder Toast  ·  behavioral
+     * -------------------------------------------------------------------------
+     * WHAT   A quiet, frosted toast pinned to the bottom corner that gently
+     *        nudges a shopper who left items sitting in their cart to come back,
+     *        with a teal "View cart" action and a ghost dismiss.
+     * HOW    After an idle delay it reads the cart from localStorage
+     *        ("owl-park-cart"); if the cart holds lines and the cart drawer
+     *        isn't already open, it builds the toast as a direct <body> child
+     *        (its id'd <style> is relocated to <head> so a host chrome re-render
+     *        can't drop it). Entrance is a fade+rise; it auto-dismisses on a
+     *        timer but stays dismissible, and "View cart" opens Owl Park's cart
+     *        drawer via #open-cart-btn. Trigger/read logic is unchanged.
+     * HOSTS  Effectively Owl Park only: the nudge keys off the "owl-park-cart"
+     *        storage the zoo store never writes, so it stays a no-op on the zoo
+     *        ViewItems page and any generic host.
+     * ===================================================================== */
+
     var FEATURE_ID = "cart-reminder-toast";
-    var CART_STORAGE_KEY = "owl-park-cart";
-    var REMINDER_DELAY_MS = 20000;
-    var AUTO_DISMISS_MS = 6000;
+
+    // ----- Configuration --------------------------------------------------
+    // Tunable values, safe to edit. Each explained inline.
+    var CONFIG = {
+      message: "Your cart is waiting — ready to check out?", // toast copy
+      ctaLabel: "View cart", // primary action label (opens the cart drawer)
+      idleDelayMs: 20000, // wait this long after activation before nudging
+      autoDismissMs: 6000, // auto-hide the toast this long after it appears
+    };
+
+    var CART_STORAGE_KEY = "owl-park-cart"; // cart location — do not change
+    var STYLE_ID = "owlpark-cart-reminder-toast-style";
 
     var reminderTimeoutId = null;
     var dismissTimeoutId = null;
@@ -73,40 +189,70 @@
       }
     }
 
+    // Keep the feature's <style> in <head> so a host that re-renders its
+    // chrome after load can't drop the toast's styling.
+    function ensureStyleInHead() {
+      var st = document.getElementById(STYLE_ID);
+      if (st && st.parentElement !== document.head) document.head.appendChild(st);
+    }
+
+    function remove() {
+      if (toastEl) {
+        toastEl.remove();
+        toastEl = null;
+      }
+      if (dismissTimeoutId) {
+        clearTimeout(dismissTimeoutId);
+        dismissTimeoutId = null;
+      }
+    }
+
+    function openCart() {
+      // Owl Park reveals its cart drawer via the header cart button.
+      var opener = document.getElementById("open-cart-btn");
+      if (opener) opener.click();
+      remove();
+    }
+
     function showToast() {
       if (toastEl) return;
+
+      ensureStyleInHead();
 
       toastEl = document.createElement("div");
       toastEl.className = "owlpark-feat-cart-reminder-toast";
       toastEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+      toastEl.setAttribute("role", "status");
+      toastEl.setAttribute("aria-live", "polite");
       toastEl.innerHTML =
-        "<span>🦉 Your cart is waiting — ready to checkout?</span>" +
-        '<button class="crt-dismiss" type="button" aria-label="Dismiss">&times;</button>';
+        '<span class="crt-icon" aria-hidden="true">🛒</span>' +
+        '<span class="crt-msg"></span>' +
+        '<button class="crt-view" type="button"></button>' +
+        '<button class="crt-dismiss" type="button" aria-label="Dismiss reminder">&times;</button>';
+      toastEl.querySelector(".crt-msg").textContent = CONFIG.message;
+      toastEl.querySelector(".crt-view").textContent = CONFIG.ctaLabel;
       document.body.appendChild(toastEl);
 
-      function remove() {
-        if (toastEl) {
-          toastEl.remove();
-          toastEl = null;
-        }
-        if (dismissTimeoutId) {
-          clearTimeout(dismissTimeoutId);
-          dismissTimeoutId = null;
-        }
-      }
-
       toastEl.querySelector(".crt-dismiss").addEventListener("click", remove);
-      dismissTimeoutId = setTimeout(remove, AUTO_DISMISS_MS);
+      toastEl.querySelector(".crt-view").addEventListener("click", openCart);
+
+      // Entrance: fade + rise on the next frame.
+      requestAnimationFrame(function () {
+        if (toastEl) toastEl.classList.add("crt-in");
+      });
+
+      dismissTimeoutId = setTimeout(remove, CONFIG.autoDismissMs);
     }
 
     function activate() {
+      ensureStyleInHead();
       reminderTimeoutId = setTimeout(function () {
         var drawer = document.getElementById("cart-drawer");
         var cartOpen = drawer && drawer.classList.contains("open");
         if (readCartLines().length > 0 && !cartOpen) {
           showToast();
         }
-      }, REMINDER_DELAY_MS);
+      }, CONFIG.idleDelayMs);
     }
 
     function deactivate() {

@@ -9,131 +9,415 @@
   }
 </script>
 
-<style>
-  .owlpark-feat-exit-intent-offer {
+<style id="owlpark-exit-intent-offer-style">
+  /* Frosted modal — matches park-map-modal: scrim blur + near-white card,
+     hairline border, soft lg shadow, corner ghost ×, one solid-teal pill. */
+  .owlpark-feat-exit-intent-offer-overlay {
     position: fixed;
     inset: 0;
-    /* inset: 0 sizes this against the *large* viewport on iOS Safari, so 100% of
-       it is taller than what you can see. 100dvh pins it to the visible one. */
     height: 100dvh;
     box-sizing: border-box;
-    background: rgba(10, 30, 32, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 80;
-    padding: calc(1rem + env(safe-area-inset-top, 0px))
-      calc(1rem + env(safe-area-inset-right, 0px))
-      calc(1rem + env(safe-area-inset-bottom, 0px))
-      calc(1rem + env(safe-area-inset-left, 0px));
-    animation: exit-intent-fade-in 0.2s ease;
+    z-index: 2147483200;
+    padding: calc(1.25rem + env(safe-area-inset-top, 0px))
+      calc(1.25rem + env(safe-area-inset-right, 0px))
+      calc(1.25rem + env(safe-area-inset-bottom, 0px))
+      calc(1.25rem + env(safe-area-inset-left, 0px));
+    background: rgba(16, 22, 24, 0.38);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    transition: opacity 0.18s ease;
   }
-  @keyframes exit-intent-fade-in {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
+  .owlpark-feat-exit-intent-offer-overlay.is-open {
+    opacity: 1;
   }
-  .owlpark-feat-exit-intent-offer .exit-intent-card {
-    background: white;
-    border-radius: var(--radius-lg, 18px);
-    padding: 1.8rem 2rem;
-    max-width: 380px;
+  .owlpark-feat-exit-intent-offer-card {
+    position: relative;
+    background: #ffffff;
+    border: 1px solid rgba(17, 33, 31, 0.08);
+    border-radius: 20px;
+    padding: 2rem;
+    max-width: 400px;
     width: 100%;
     box-sizing: border-box;
+    box-shadow: 0 18px 50px rgba(15, 30, 33, 0.18);
     text-align: center;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
-    /* Cap to the overlay box — the visible viewport, minus its safe-area
-       padding — so a short phone screen can still reach the buttons below. */
     max-height: 100%;
     overflow-y: auto;
+    color: #17211f;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    transform: scale(0.98);
+    opacity: 0;
+    transition:
+      transform 0.2s cubic-bezier(0.2, 0.6, 0.2, 1),
+      opacity 0.2s ease;
   }
-  .owlpark-feat-exit-intent-offer .exit-intent-icon {
-    font-size: 2.2rem;
+  .owlpark-feat-exit-intent-offer-overlay.is-open
+    .owlpark-feat-exit-intent-offer-card {
+    transform: scale(1);
+    opacity: 1;
   }
-  .owlpark-feat-exit-intent-offer h3 {
-    margin: 0.5rem 0 0.4rem;
-    color: var(--cove-teal-dark, #0a4d55);
+  .owlpark-feat-exit-intent-offer-icon {
+    font-size: 1.9rem;
+    line-height: 1;
+    margin-bottom: 0.6rem;
   }
-  .owlpark-feat-exit-intent-offer p {
-    margin: 0 0 1.1rem;
-    font-size: 0.92rem;
-    color: #4a5657;
+  .owlpark-feat-exit-intent-offer-card h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #17211f;
   }
-  .owlpark-feat-exit-intent-offer .exit-intent-code {
+  .owlpark-feat-exit-intent-offer-body {
+    margin: 0 0 1.25rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.45;
+    color: #67736f;
+  }
+  /* Promo code — clean monospace chip. */
+  .owlpark-feat-exit-intent-offer-code {
     display: inline-block;
-    background: var(--cove-sand, #faf3e6);
-    border: 1px dashed var(--cove-orange, #e2662d);
-    color: var(--cove-orange, #e2662d);
-    font-weight: 700;
-    padding: 0.25rem 0.7rem;
-    border-radius: 8px;
-    letter-spacing: 0.5px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas,
+      "Liberation Mono", monospace;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: #0f6f7a;
+    background: rgba(15, 111, 122, 0.09);
+    border: 1px solid rgba(15, 111, 122, 0.22);
+    border-radius: 10px;
+    padding: 0.5rem 0.9rem;
+    margin-bottom: 1.5rem;
   }
-  .owlpark-feat-exit-intent-offer .exit-intent-close-btn {
-    display: block;
-    margin: 1.1rem auto 0;
-    background: var(--cove-teal, #0f6f7a);
-    color: white;
-    border: none;
-    padding: 0.55rem 1.3rem;
-    border-radius: 999px;
-    font-weight: 700;
+  .owlpark-feat-exit-intent-offer-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .owlpark-feat-exit-intent-offer-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     min-height: 44px;
+    padding: 0 1.5rem;
+    background: #0f6f7a;
+    color: #ffffff;
+    border: none;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 600;
     cursor: pointer;
+    transition:
+      background 0.16s ease,
+      transform 0.16s ease;
   }
-  .owlpark-feat-exit-intent-offer .exit-intent-close-btn:hover {
-    filter: brightness(1.06);
+  .owlpark-feat-exit-intent-offer-cta:hover {
+    background: #0c5f69;
+    transform: translateY(-1px);
+  }
+  .owlpark-feat-exit-intent-offer-cta:active {
+    transform: translateY(0);
+  }
+  /* Quiet secondary "no thanks" ghost link. */
+  .owlpark-feat-exit-intent-offer-dismiss {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 0.75rem;
+    background: transparent;
+    border: none;
+    color: #67736f;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 999px;
+    transition: color 0.16s ease;
+  }
+  .owlpark-feat-exit-intent-offer-dismiss:hover {
+    color: #17211f;
+  }
+  .owlpark-feat-exit-intent-offer-x {
+    position: absolute;
+    top: 0.9rem;
+    right: 0.9rem;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: #67736f;
+    font-size: 1.35rem;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      background 0.16s ease,
+      color 0.16s ease;
+  }
+  .owlpark-feat-exit-intent-offer-x:hover {
+    background: rgba(17, 33, 31, 0.05);
+    color: #17211f;
+  }
+  .owlpark-feat-exit-intent-offer-card :focus-visible {
+    outline: 2px solid #0f6f7a;
+    outline-offset: 2px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-exit-intent-offer-card {
+      background: #12181a;
+      border-color: rgba(255, 255, 255, 0.1);
+      color: #e9edec;
+    }
+    .owlpark-feat-exit-intent-offer-card h3 {
+      color: #e9edec;
+    }
+    .owlpark-feat-exit-intent-offer-body {
+      color: #98a4a1;
+    }
+    .owlpark-feat-exit-intent-offer-code {
+      color: #5bc7cf;
+      background: rgba(91, 199, 207, 0.12);
+      border-color: rgba(91, 199, 207, 0.3);
+    }
+    .owlpark-feat-exit-intent-offer-dismiss {
+      color: #98a4a1;
+    }
+    .owlpark-feat-exit-intent-offer-dismiss:hover {
+      color: #e9edec;
+    }
+    .owlpark-feat-exit-intent-offer-x {
+      color: #98a4a1;
+    }
+    .owlpark-feat-exit-intent-offer-x:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #e9edec;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-exit-intent-offer-overlay,
+    .owlpark-feat-exit-intent-offer-card,
+    .owlpark-feat-exit-intent-offer-cta,
+    .owlpark-feat-exit-intent-offer-x {
+      transition: none;
+    }
+    .owlpark-feat-exit-intent-offer-card {
+      transform: none;
+    }
   }
 </style>
 
 <script>
   (function () {
+    /* =========================================================================
+     * Exit Intent Offer  ·  behavioral
+     * -------------------------------------------------------------------------
+     * WHAT   A one-time, dismissible offer that reveals a promo code when the
+     *        visitor signals they're about to leave — presented as a clean,
+     *        frosted modal dialog.
+     * HOW    Watches for exit intent (the pointer leaving the top edge of the
+     *        viewport) plus a fallback dwell timer; either reveals the offer at
+     *        most once per browser session (sessionStorage guard, with an
+     *        in-memory fallback for private mode). The dialog fades/scales in,
+     *        traps focus, closes on Esc / scrim / × / an action, and restores
+     *        focus to wherever it was.
+     * HOSTS  Renders on every host (self-contained; needs no store data). The
+     *        promo code is informational — it is revealed for the shopper to
+     *        enter later; this feature never touches a cart.
+     * ===================================================================== */
+
     var FEATURE_ID = "exit-intent-offer";
 
+    // ----- Configuration --------------------------------------------------
+    // Tunable values, safe to edit. Each explained inline.
+    var CONFIG = {
+      icon: "🐾", // small emoji above the title ("" to hide it)
+      title: "Wait — don't go!", // headline; also labels the dialog
+      body: "Here's 10% off your first membership — enter this code at checkout.", // supporting copy
+      promoCode: "COVE10", // revealed discount code shown in the chip ("" to hide the chip)
+      ctaLabel: "Got it", // primary solid-teal pill; acknowledges and closes
+      dismissLabel: "No thanks", // quiet secondary ghost link ("" to hide it)
+      fallbackDelayMs: 25000, // reveal after this long if no exit intent is detected first
+    };
+
+    // sessionStorage key backing the once-per-session guard.
+    var SHOWN_KEY = "owl-park-exit-intent-shown";
+    var TITLE_ID = "owlpark-exit-intent-title";
+
     var leaveHandler = null;
+    var fallbackTimerId = null;
+    var overlayEl = null;
+    var lastFocus = null;
+    var keyHandler = null;
     var shownThisSession = false;
 
-    function showOffer() {
-      if (
-        shownThisSession ||
-        document.querySelector('[data-owlpark-feature="' + FEATURE_ID + '"]')
-      )
-        return;
-      shownThisSession = true;
-
-      var overlay = document.createElement("div");
-      overlay.className = "owlpark-feat-exit-intent-offer";
-      overlay.setAttribute("data-owlpark-feature", FEATURE_ID);
-      overlay.innerHTML =
-        '<div class="exit-intent-card">' +
-        '<div class="exit-intent-icon">🐾</div>' +
-        "<h3>Wait — don't go!</h3>" +
-        '<p>Use code <span class="exit-intent-code">COVE10</span> for 10% off your first membership.</p>' +
-        '<button type="button" class="exit-intent-close-btn">No thanks, I\'ll browse</button>' +
-        "</div>";
-
-      function close() {
-        overlay.remove();
+    // ----- Once-per-session guard -----------------------------------------
+    function hasShown() {
+      if (shownThisSession) return true;
+      try {
+        return sessionStorage.getItem(SHOWN_KEY) === "1";
+      } catch (e) {
+        return false;
       }
-      overlay
-        .querySelector(".exit-intent-close-btn")
-        .addEventListener("click", close);
-      overlay.addEventListener("click", function (e) {
-        if (e.target === overlay) close();
-      });
+    }
+    function markShown() {
+      shownThisSession = true;
+      try {
+        sessionStorage.setItem(SHOWN_KEY, "1");
+      } catch (e) {
+        /* private mode — the in-memory flag still guards this session */
+      }
+    }
 
-      document.body.appendChild(overlay);
+    // ----- Modal dialog ---------------------------------------------------
+    function focusable() {
+      if (!overlayEl) return [];
+      return [].slice.call(
+        overlayEl.querySelectorAll(
+          'button, [href], input, [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+    }
+
+    function onKey(e) {
+      if (e.key === "Escape" || e.key === "Esc") {
+        e.preventDefault();
+        closeOffer();
+        return;
+      }
+      if (e.key === "Tab") {
+        var f = focusable();
+        if (!f.length) return;
+        var first = f[0];
+        var last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+
+    function showOffer() {
+      if (hasShown() || overlayEl) return;
+      markShown();
+      clearFallback();
+
+      lastFocus = document.activeElement;
+      overlayEl = document.createElement("div");
+      overlayEl.className = "owlpark-feat-exit-intent-offer-overlay";
+      overlayEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+      overlayEl.setAttribute("role", "dialog");
+      overlayEl.setAttribute("aria-modal", "true");
+      overlayEl.setAttribute("aria-labelledby", TITLE_ID);
+
+      var html =
+        '<div class="owlpark-feat-exit-intent-offer-card">' +
+        '<button type="button" class="owlpark-feat-exit-intent-offer-x" aria-label="Close">&times;</button>';
+      if (CONFIG.icon) {
+        html +=
+          '<div class="owlpark-feat-exit-intent-offer-icon" aria-hidden="true">' +
+          CONFIG.icon +
+          "</div>";
+      }
+      html += '<h3 id="' + TITLE_ID + '">' + CONFIG.title + "</h3>";
+      if (CONFIG.body) {
+        html +=
+          '<p class="owlpark-feat-exit-intent-offer-body">' +
+          CONFIG.body +
+          "</p>";
+      }
+      if (CONFIG.promoCode) {
+        html +=
+          '<div class="owlpark-feat-exit-intent-offer-code">' +
+          CONFIG.promoCode +
+          "</div>";
+      }
+      html +=
+        '<div class="owlpark-feat-exit-intent-offer-actions">' +
+        '<button type="button" class="owlpark-feat-exit-intent-offer-cta">' +
+        CONFIG.ctaLabel +
+        "</button>";
+      if (CONFIG.dismissLabel) {
+        html +=
+          '<button type="button" class="owlpark-feat-exit-intent-offer-dismiss">' +
+          CONFIG.dismissLabel +
+          "</button>";
+      }
+      html += "</div></div>";
+      overlayEl.innerHTML = html;
+      document.body.appendChild(overlayEl);
+
+      overlayEl
+        .querySelector(".owlpark-feat-exit-intent-offer-cta")
+        .addEventListener("click", closeOffer);
+      var dismissBtn = overlayEl.querySelector(
+        ".owlpark-feat-exit-intent-offer-dismiss",
+      );
+      if (dismissBtn) dismissBtn.addEventListener("click", closeOffer);
+      overlayEl
+        .querySelector(".owlpark-feat-exit-intent-offer-x")
+        .addEventListener("click", closeOffer);
+      overlayEl.addEventListener("click", function (e) {
+        if (e.target === overlayEl) closeOffer();
+      });
+      keyHandler = onKey;
+      document.addEventListener("keydown", keyHandler);
+
+      requestAnimationFrame(function () {
+        if (overlayEl) overlayEl.classList.add("is-open");
+        var x =
+          overlayEl &&
+          overlayEl.querySelector(".owlpark-feat-exit-intent-offer-x");
+        if (x) x.focus();
+      });
+    }
+
+    function closeOffer() {
+      if (!overlayEl) return;
+      var el = overlayEl;
+      overlayEl = null;
+      if (keyHandler) {
+        document.removeEventListener("keydown", keyHandler);
+        keyHandler = null;
+      }
+      el.classList.remove("is-open");
+      setTimeout(function () {
+        el.remove();
+      }, 180);
+      if (lastFocus && typeof lastFocus.focus === "function") lastFocus.focus();
+      lastFocus = null;
+    }
+
+    // ----- Exit-intent triggers -------------------------------------------
+    function clearFallback() {
+      if (fallbackTimerId) {
+        clearTimeout(fallbackTimerId);
+        fallbackTimerId = null;
+      }
     }
 
     function activate() {
-      shownThisSession = false;
       leaveHandler = function (event) {
         if (event.clientY <= 0) showOffer();
       };
       document.documentElement.addEventListener("mouseleave", leaveHandler);
+      if (CONFIG.fallbackDelayMs > 0 && !hasShown()) {
+        fallbackTimerId = setTimeout(showOffer, CONFIG.fallbackDelayMs);
+      }
     }
 
     function deactivate() {
@@ -144,6 +428,13 @@
         );
         leaveHandler = null;
       }
+      clearFallback();
+      if (keyHandler) {
+        document.removeEventListener("keydown", keyHandler);
+        keyHandler = null;
+      }
+      overlayEl = null;
+      lastFocus = null;
       document
         .querySelectorAll('[data-owlpark-feature="' + FEATURE_ID + '"]')
         .forEach(function (el) {

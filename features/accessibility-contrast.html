@@ -9,24 +9,56 @@
   }
 </script>
 
-<style>
+<style id="owlpark-accessibility-contrast-style">
+  /* Standard docked-utility button: a quiet glass pill that reads on the dark
+     floating bar and on Owl Park's header alike. Only THIS control is sleek —
+     the high-contrast theme it applies (below) stays deliberately strong. */
   .owlpark-feat-accessibility-contrast {
-    background: #0a4d55 !important;
-    color: #ffffff !important;
-    border: 1px solid rgba(255, 255, 255, 0.35) !important;
-    padding: 0.4rem 0.7rem;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
     min-height: 44px;
     box-sizing: border-box;
+    padding: 0 0.9rem;
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.22) !important;
+    border-radius: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.1px;
     text-decoration: none;
+    cursor: pointer;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    transition:
+      transform 0.16s cubic-bezier(0.2, 0.6, 0.2, 1),
+      background 0.16s ease;
   }
   .owlpark-feat-accessibility-contrast:hover {
-    background: #0c5b64 !important;
+    background: rgba(255, 255, 255, 0.2) !important;
+    transform: translateY(-1px);
+  }
+  .owlpark-feat-accessibility-contrast:active {
+    transform: translateY(0);
+  }
+  .owlpark-feat-accessibility-contrast:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.85);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-accessibility-contrast {
+      transition: none;
+    }
   }
 
+  /* =========================================================================
+   * HIGH-CONTRAST THEME — the styles this feature APPLIES to the page.
+   * Intentionally strong (pure black / white / yellow), NOT the sleek look:
+   * maximum legibility is the whole point. Do not soften these.
+   * ===================================================================== */
   body.high-contrast-active {
     background: #ffffff !important;
     color: #000000 !important;
@@ -145,12 +177,79 @@
 
 <script>
   (function () {
+    /* =========================================================================
+     * High-Contrast Mode  ·  utility
+     * -------------------------------------------------------------------------
+     * WHAT   A docked toggle that flips the whole storefront into a strong,
+     *        pure black/white/yellow high-contrast theme for readability, and
+     *        remembers the choice across visits.
+     * HOW    Docks a quiet glass button into Owl Park's .header-actions, else a
+     *        self-owned frosted floating bar on <body> (kept alive by a 1s
+     *        watchdog). Clicking adds/removes body.high-contrast-active and
+     *        persists the state under CONFIG.storageKey; activate() restores it.
+     *        The feature's <style> (owlpark-accessibility-contrast-style) is
+     *        relocated to <head> so its rules survive the host re-rendering its
+     *        body, and it carries a SECOND CSS block targeting the ZooTampa PLU
+     *        classes so the whole zoo page responds, not just Owl Park.
+     * HOSTS  Works on every host — the theme is a body class needing no store
+     *        data; no no-op conditions.
+     * ===================================================================== */
+
+    var FEATURE_ID = "accessibility-contrast";
+
+    // ----- Configuration --------------------------------------------------
+    var CONFIG = {
+      glyph: "◐", // half-shaded circle — the toggle's contrast icon
+      labelOff: "High Contrast", // visible button text while the standard theme shows
+      labelOn: "Standard Contrast", // visible button text while high-contrast is on
+      ariaLabel: "High-contrast mode", // stable accessible name (state read via aria-pressed)
+      storageKey: "owl-park-high-contrast", // localStorage key remembering the choice
+    };
+
+    // CSS couples to this class name and this <style> id — keep them in sync.
+    var ACTIVE_CLASS = "high-contrast-active";
+    var STYLE_ID = "owlpark-accessibility-contrast-style";
+
     var buttonEl = null;
     var watchdogId = null;
 
+    // ----- Persistence ----------------------------------------------------
+    function isStored() {
+      try {
+        return localStorage.getItem(CONFIG.storageKey) === "1";
+      } catch (e) {
+        return false;
+      }
+    }
+    function store(on) {
+      try {
+        localStorage.setItem(CONFIG.storageKey, on ? "1" : "0");
+      } catch (e) {
+        /* private mode — keep the toggle for this session only */
+      }
+    }
+
+    // ----- Apply / remove the high-contrast theme -------------------------
+    function isActive() {
+      return document.body.classList.contains(ACTIVE_CLASS);
+    }
+    function apply(on) {
+      document.body.classList.toggle(ACTIVE_CLASS, on);
+    }
+
     function onClick() {
-      document.body.classList.toggle("high-contrast-active");
+      var next = !isActive();
+      apply(next);
+      store(next);
       updateLabel();
+    }
+
+    function updateLabel() {
+      if (!buttonEl) return;
+      var active = isActive();
+      buttonEl.textContent =
+        CONFIG.glyph + " " + (active ? CONFIG.labelOn : CONFIG.labelOff);
+      buttonEl.setAttribute("aria-pressed", active ? "true" : "false");
     }
 
     // Host-agnostic mount point. Prefer the storefront's own header, but fall
@@ -167,8 +266,10 @@
         "align-items:center;justify-content:flex-end;max-width:calc(100vw - 20px);" +
         "top:calc(10px + env(safe-area-inset-top, 0px));" +
         "right:calc(10px + env(safe-area-inset-right, 0px));" +
-        "padding:8px 10px;background:rgba(10,77,85,0.96);border-radius:12px;" +
-        "box-shadow:0 8px 24px rgba(0,0,0,0.28);";
+        "padding:8px;background:rgba(18,26,28,0.72);border-radius:16px;" +
+        "border:1px solid rgba(255,255,255,0.12);" +
+        "-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);" +
+        "box-shadow:0 8px 30px rgba(8,20,22,0.28);";
       var barStyle = document.createElement("style");
       barStyle.id = "owlpark-fallback-actions-style";
       barStyle.setAttribute("data-owlpark-fallback", "actions");
@@ -187,12 +288,6 @@
       if (barStyle) barStyle.remove();
     }
 
-    function updateLabel() {
-      if (!buttonEl) return;
-      var active = document.body.classList.contains("high-contrast-active");
-      buttonEl.textContent = active ? "◐ Standard Contrast" : "◐ High Contrast";
-    }
-
     // Owl Park's header is stable, so dock there. On any OTHER store the header
     // chrome may be hidden before the host reveals its body, re-rendered from a
     // template after load, or styled unpredictably — so use the self-owned
@@ -200,6 +295,16 @@
     // own content wrapper) and therefore survives the host re-rendering itself.
     function resolveDock() {
       return document.querySelector(".header-actions") || owlparkFallbackBar();
+    }
+
+    // Keep the feature's <style> in <head> so its high-contrast rules (incl. the
+    // zoo-class block) survive a host wiping/re-rendering its body region. Via
+    // the loader the style is already in <head>; this also covers a raw paste.
+    function ensureStyleInHead() {
+      var st = document.getElementById(STYLE_ID);
+      if (st && st.parentElement !== document.head) {
+        document.head.appendChild(st);
+      }
     }
 
     function ensureButton() {
@@ -211,16 +316,22 @@
       buttonEl.type = "button";
       buttonEl.className = "owlpark-feat-accessibility-contrast";
       buttonEl.setAttribute("data-owlpark-feature", "accessibility-contrast");
+      buttonEl.setAttribute("aria-label", CONFIG.ariaLabel);
       buttonEl.addEventListener("click", onClick);
       resolveDock().prepend(buttonEl);
       updateLabel();
     }
 
     function activate() {
+      ensureStyleInHead();
+      apply(isStored()); // restore the remembered choice
       ensureButton();
-      // Re-assert the control if the host removes or replaces it after load
-      // (body reveal, template re-render); cheap isConnected check.
-      watchdogId = setInterval(ensureButton, 1000);
+      // Re-assert the control (and style placement) if the host removes or
+      // replaces them after load (body reveal, template re-render).
+      watchdogId = setInterval(function () {
+        ensureButton();
+        ensureStyleInHead();
+      }, 1000);
     }
 
     function deactivate() {
@@ -228,7 +339,7 @@
         clearInterval(watchdogId);
         watchdogId = null;
       }
-      document.body.classList.remove("high-contrast-active");
+      document.body.classList.remove(ACTIVE_CLASS);
       if (buttonEl) {
         buttonEl.removeEventListener("click", onClick);
         buttonEl.remove();

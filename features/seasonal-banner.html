@@ -9,74 +9,344 @@
   }
 </script>
 
-<style>
+<style id="owlpark-seasonal-banner-style">
   .owlpark-feat-seasonal-banner {
-    background: linear-gradient(90deg, #e2662d, #f0a02f);
-    color: white;
-    text-align: center;
-    padding: 0.55rem 1rem;
-    font-size: 0.9rem;
-    font-weight: 600;
+    box-sizing: border-box;
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
+    gap: 0.7rem;
+    position: relative;
+    padding: 0.72rem 1.25rem;
+    padding-left: calc(2.75rem + env(safe-area-inset-left, 0px));
+    padding-right: calc(2.75rem + env(safe-area-inset-right, 0px));
+    background: rgba(255, 255, 255, 0.82);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    backdrop-filter: blur(16px) saturate(1.4);
+    border-bottom: 1px solid rgba(17, 33, 31, 0.1);
+    color: #17211f;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.45;
+    letter-spacing: -0.005em;
+    z-index: 25;
+  }
+  .owlpark-feat-seasonal-banner .sb-inner {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease;
+  }
+  .owlpark-feat-seasonal-banner.sb-swapping .sb-inner {
+    opacity: 0;
+    transform: translateY(-4px);
   }
   .owlpark-feat-seasonal-banner .sb-icon {
-    font-size: 1.05rem;
+    font-size: 1rem;
+    line-height: 1;
+    opacity: 0.9;
+  }
+  .owlpark-feat-seasonal-banner .sb-text {
+    text-align: center;
+  }
+  .owlpark-feat-seasonal-banner .sb-text b {
+    font-weight: 600;
+  }
+  .owlpark-feat-seasonal-banner .sb-dots {
+    display: inline-flex;
+    gap: 0.3rem;
+    margin-left: 0.4rem;
+    flex-shrink: 0;
+  }
+  .owlpark-feat-seasonal-banner .sb-dot {
+    width: 5px;
+    height: 5px;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: rgba(17, 33, 31, 0.2);
+    cursor: pointer;
+    transition:
+      background 0.16s ease,
+      transform 0.16s ease;
+  }
+  .owlpark-feat-seasonal-banner .sb-dot:hover {
+    background: rgba(17, 33, 31, 0.4);
+  }
+  .owlpark-feat-seasonal-banner .sb-dot.is-active {
+    background: #0f6f7a;
+    transform: scale(1.35);
+  }
+  .owlpark-feat-seasonal-banner .sb-close {
+    position: absolute;
+    top: 50%;
+    right: calc(0.7rem + env(safe-area-inset-right, 0px));
+    transform: translateY(-50%);
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: #67736f;
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      background 0.16s ease,
+      color 0.16s ease;
+  }
+  .owlpark-feat-seasonal-banner .sb-close::before {
+    content: "";
+    position: absolute;
+    inset: -7px;
+  }
+  .owlpark-feat-seasonal-banner .sb-close:hover {
+    background: rgba(17, 33, 31, 0.05);
+    color: #17211f;
+  }
+  .owlpark-feat-seasonal-banner :focus-visible {
+    outline: 2px solid #0f6f7a;
+    outline-offset: 2px;
+  }
+  @media (max-width: 560px) {
+    .owlpark-feat-seasonal-banner {
+      font-size: 0.84rem;
+      padding-top: 0.62rem;
+      padding-bottom: 0.62rem;
+    }
+    .owlpark-feat-seasonal-banner .sb-dots {
+      display: none;
+    }
+  }
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-seasonal-banner {
+      background: rgba(18, 24, 26, 0.8);
+      border-bottom-color: rgba(255, 255, 255, 0.11);
+      color: #e9edec;
+    }
+    .owlpark-feat-seasonal-banner .sb-dot {
+      background: rgba(255, 255, 255, 0.24);
+    }
+    .owlpark-feat-seasonal-banner .sb-dot.is-active {
+      background: #5bc7cf;
+    }
+    .owlpark-feat-seasonal-banner .sb-close {
+      color: #98a4a1;
+    }
+    .owlpark-feat-seasonal-banner .sb-close:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #e9edec;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-seasonal-banner .sb-inner,
+    .owlpark-feat-seasonal-banner .sb-dot,
+    .owlpark-feat-seasonal-banner .sb-close {
+      transition: none;
+    }
   }
 </style>
 
-<div class="owlpark-feat-seasonal-banner">
-  <span class="sb-icon">🦉</span>
-  <span class="sb-text"
-    >Summer Nights are here — extended evening hours through August!</span
-  >
+<div class="owlpark-feat-seasonal-banner" role="status" aria-live="polite">
+  <div class="sb-inner">
+    <span class="sb-icon" aria-hidden="true">🌙</span>
+    <span class="sb-text">Summer Nights are here — extended evening hours through August!</span>
+  </div>
+  <div class="sb-dots" aria-hidden="true"></div>
+  <button type="button" class="sb-close" aria-label="Dismiss announcement">&times;</button>
 </div>
 
 <script>
   (function () {
-    var MESSAGES = [
-      "Summer Nights are here — extended evening hours through August!",
-      "Weekend Roost Nights — keeper talks under the stars, Fri & Sat.",
-      "Members save 15% on Twilight Explorer tickets this month.",
-    ];
+    /* =========================================================================
+     * Seasonal Banner  ·  visual
+     * -------------------------------------------------------------------------
+     * WHAT   A slim, frosted announcement strip below the header that crossfades
+     *        through seasonal messages, with minimal progress dots, pause-on-hover
+     *        and a quiet dismiss control.
+     * HOW    Injects its own markup; relocates the full-width strip to sit right
+     *        below the host header (zoo #Header / Owl Park .site-header / top of
+     *        body) and keeps it (and its <style>) there via a 1s watchdog, so a
+     *        store that re-renders its chrome after load can't drop it. Rotation
+     *        is a fade-out → swap → fade-in cycle on a timer.
+     * HOSTS  Renders on every host. Dismissal is remembered for the browser
+     *        session (sessionStorage) so it does not nag on every page.
+     * ===================================================================== */
 
-    var intervalId = null;
+    var FEATURE_ID = "seasonal-banner";
+
+    // ----- Configuration --------------------------------------------------
+    var CONFIG = {
+      rotateMs: 6000, // dwell time per announcement
+      pauseOnHover: true, // freeze rotation while the pointer is over the strip
+      rememberDismissal: true, // hide for the rest of the browser session once closed
+      messages: [
+        { icon: "🌙", text: "Summer Nights are here — extended evening hours through August!" },
+        { icon: "⭐", text: "Weekend Roost Nights — keeper talks under the stars, Fri & Sat." },
+        { icon: "🦉", text: "Members save 15% on Twilight Explorer tickets this month." },
+      ],
+    };
+
+    var DISMISS_KEY = "owl-park-seasonal-dismissed";
+    var rootEl = null;
+    var iconEl = null;
+    var textEl = null;
+    var dotsEl = null;
+    var index = 0;
+    var timerId = null;
+    var watchdogId = null;
+    var paused = false;
+
+    function render(i) {
+      var m = CONFIG.messages[i];
+      if (!m) return;
+      if (iconEl) iconEl.textContent = m.icon;
+      if (textEl) textEl.textContent = m.text;
+      if (dotsEl) {
+        [].forEach.call(dotsEl.children, function (dot, di) {
+          dot.classList.toggle("is-active", di === i);
+        });
+      }
+    }
+
+    function goTo(i, animate) {
+      index = (i + CONFIG.messages.length) % CONFIG.messages.length;
+      if (animate === false || !rootEl) {
+        render(index);
+        return;
+      }
+      rootEl.classList.add("sb-swapping");
+      setTimeout(function () {
+        render(index);
+        rootEl.classList.remove("sb-swapping");
+      }, 200);
+    }
+
+    function tick() {
+      if (!paused) goTo(index + 1, true);
+    }
+
+    function buildDots() {
+      if (!dotsEl) return;
+      dotsEl.innerHTML = "";
+      CONFIG.messages.forEach(function (m, di) {
+        var dot = document.createElement("button");
+        dot.type = "button";
+        dot.className = "sb-dot" + (di === 0 ? " is-active" : "");
+        dot.setAttribute("aria-label", "Show announcement " + (di + 1));
+        dot.addEventListener("click", function () {
+          goTo(di, true);
+          restartTimer();
+        });
+        dotsEl.appendChild(dot);
+      });
+    }
+
+    function restartTimer() {
+      if (timerId) clearInterval(timerId);
+      timerId = setInterval(tick, CONFIG.rotateMs);
+    }
+
+    function resolveHeaderInsertion() {
+      var zoo = document.getElementById("Header");
+      if (zoo) return { ref: zoo, pos: "afterend" };
+      var owl = document.querySelector(".site-header");
+      if (owl) return { ref: owl, pos: "afterend" };
+      return { ref: document.body, pos: "afterbegin" };
+    }
+    function placed(t) {
+      if (!rootEl.isConnected) return false;
+      return t.pos === "afterend"
+        ? t.ref.nextElementSibling === rootEl
+        : t.ref.firstElementChild === rootEl;
+    }
+    function ensurePlaced() {
+      if (!rootEl) return;
+      var t = resolveHeaderInsertion();
+      if (!placed(t)) t.ref.insertAdjacentElement(t.pos, rootEl);
+      var st = document.getElementById("owlpark-seasonal-banner-style");
+      if (st && st.parentElement !== document.head) document.head.appendChild(st);
+    }
+
+    function isDismissed() {
+      try {
+        return CONFIG.rememberDismissal && sessionStorage.getItem(DISMISS_KEY) === "1";
+      } catch (e) {
+        return false;
+      }
+    }
+    function dismiss() {
+      try {
+        if (CONFIG.rememberDismissal) sessionStorage.setItem(DISMISS_KEY, "1");
+      } catch (e) {
+        /* private mode — dismiss for this activation only */
+      }
+      teardownTimers();
+      if (rootEl) rootEl.hidden = true;
+    }
+
+    function teardownTimers() {
+      if (timerId) {
+        clearInterval(timerId);
+        timerId = null;
+      }
+      if (watchdogId) {
+        clearInterval(watchdogId);
+        watchdogId = null;
+      }
+    }
 
     function activate() {
-      var el = document.querySelector(".owlpark-feat-seasonal-banner .sb-text");
-      if (!el) return;
+      rootEl = document.querySelector(".owlpark-feat-seasonal-banner");
+      if (!rootEl) return;
+      iconEl = rootEl.querySelector(".sb-icon");
+      textEl = rootEl.querySelector(".sb-text");
+      dotsEl = rootEl.querySelector(".sb-dots");
 
-      // On a store that isn't Owl Park (e.g. the zoo web store), lift the banner
-      // to the top of the page content so it reads as a banner instead of
-      // trailing the end of the body where the loader first dropped it.
-      var banner = document.querySelector(".owlpark-feat-seasonal-banner");
-      var anchor =
-        document.getElementById("sub-header") ||
-        document.getElementById("ContentHeading");
-      if (banner && anchor && anchor.parentNode) {
-        anchor.parentNode.insertBefore(banner, anchor);
+      if (isDismissed()) {
+        rootEl.hidden = true;
+        return;
       }
 
-      var i = 0;
-      intervalId = setInterval(function () {
-        i = (i + 1) % MESSAGES.length;
-        el.textContent = MESSAGES[i];
-      }, 4000);
+      ensurePlaced();
+      buildDots();
+      goTo(0, false);
+
+      var closeBtn = rootEl.querySelector(".sb-close");
+      if (closeBtn) closeBtn.addEventListener("click", dismiss);
+
+      if (CONFIG.pauseOnHover) {
+        rootEl.addEventListener("mouseenter", function () {
+          paused = true;
+        });
+        rootEl.addEventListener("mouseleave", function () {
+          paused = false;
+        });
+      }
+
+      restartTimer();
+      watchdogId = setInterval(ensurePlaced, 1000);
     }
 
     function deactivate() {
-      if (intervalId) {
-        clearInterval(intervalId);
-        intervalId = null;
-      }
+      teardownTimers();
+      paused = false;
     }
 
     activate();
 
     window.__owlParkFeatures = window.__owlParkFeatures || {};
-    window.__owlParkFeatures["seasonal-banner"] = {
+    window.__owlParkFeatures[FEATURE_ID] = {
       activate: activate,
       deactivate: deactivate,
     };

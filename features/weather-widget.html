@@ -10,103 +10,191 @@
 </script>
 
 <style id="owlpark-weather-widget-style">
-  /* Full-width banner strip that sits in the document flow just below the host's
-     header (see the script), rather than a floating corner badge. */
+  /* A slim frosted full-width strip in the document flow just below the host
+     header (see the script), not a floating corner badge. Matches the sibling
+     seasonal-banner strip: near-white glass, hairline base border, ink type. */
   .owlpark-feat-weather-widget {
     box-sizing: border-box;
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.65rem;
-    padding: 0.72rem 1.1rem;
-    /* A full-bleed strip, so keep the text clear of landscape notches. */
-    padding-left: calc(1.1rem + env(safe-area-inset-left, 0px));
-    padding-right: calc(1.1rem + env(safe-area-inset-right, 0px));
-    background: linear-gradient(120deg, #0e6b76 0%, #1f97a8 55%, #46b39c 100%);
-    color: #ffffff;
-    font-size: 0.95rem;
-    font-weight: 600;
-    letter-spacing: 0.2px;
-    line-height: 1.3;
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.16);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+    gap: 0.5rem;
     position: relative;
+    padding: 0.72rem 1.25rem;
+    /* A full-bleed strip, so keep the text clear of landscape notches. */
+    padding-left: calc(1.25rem + env(safe-area-inset-left, 0px));
+    padding-right: calc(1.25rem + env(safe-area-inset-right, 0px));
+    background: rgba(255, 255, 255, 0.82);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    backdrop-filter: blur(16px) saturate(1.4);
+    border-bottom: 1px solid rgba(17, 33, 31, 0.1);
+    color: #17211f;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.45;
+    letter-spacing: -0.005em;
     z-index: 25;
   }
-
   .owlpark-feat-weather-widget .ww-icon {
-    font-size: 1.45rem;
+    font-size: 1.05rem;
     line-height: 1;
-    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.2));
+    opacity: 0.9;
   }
-
+  /* The temperature is the one lightly-emphasized figure. */
+  .owlpark-feat-weather-widget .ww-temp {
+    font-weight: 600;
+    font-size: 0.98rem;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+  .owlpark-feat-weather-widget .ww-temp[hidden] {
+    display: none;
+  }
   .owlpark-feat-weather-widget .ww-text {
     text-align: center;
   }
-
   @media (max-width: 560px) {
     .owlpark-feat-weather-widget {
-      font-size: 0.85rem;
-      padding-top: 0.6rem;
-      padding-bottom: 0.6rem;
-      gap: 0.5rem;
+      font-size: 0.84rem;
+      padding-top: 0.62rem;
+      padding-bottom: 0.62rem;
+    }
+    .owlpark-feat-weather-widget .ww-temp {
+      font-size: 0.9rem;
     }
     .owlpark-feat-weather-widget .ww-icon {
-      font-size: 1.25rem;
+      font-size: 1rem;
+    }
+  }
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-weather-widget {
+      background: rgba(18, 24, 26, 0.8);
+      border-bottom-color: rgba(255, 255, 255, 0.11);
+      color: #e9edec;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-weather-widget,
+    .owlpark-feat-weather-widget .ww-icon {
+      transition: none;
     }
   }
 </style>
 
 <div class="owlpark-feat-weather-widget" role="status" aria-live="polite">
   <span class="ww-icon" aria-hidden="true">🌤️</span>
+  <span class="ww-temp" hidden></span>
   <span class="ww-text">Loading local weather…</span>
 </div>
 
 <script>
   (function () {
+    /* =========================================================================
+     * Park Weather Widget  ·  visual
+     * -------------------------------------------------------------------------
+     * WHAT   A slim, frosted full-width strip below the header showing the park's
+     *        CURRENT conditions — a clean sky glyph, the temperature as the one
+     *        lightly-emphasized figure, and a quiet phrase.
+     * HOW    Fetches live current weather from Open-Meteo (free, no-key, CORS) for
+     *        the park's coordinates, maps the WMO weather_code to a glyph + phrase,
+     *        and re-fetches on an interval. Relocates the full-width strip to sit
+     *        just below the host header (zoo #Header / Owl Park .site-header / top
+     *        of body) and keeps it (and its <style>) there via a 1s watchdog, so a
+     *        store that re-renders its chrome after load can't drop it.
+     * HOSTS  Renders on every host. If the fetch fails or the host CSP blocks it,
+     *        it shows a neutral prompt — NEVER a fabricated temperature.
+     * ===================================================================== */
+
     var FEATURE_ID = "weather-widget";
-    // ZooTampa at Lowry Park (Tampa, FL). Live current conditions come from
-    // Open-Meteo — a free, no-key, CORS-enabled API — so this works pasted into
-    // any store's page. If the request fails (offline, or the host store's CSP
-    // blocks it), the badge shows a neutral message, never a fake temperature.
-    var LAT = 28.0106;
-    var LON = -82.4667;
+
+    // ----- Configuration --------------------------------------------------
+    var CONFIG = {
+      // Park location — ZooTampa at Lowry Park (Tampa, FL). Drives the query.
+      lat: 28.0106,
+      lon: -82.4667,
+
+      // Units. `apiUnit` is Open-Meteo's `temperature_unit`; `unitLabel` is the
+      // suffix shown beside the figure. Keep the two in agreement.
+      apiUnit: "fahrenheit",
+      unitLabel: "°F",
+
+      // How often to re-fetch current conditions, in ms.
+      refreshMs: 15 * 60 * 1000,
+
+      // Copy. `loading*` shows until the first fetch resolves; `fallback*` shows
+      // if the fetch fails or the host CSP blocks it — NEVER a fabricated
+      // temperature. `suffix` tails the live phrase ("… at the park").
+      loadingIcon: "🌤️",
+      loadingText: "Loading local weather…",
+      fallbackIcon: "🦉",
+      fallbackText: "Check today's forecast before your visit!",
+      suffix: " at the park",
+
+      // WMO weather_code → sky glyph + phrase (Open-Meteo `weather_code`). First
+      // matching rule wins. `range` is an inclusive [min, max]; `codes` is an
+      // exact set. Where the glyph depends on daylight, give `day`/`night`
+      // instead of a single `icon`; `wmoFallback` covers any unlisted code.
+      wmo: [
+        { range: [0, 0], day: "☀️", night: "🌙", label: "clear" },
+        { range: [1, 2], day: "🌤️", night: "☁️", label: "partly cloudy" },
+        { range: [3, 3], icon: "☁️", label: "overcast" },
+        { codes: [45, 48], icon: "🌫️", label: "foggy" },
+        { range: [51, 57], icon: "🌦️", label: "drizzly" },
+        { range: [61, 67], icon: "🌧️", label: "rainy" },
+        { range: [71, 77], icon: "🌨️", label: "snowy" },
+        { range: [80, 82], icon: "🌦️", label: "passing showers" },
+        { range: [85, 86], icon: "🌨️", label: "snow showers" },
+        { range: [95, Infinity], icon: "⛈️", label: "stormy" },
+      ],
+      wmoFallback: { day: "☀️", night: "🌙", label: "mild" },
+    };
+
+    // Live current conditions come from Open-Meteo — a free, no-key,
+    // CORS-enabled API — so this works pasted into any store's page.
     var WEATHER_API =
       "https://api.open-meteo.com/v1/forecast?latitude=" +
-      LAT +
+      CONFIG.lat +
       "&longitude=" +
-      LON +
+      CONFIG.lon +
       "&current=temperature_2m,weather_code,is_day" +
-      "&temperature_unit=fahrenheit&timezone=auto";
-    var REFRESH_MS = 15 * 60 * 1000;
+      "&temperature_unit=" +
+      CONFIG.apiUnit +
+      "&timezone=auto";
 
     var iconEl = null;
+    var tempEl = null;
     var textEl = null;
     var rootEl = null;
     var refreshId = null;
     var watchdogId = null;
 
-    // WMO weather codes (open-meteo `weather_code`) -> a friendly icon + phrase.
+    // Resolve a WMO `weather_code` to a friendly glyph + phrase via CONFIG.wmo.
     function describeWeather(code, isDay) {
-      var clear = isDay ? "☀️" : "🌙";
-      if (code === 0) return { icon: clear, label: "clear" };
-      if (code === 1 || code === 2)
-        return { icon: isDay ? "🌤️" : "☁️", label: "partly cloudy" };
-      if (code === 3) return { icon: "☁️", label: "overcast" };
-      if (code === 45 || code === 48) return { icon: "🌫️", label: "foggy" };
-      if (code >= 51 && code <= 57) return { icon: "🌦️", label: "drizzly" };
-      if (code >= 61 && code <= 67) return { icon: "🌧️", label: "rainy" };
-      if (code >= 71 && code <= 77) return { icon: "🌨️", label: "snowy" };
-      if (code >= 80 && code <= 82) return { icon: "🌦️", label: "passing showers" };
-      if (code >= 85 && code <= 86) return { icon: "🌨️", label: "snow showers" };
-      if (code >= 95) return { icon: "⛈️", label: "stormy" };
-      return { icon: clear, label: "mild" };
+      var rules = CONFIG.wmo;
+      for (var i = 0; i < rules.length; i++) {
+        var r = rules[i];
+        var hit =
+          (r.range && code >= r.range[0] && code <= r.range[1]) ||
+          (r.codes && r.codes.indexOf(code) !== -1);
+        if (hit)
+          return { icon: r.icon || (isDay ? r.day : r.night), label: r.label };
+      }
+      var f = CONFIG.wmoFallback;
+      return { icon: f.icon || (isDay ? f.day : f.night), label: f.label };
     }
 
-    function paint(icon, text) {
+    // Paint the strip. An empty `temp` hides the figure entirely, so the loading
+    // and fallback states never show a number.
+    function paint(icon, temp, desc) {
       if (iconEl) iconEl.textContent = icon;
-      if (textEl) textEl.textContent = text;
+      if (tempEl) {
+        tempEl.textContent = temp || "";
+        tempEl.hidden = !temp;
+      }
+      if (textEl) textEl.textContent = desc;
     }
 
     function loadWeather() {
@@ -122,11 +210,12 @@
           var d = describeWeather(cur.weather_code, cur.is_day);
           paint(
             d.icon,
-            Math.round(cur.temperature_2m) + "°F and " + d.label + " at the park",
+            Math.round(cur.temperature_2m) + CONFIG.unitLabel,
+            "and " + d.label + CONFIG.suffix,
           );
         })
         .catch(function () {
-          paint("🦉", "Check today's forecast before your visit!");
+          paint(CONFIG.fallbackIcon, "", CONFIG.fallbackText);
         });
     }
 
@@ -169,10 +258,12 @@
       if (!rootEl) return;
       ensurePlaced();
       iconEl = rootEl.querySelector(".ww-icon");
+      tempEl = rootEl.querySelector(".ww-temp");
       textEl = rootEl.querySelector(".ww-text");
 
+      paint(CONFIG.loadingIcon, "", CONFIG.loadingText);
       loadWeather();
-      refreshId = setInterval(loadWeather, REFRESH_MS);
+      refreshId = setInterval(loadWeather, CONFIG.refreshMs);
       watchdogId = setInterval(ensurePlaced, 1000);
     }
 

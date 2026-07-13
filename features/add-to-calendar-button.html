@@ -9,27 +9,115 @@
   }
 </script>
 
-<style>
+<style id="owlpark-add-to-calendar-button-style">
+  /* Secondary / ghost action: a clean, hairline-bordered button that sits
+     quietly above the modal's solid teal "Done" primary. */
   .owlpark-feat-add-to-calendar-button {
+    box-sizing: border-box;
     width: 100%;
     margin-top: 0.6rem;
-    background: white;
-    color: var(--cove-teal-dark, #0a4d55);
-    border: 2px solid var(--cove-teal, #0f6f7a);
-    padding: 0.6rem;
-    border-radius: 999px;
-    font-weight: 700;
-    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
     min-height: 44px;
+    padding: 0.6rem 1rem;
+    background: #ffffff;
+    color: #17211f;
+    border: 1px solid rgba(17, 33, 31, 0.1);
+    border-radius: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    cursor: pointer;
+    transition:
+      background 0.16s cubic-bezier(0.2, 0.6, 0.2, 1),
+      border-color 0.16s cubic-bezier(0.2, 0.6, 0.2, 1),
+      color 0.16s cubic-bezier(0.2, 0.6, 0.2, 1),
+      transform 0.16s cubic-bezier(0.2, 0.6, 0.2, 1);
+  }
+  .owlpark-feat-add-to-calendar-button .atc-glyph {
+    flex-shrink: 0;
+    opacity: 0.75;
+    transition: opacity 0.16s cubic-bezier(0.2, 0.6, 0.2, 1);
   }
   .owlpark-feat-add-to-calendar-button:hover {
-    background: var(--cove-sand, #faf3e6);
+    background: rgba(15, 111, 122, 0.06);
+    border-color: rgba(15, 111, 122, 0.5);
+    color: #0f6f7a;
+    transform: translateY(-1px);
+  }
+  .owlpark-feat-add-to-calendar-button:hover .atc-glyph {
+    opacity: 1;
+  }
+  .owlpark-feat-add-to-calendar-button:active {
+    transform: translateY(0);
+  }
+  .owlpark-feat-add-to-calendar-button:focus-visible {
+    outline: 2px solid #0f6f7a;
+    outline-offset: 2px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-add-to-calendar-button {
+      background: #12181a;
+      color: #e9edec;
+      border-color: rgba(255, 255, 255, 0.11);
+    }
+    .owlpark-feat-add-to-calendar-button:hover {
+      background: rgba(91, 199, 207, 0.1);
+      border-color: rgba(91, 199, 207, 0.5);
+      color: #5bc7cf;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-add-to-calendar-button,
+    .owlpark-feat-add-to-calendar-button .atc-glyph {
+      transition: none;
+    }
+    .owlpark-feat-add-to-calendar-button:hover {
+      transform: none;
+    }
   }
 </style>
 
 <script>
   (function () {
+    /* =========================================================================
+     * Add to Calendar Button  ·  utility
+     * -------------------------------------------------------------------------
+     * WHAT   A refined secondary "Add to Calendar" button on the order-confirmation
+     *        modal that downloads an .ics file for the upcoming visit.
+     * HOW    On activate, finds the confirmation modal's Done button
+     *        (#close-modal-btn) and inserts itself just before it. On click it
+     *        builds an iCalendar (.ics) blob from the order id (#order-id) plus a
+     *        fixed visit window and triggers a same-page download (Blob + object
+     *        URL). Mounts once; removed cleanly on deactivate.
+     * HOSTS  Owl Park order confirmation only. No-op anywhere without a
+     *        #close-modal-btn — the zoo ViewItems ticket page has no order
+     *        confirmation, so the feature silently does nothing there.
+     * ===================================================================== */
+
     var FEATURE_ID = "add-to-calendar-button";
+
+    // ----- Configuration --------------------------------------------------
+    // Copy / identity written into the calendar file. Editing these changes
+    // only the text and file identity — the visit date/time is still derived
+    // live from the confirmation (see downloadCalendar's date source below).
+    var CONFIG = {
+      buttonLabel: "Add to Calendar", // text beside the calendar glyph
+      summary: "Owl Park Visit", // VEVENT SUMMARY (event title)
+      location: "Owl Park", // VEVENT LOCATION
+      descriptionTemplate: "{order}", // VEVENT DESCRIPTION; {order} = order id
+      fallbackOrderId: "Owl Park visit", // used when #order-id isn't present
+      durationHours: 2, // visit length; DTEND = DTSTART + this
+      fileName: "owl-park-visit.ics", // downloaded filename
+      prodId: "-//Owl Park//Storefront//EN", // iCalendar PRODID
+      uidDomain: "owlpark.example", // right-hand side of the VEVENT UID
+    };
+
     var buttonEl = null;
 
     function pad(n) {
@@ -51,21 +139,26 @@
 
     function downloadCalendar() {
       var orderIdEl = document.getElementById("order-id");
-      var orderId = orderIdEl ? orderIdEl.textContent : "Owl Park visit";
+      var orderId = orderIdEl ? orderIdEl.textContent : CONFIG.fallbackOrderId;
 
+      // Actual date/time source: one week out, 10:00 local, for durationHours.
       var start = new Date();
       start.setDate(start.getDate() + 7);
       start.setHours(10, 0, 0, 0);
-      var end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
+      var end = new Date(start.getTime() + CONFIG.durationHours * 60 * 60 * 1000);
 
       var ics =
         "BEGIN:VCALENDAR\r\n" +
         "VERSION:2.0\r\n" +
-        "PRODID:-//Owl Park//Storefront//EN\r\n" +
+        "PRODID:" +
+        CONFIG.prodId +
+        "\r\n" +
         "BEGIN:VEVENT\r\n" +
         "UID:" +
         Date.now() +
-        "@owlpark.example\r\n" +
+        "@" +
+        CONFIG.uidDomain +
+        "\r\n" +
         "DTSTAMP:" +
         icsDate(new Date()) +
         "\r\n" +
@@ -75,11 +168,15 @@
         "DTEND:" +
         icsDate(end) +
         "\r\n" +
-        "SUMMARY:Owl Park Visit\r\n" +
-        "DESCRIPTION:" +
-        orderId +
+        "SUMMARY:" +
+        CONFIG.summary +
         "\r\n" +
-        "LOCATION:Owl Park\r\n" +
+        "DESCRIPTION:" +
+        CONFIG.descriptionTemplate.replace("{order}", orderId) +
+        "\r\n" +
+        "LOCATION:" +
+        CONFIG.location +
+        "\r\n" +
         "END:VEVENT\r\n" +
         "END:VCALENDAR\r\n";
 
@@ -87,7 +184,7 @@
       var url = URL.createObjectURL(blob);
       var link = document.createElement("a");
       link.href = url;
-      link.download = "owl-park-visit.ics";
+      link.download = CONFIG.fileName;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -104,7 +201,17 @@
       buttonEl.type = "button";
       buttonEl.className = "owlpark-feat-add-to-calendar-button";
       buttonEl.setAttribute("data-owlpark-feature", FEATURE_ID);
-      buttonEl.textContent = "📅 Add to Calendar";
+      buttonEl.innerHTML =
+        '<svg class="atc-glyph" width="16" height="16" viewBox="0 0 24 24" ' +
+        'fill="none" aria-hidden="true">' +
+        '<rect x="3.5" y="5.5" width="17" height="15" rx="2.5" ' +
+        'stroke="currentColor" stroke-width="1.6"/>' +
+        '<path d="M3.5 10h17" stroke="currentColor" stroke-width="1.6"/>' +
+        '<path d="M8 3.25v3.5M16 3.25v3.5" stroke="currentColor" ' +
+        'stroke-width="1.6" stroke-linecap="round"/>' +
+        "</svg>" +
+        '<span class="atc-label"></span>';
+      buttonEl.querySelector(".atc-label").textContent = CONFIG.buttonLabel;
       buttonEl.addEventListener("click", downloadCalendar);
 
       closeBtn.parentElement.insertBefore(buttonEl, closeBtn);

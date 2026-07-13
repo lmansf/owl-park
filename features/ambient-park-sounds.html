@@ -9,28 +9,93 @@
   }
 </script>
 
-<style>
+<style id="owlpark-ambient-park-sounds-style">
+  /* Standard docked-utility button: a quiet glass pill that reads on the dark
+     floating bar and on Owl Park's header alike. */
   .owlpark-feat-ambient-park-sounds-btn {
-    background: #0a4d55 !important;
-    color: #ffffff !important;
-    border: 1px solid rgba(255, 255, 255, 0.35) !important;
-    padding: 0.4rem 0.7rem;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
     min-height: 44px;
     box-sizing: border-box;
+    padding: 0 0.9rem;
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.22) !important;
+    border-radius: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.1px;
     text-decoration: none;
+    cursor: pointer;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    transition:
+      transform 0.16s cubic-bezier(0.2, 0.6, 0.2, 1),
+      background 0.16s ease;
   }
   .owlpark-feat-ambient-park-sounds-btn:hover {
-    background: #0c5b64 !important;
+    background: rgba(255, 255, 255, 0.2) !important;
+    transform: translateY(-1px);
+  }
+  .owlpark-feat-ambient-park-sounds-btn:active {
+    transform: translateY(0);
+  }
+  .owlpark-feat-ambient-park-sounds-btn:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.85);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-ambient-park-sounds-btn {
+      transition: none;
+    }
   }
 </style>
 
 <script>
   (function () {
+    /* =========================================================================
+     * Ambient Park Sounds  ·  utility
+     * -------------------------------------------------------------------------
+     * WHAT   A docked toggle that plays a soft, synthesized park soundscape — a
+     *        low "breeze" drone under randomly pitched bird chirps — and mutes
+     *        it again. A speaker / muted-speaker glyph reflects the on/off state.
+     * HOW    Audio is generated live with the Web Audio API (oscillators + gain,
+     *        no external asset) and only ever starts from the user's click — the
+     *        gesture browsers require for audio. Docks the button into Owl Park's
+     *        .header-actions, else a self-owned frosted floating bar on <body>,
+     *        kept alive through host re-renders by a 1s watchdog.
+     * HOSTS  Renders on every host (self-contained; needs no store data). No-ops
+     *        where the Web Audio API is unavailable.
+     * ===================================================================== */
+
     var FEATURE_ID = "ambient-park-sounds";
+
+    // ----- Configuration --------------------------------------------------
+    var CONFIG = {
+      // Dock button copy. The glyph reflects the CURRENT on/off state; the
+      // label carries the action and aria-pressed carries state for AT.
+      glyphOff: "🔇", // muted speaker — ambience is stopped
+      labelOff: "Park Sounds", // button text while stopped
+      ariaLabelOff: "Play ambient park sounds", // accessible name while stopped
+      glyphOn: "🔊", // speaker — ambience is playing
+      labelOn: "Stop Ambience", // button text while playing
+      ariaLabelOn: "Stop ambient park sounds", // accessible name while playing
+
+      // Audio synthesis (Web Audio API — no external asset). Tunable, safe to edit.
+      breezeHz: 110, // low sine "breeze" drone frequency (Hz)
+      breezeGain: 0.02, // breeze loudness — a very quiet bed
+      chirpEveryMs: 1500, // gap between random bird chirps
+      chirpBaseHz: 900, // chirp base pitch (Hz)…
+      chirpRangeHz: 500, // …plus up to this much random detune
+      chirpPeakGain: 0.05, // chirp peak loudness
+      chirpAttackS: 0.05, // chirp fade-in time (seconds)
+      chirpDurationS: 0.3, // chirp total length (seconds)
+    };
+
     var buttonEl = null;
     var audioCtx = null;
     var nodes = [];
@@ -52,8 +117,10 @@
         "align-items:center;justify-content:flex-end;max-width:calc(100vw - 20px);" +
         "top:calc(10px + env(safe-area-inset-top, 0px));" +
         "right:calc(10px + env(safe-area-inset-right, 0px));" +
-        "padding:8px 10px;background:rgba(10,77,85,0.96);border-radius:12px;" +
-        "box-shadow:0 8px 24px rgba(0,0,0,0.28);";
+        "padding:8px;background:rgba(18,26,28,0.72);border-radius:16px;" +
+        "border:1px solid rgba(255,255,255,0.12);" +
+        "-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);" +
+        "box-shadow:0 8px 30px rgba(8,20,22,0.28);";
       var barStyle = document.createElement("style");
       barStyle.id = "owlpark-fallback-actions-style";
       barStyle.setAttribute("data-owlpark-fallback", "actions");
@@ -74,7 +141,14 @@
 
     function updateLabel() {
       if (!buttonEl) return;
-      buttonEl.textContent = playing ? "🔇 Stop Ambience" : "🔊 Park Sounds";
+      buttonEl.textContent = playing
+        ? CONFIG.glyphOn + " " + CONFIG.labelOn
+        : CONFIG.glyphOff + " " + CONFIG.labelOff;
+      buttonEl.setAttribute("aria-pressed", playing ? "true" : "false");
+      buttonEl.setAttribute(
+        "aria-label",
+        playing ? CONFIG.ariaLabelOn : CONFIG.ariaLabelOff,
+      );
     }
 
     function scheduleChirp() {
@@ -82,13 +156,16 @@
       var osc = audioCtx.createOscillator();
       var gain = audioCtx.createGain();
       osc.type = "sine";
-      osc.frequency.value = 900 + Math.random() * 500;
+      osc.frequency.value = CONFIG.chirpBaseHz + Math.random() * CONFIG.chirpRangeHz;
       gain.gain.setValueAtTime(0, audioCtx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.05, audioCtx.currentTime + 0.05);
-      gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
+      gain.gain.linearRampToValueAtTime(
+        CONFIG.chirpPeakGain,
+        audioCtx.currentTime + CONFIG.chirpAttackS,
+      );
+      gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + CONFIG.chirpDurationS);
       osc.connect(gain).connect(audioCtx.destination);
       osc.start();
-      osc.stop(audioCtx.currentTime + 0.3);
+      osc.stop(audioCtx.currentTime + CONFIG.chirpDurationS);
     }
 
     function startAmbience() {
@@ -100,13 +177,13 @@
       var breeze = audioCtx.createOscillator();
       var breezeGain = audioCtx.createGain();
       breeze.type = "sine";
-      breeze.frequency.value = 110;
-      breezeGain.gain.value = 0.02;
+      breeze.frequency.value = CONFIG.breezeHz;
+      breezeGain.gain.value = CONFIG.breezeGain;
       breeze.connect(breezeGain).connect(audioCtx.destination);
       breeze.start();
       nodes.push(breeze, breezeGain);
 
-      chirpIntervalId = setInterval(scheduleChirp, 1500);
+      chirpIntervalId = setInterval(scheduleChirp, CONFIG.chirpEveryMs);
       playing = true;
       updateLabel();
     }
@@ -135,6 +212,7 @@
       updateLabel();
     }
 
+    // Audio may only begin from a user gesture, so start/stop is click-driven.
     function onClick() {
       if (playing) {
         stopAmbience();

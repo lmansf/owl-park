@@ -9,37 +9,120 @@
   }
 </script>
 
-<style>
+<style id="owlpark-urgency-stock-indicator-style">
+  /* Small status chip mounted under a ticket row. Two quiet tones, both
+     hairline and restrained — never a flashing red alarm:
+       · caution (default)  — the simulated "Only N left" scarcity nudge
+       · muted   (.owlpark-soldout) — the REAL, factual "Sold out" state */
   .owlpark-feat-urgency-stock-indicator {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: #b23b1f;
-    background: #fdecdf;
-    border: 1px solid #f3c9ab;
-    border-radius: 999px;
-    padding: 0.2rem 0.6rem;
-    margin-top: 0.4rem;
+    gap: 0.4rem;
+    box-sizing: border-box;
     width: fit-content;
+    max-width: 100%;
+    margin-top: 0.4rem;
+    padding: 0.24rem 0.55rem;
+    border: 1px solid rgba(184, 121, 31, 0.22);
+    border-radius: 10px;
+    background: rgba(184, 121, 31, 0.12);
+    color: #b8791f;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: 0.01em;
+    animation: owlpark-usi-in 0.2s cubic-bezier(0.2, 0.6, 0.2, 1);
   }
-  .owlpark-feat-urgency-stock-indicator .urgency-icon {
-    font-size: 0.85rem;
+  .owlpark-feat-urgency-stock-indicator .usi-dot {
+    flex-shrink: 0;
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: currentColor;
+    opacity: 0.85;
+  }
+  .owlpark-feat-urgency-stock-indicator .usi-text {
+    min-width: 0;
   }
   /* Real sold-out state (read from the store's live availability) reads as a
-     firmer negative than the amber scarcity nudge. */
+     neutral, muted fact rather than the amber scarcity caution. */
   .owlpark-feat-urgency-stock-indicator.owlpark-soldout {
-    color: #8a1c1c;
-    background: #fbe3e3;
-    border-color: #f0b3b3;
+    color: #67736f;
+    background: rgba(17, 33, 31, 0.06);
+    border-color: rgba(17, 33, 31, 0.12);
+  }
+  @keyframes owlpark-usi-in {
+    from {
+      opacity: 0;
+      transform: translateY(3px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-urgency-stock-indicator {
+      color: #e2ab5c;
+      background: rgba(214, 158, 74, 0.15);
+      border-color: rgba(214, 158, 74, 0.32);
+    }
+    .owlpark-feat-urgency-stock-indicator.owlpark-soldout {
+      color: #98a4a1;
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.14);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-urgency-stock-indicator {
+      animation: none;
+    }
   }
 </style>
 
 <script>
   (function () {
-    var TARGET_PRODUCT_IDS = ["prod-family-day-pass", "prod-twilight-ticket"];
+    /* =========================================================================
+     * Urgency Stock Indicator  ·  behavioral
+     * -------------------------------------------------------------------------
+     * WHAT   A small status chip beneath a ticket row: a quiet amber "Only N
+     *        left for today's date" scarcity nudge, or a muted, factual
+     *        "Sold out for this date".
+     * HOW    Decorates selected product rows through the shared owlHost()
+     *        adapter and re-applies via a MutationObserver on the catalog grid
+     *        (idempotency-guarded, so tab re-renders don't duplicate chips).
+     *        Every injected node is tagged data-owlpark-feature so deactivate()
+     *        removes it cleanly.
+     * HOSTS  ZOO store — reads the REAL per-PLU availability from
+     *        input[id$="PluNotAvailableHidden"] and shows "Sold out" ONLY when
+     *        genuinely sold out (no chip when available); never fabricates a
+     *        count. Owl Park has no availability feed, so it shows the
+     *        SIMULATED "Only N left" nudge on its target rows instead.
+     * ===================================================================== */
+
     var FEATURE_ID = "urgency-stock-indicator";
+
+    // ----- Configuration --------------------------------------------------
+    // Tunable values, safe to edit. The zoo store's REAL sold-out read below is
+    // never affected by these — only the Owl Park demo nudge is.
+    var CONFIG = {
+      // Simulated remaining-count range (inclusive) for the Owl Park demo nudge.
+      simulatedMin: 3, // lowest "left" count the nudge will show
+      simulatedMax: 9, // highest "left" count the nudge will show
+      // Only surface the demo nudge when the simulated count is below this
+      // threshold. simulatedMax (9) sits under 10, so the nudge always shows by
+      // default; lower it to reveal the nudge only for tighter simulated stock.
+      lowStockThreshold: 10,
+      // Copy. "{n}" in lowStockText is replaced by the simulated count.
+      // soldOutText is shown ONLY from the store's REAL feed — never faked.
+      lowStockText: "Only {n} left for today's date",
+      soldOutText: "Sold out for this date",
+      // Owl Park product ids that carry the demo nudge first (see selectRows).
+      targetProductIds: ["prod-family-day-pass", "prod-twilight-ticket"],
+    };
+
     // --- Host adapter -------------------------------------------------------
     // Resolves whichever storefront this snippet was pasted into, preferring the
     // ZooTampa web store (ASP.NET PLU rows), then the Owl Park storefront, then a
@@ -127,7 +210,28 @@
     var observer = null;
 
     function randomCount() {
-      return Math.floor(Math.random() * 7) + 3; // 3-9
+      var lo = CONFIG.simulatedMin;
+      var hi = CONFIG.simulatedMax;
+      return Math.floor(Math.random() * (hi - lo + 1)) + lo; // inclusive lo..hi
+    }
+
+    // Build a sleek status chip: a tone-coloured dot + label. `variant` adds a
+    // state class (e.g. "owlpark-soldout"). Always tagged for clean teardown.
+    function makeChip(text, variant) {
+      var chip = document.createElement("div");
+      chip.className =
+        "owlpark-feat-urgency-stock-indicator" + (variant ? " " + variant : "");
+      chip.setAttribute("data-owlpark-feature", FEATURE_ID);
+      chip.setAttribute("role", "status");
+      var dot = document.createElement("span");
+      dot.className = "usi-dot";
+      dot.setAttribute("aria-hidden", "true");
+      var label = document.createElement("span");
+      label.className = "usi-text";
+      label.textContent = text;
+      chip.appendChild(dot);
+      chip.appendChild(label);
+      return chip;
     }
 
     // Choose the subset of rows to decorate:
@@ -137,7 +241,7 @@
     function selectRows() {
       var rows = H.rows();
       var byId = rows.filter(function (row) {
-        return TARGET_PRODUCT_IDS.indexOf(H.rowId(row)) !== -1;
+        return CONFIG.targetProductIds.indexOf(H.rowId(row)) !== -1;
       });
       if (byId.length) return byId;
       var byName = rows.filter(function (row) {
@@ -169,25 +273,17 @@
       if (row.querySelector('[data-owlpark-feature="' + FEATURE_ID + '"]'))
         return;
       if (!isSoldOut(row)) return; // available — do not invent scarcity
-      var line = document.createElement("div");
-      line.className = "owlpark-feat-urgency-stock-indicator owlpark-soldout";
-      line.setAttribute("data-owlpark-feature", FEATURE_ID);
-      line.innerHTML =
-        '<span class="urgency-icon">⛔</span><span>Sold out for this date</span>';
-      H.rowInfoCell(row).appendChild(line);
+      H.rowInfoCell(row).appendChild(makeChip(CONFIG.soldOutText, "owlpark-soldout"));
     }
 
     function injectMock(row) {
       if (row.querySelector('[data-owlpark-feature="' + FEATURE_ID + '"]'))
         return;
-      var line = document.createElement("div");
-      line.className = "owlpark-feat-urgency-stock-indicator";
-      line.setAttribute("data-owlpark-feature", FEATURE_ID);
-      line.innerHTML =
-        '<span class="urgency-icon">🔥</span><span>Only ' +
-        randomCount() +
-        " left for today's date!</span>";
-      H.rowInfoCell(row).appendChild(line);
+      var n = randomCount();
+      if (n >= CONFIG.lowStockThreshold) return; // above the low-stock cutoff
+      H.rowInfoCell(row).appendChild(
+        makeChip(CONFIG.lowStockText.replace("{n}", n))
+      );
     }
 
     function applyToRows() {

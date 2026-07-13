@@ -9,98 +9,129 @@
   }
 </script>
 
-<style>
+<style id="owlpark-dark-mode-style">
+  /* Standard docked-utility button: a quiet glass pill that reads on the dark
+     floating bar and on Owl Park's header alike. */
   .owlpark-feat-dark-mode-btn {
-    background: #0a4d55 !important;
-    color: #ffffff !important;
-    border: 1px solid rgba(255, 255, 255, 0.35) !important;
-    padding: 0.4rem 0.7rem;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
     min-height: 44px;
     box-sizing: border-box;
+    padding: 0 0.9rem;
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.22) !important;
+    border-radius: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.1px;
     text-decoration: none;
+    cursor: pointer;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    transition:
+      transform 0.16s cubic-bezier(0.2, 0.6, 0.2, 1),
+      background 0.16s ease;
   }
   .owlpark-feat-dark-mode-btn:hover {
-    background: #0c5b64 !important;
+    background: rgba(255, 255, 255, 0.2) !important;
+    transform: translateY(-1px);
+  }
+  .owlpark-feat-dark-mode-btn:active {
+    transform: translateY(0);
+  }
+  .owlpark-feat-dark-mode-btn:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.85);
+    outline-offset: 2px;
   }
 
+  /* --- Owl Park storefront dark theme (sleek dark tokens) --- */
   body.owlpark-dark-mode-active {
     background: #12181a;
-    color: #e6ece9;
+    color: #e9edec;
   }
   body.owlpark-dark-mode-active .hero {
     background: #12181a;
   }
   body.owlpark-dark-mode-active .hero h1 {
-    color: #7fd8d8;
+    color: #5bc7cf;
   }
   body.owlpark-dark-mode-active .hero p {
-    color: #b7c2c1;
+    color: #98a4a1;
   }
   body.owlpark-dark-mode-active .catalog-heading h2 {
-    color: #7fd8d8;
+    color: #5bc7cf;
   }
   body.owlpark-dark-mode-active .product-row {
-    background: #1b2426;
-    border-color: #2c3638;
+    background: #1a2224;
+    border-color: rgba(255, 255, 255, 0.11);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
   }
   body.owlpark-dark-mode-active .row-divider {
-    border-color: #2c3638;
+    border-color: rgba(255, 255, 255, 0.11);
   }
   body.owlpark-dark-mode-active .product-desc,
   body.owlpark-dark-mode-active .price-unit {
-    color: #b7c2c1;
+    color: #98a4a1;
   }
   body.owlpark-dark-mode-active .product-tagline {
-    color: #8a9694;
+    color: #7c8785;
   }
   body.owlpark-dark-mode-active .product-plu {
-    color: #6d7876;
+    color: #67736f;
   }
   body.owlpark-dark-mode-active .price-amount {
-    color: #7fd8d8;
+    color: #5bc7cf;
   }
   body.owlpark-dark-mode-active .tab-btn {
-    background: #1b2426;
-    border-color: #2c3638;
-    color: #7fd8d8;
+    background: #1a2224;
+    border-color: rgba(255, 255, 255, 0.11);
+    color: #5bc7cf;
   }
   body.owlpark-dark-mode-active .tab-btn.active {
     background: #0f6f7a;
-    color: white;
+    color: #ffffff;
   }
   body.owlpark-dark-mode-active .cart-drawer,
   body.owlpark-dark-mode-active .modal-card {
-    background: #1b2426;
-    color: #e6ece9;
+    background: #1a2224;
+    color: #e9edec;
   }
   body.owlpark-dark-mode-active .cart-header,
   body.owlpark-dark-mode-active .cart-footer {
-    border-color: #2c3638;
+    border-color: rgba(255, 255, 255, 0.11);
   }
   body.owlpark-dark-mode-active .cart-line {
-    border-color: #2c3638;
+    border-color: rgba(255, 255, 255, 0.11);
   }
   body.owlpark-dark-mode-active .cart-line-emoji {
     background: #12181a;
   }
   body.owlpark-dark-mode-active .qty-btn {
     background: #12181a;
-    border-color: #2c3638;
-    color: #e6ece9;
+    border-color: rgba(255, 255, 255, 0.11);
+    color: #e9edec;
   }
   body.owlpark-dark-mode-active .modal-summary {
     background: #12181a;
   }
   body.owlpark-dark-mode-active .site-footer {
-    color: #6d7876;
+    color: #67736f;
   }
 
-  /* --- ZooTampa web store surfaces (ASP.NET PLU layout) --- */
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-dark-mode-btn {
+      transition: none;
+    }
+  }
+</style>
+
+<style id="owlpark-dark-mode-zoo-style">
+  /* --- ZooTampa web store surfaces (ASP.NET PLU layout) ---
+     A second CSS block so the whole zoo page themes, not just Owl Park's. */
   body.owlpark-dark-mode-active,
   body.owlpark-dark-mode-active #page,
   body.owlpark-dark-mode-active #MasterLayout,
@@ -108,7 +139,7 @@
   body.owlpark-dark-mode-active #ContentWrapper,
   body.owlpark-dark-mode-active .ContentCell {
     background: #12181a !important;
-    color: #e6ece9 !important;
+    color: #e9edec !important;
   }
   body.owlpark-dark-mode-active #Header,
   body.owlpark-dark-mode-active #sub-header,
@@ -119,7 +150,7 @@
   body.owlpark-dark-mode-active #ContentHeading span,
   body.owlpark-dark-mode-active .categoryDescription,
   body.owlpark-dark-mode-active .parentSCDName {
-    color: #7fd8d8 !important;
+    color: #5bc7cf !important;
   }
   body.owlpark-dark-mode-active .pluRow,
   body.owlpark-dark-mode-active .pluTable,
@@ -127,9 +158,9 @@
   body.owlpark-dark-mode-active .parentSCDheader,
   body.owlpark-dark-mode-active .SalesChannelDetailPLURepeater,
   body.owlpark-dark-mode-active .pluWrapper {
-    background: #1b2426 !important;
-    border-color: #2c3638 !important;
-    color: #e6ece9 !important;
+    background: #1a2224 !important;
+    border-color: rgba(255, 255, 255, 0.11) !important;
+    color: #e9edec !important;
   }
   body.owlpark-dark-mode-active .pluName,
   body.owlpark-dark-mode-active .pluShortName,
@@ -138,17 +169,17 @@
   body.owlpark-dark-mode-active .pluPrice,
   body.owlpark-dark-mode-active .pluQuantity,
   body.owlpark-dark-mode-active [data-text="price"] {
-    color: #e6ece9 !important;
+    color: #e9edec !important;
   }
   body.owlpark-dark-mode-active #sub-header a,
   body.owlpark-dark-mode-active #Header a,
   body.owlpark-dark-mode-active .completeDetails {
-    color: #7fd8d8 !important;
+    color: #5bc7cf !important;
   }
   body.owlpark-dark-mode-active .PLUQtyTextBox {
     background: #12181a !important;
-    color: #e6ece9 !important;
-    border-color: #2c3638 !important;
+    color: #e9edec !important;
+    border-color: rgba(255, 255, 255, 0.11) !important;
   }
   body.owlpark-dark-mode-active .addToCart {
     background: #0f6f7a !important;
@@ -159,8 +190,95 @@
 
 <script>
   (function () {
+    /* =========================================================================
+     * Dark Mode  ·  visual
+     * -------------------------------------------------------------------------
+     * WHAT   A docked sun/moon toggle that flips the whole storefront — and the
+     *        ZooTampa ticket store — between the default light theme and a calm,
+     *        sleek dark theme. The chosen theme is remembered across reloads.
+     * HOW    Docks a quiet glass toggle into Owl Park's .header-actions, else a
+     *        self-owned frosted floating bar on <body> (a direct child that
+     *        survives the host re-rendering its chrome, re-asserted by a 1s
+     *        watchdog). Toggling adds/removes `body.owlpark-dark-mode-active`;
+     *        two <style> blocks — kept in <head> so a re-rendering host can't
+     *        wipe them — theme Owl Park's surfaces and, separately, the zoo
+     *        store's PLU layout. The choice is saved in localStorage.
+     * HOSTS  Themes Owl Park AND the zoo ViewItems page; on a generic host it
+     *        still toggles the body class (no palette match, but harmless).
+     * ===================================================================== */
+
+    var FEATURE_ID = "dark-mode";
+
+    // ----- Configuration --------------------------------------------------
+    // Tunable values, safe to edit. Each explained inline.
+    var CONFIG = {
+      darkLabel: "Dark Mode", // button text while the LIGHT theme is showing
+      lightLabel: "Light Mode", // button text while the DARK theme is showing
+      darkIcon: "🌙", // moon glyph — click to switch to dark
+      lightIcon: "☀️", // sun glyph — click to switch to light
+      ariaLabel: "Toggle dark mode", // stable accessible name (state via aria-pressed)
+      storageKey: "owl-park-theme", // localStorage key remembering the choice
+      persist: true, // remember the chosen theme across reloads
+    };
+
+    var THEME_CLASS = "owlpark-dark-mode-active";
+    var STYLE_IDS = ["owlpark-dark-mode-style", "owlpark-dark-mode-zoo-style"];
+
     var buttonEl = null;
     var watchdogId = null;
+
+    // ----- Theme persistence ----------------------------------------------
+    function readStoredTheme() {
+      if (!CONFIG.persist) return null;
+      try {
+        return localStorage.getItem(CONFIG.storageKey);
+      } catch (e) {
+        return null; // storage blocked (private mode) — no remembered choice
+      }
+    }
+    function writeStoredTheme(theme) {
+      if (!CONFIG.persist) return;
+      try {
+        localStorage.setItem(CONFIG.storageKey, theme);
+      } catch (e) {
+        /* storage unavailable — the theme still applies for this session */
+      }
+    }
+
+    function isDark() {
+      return document.body.classList.contains(THEME_CLASS);
+    }
+    function applyTheme(dark) {
+      document.body.classList.toggle(THEME_CLASS, dark);
+      updateLabel();
+    }
+
+    function updateLabel() {
+      if (!buttonEl) return;
+      var dark = isDark();
+      buttonEl.textContent = dark
+        ? CONFIG.lightIcon + " " + CONFIG.lightLabel
+        : CONFIG.darkIcon + " " + CONFIG.darkLabel;
+      buttonEl.setAttribute("aria-pressed", dark ? "true" : "false");
+    }
+
+    function onClick() {
+      var next = !isDark();
+      applyTheme(next);
+      writeStoredTheme(next ? "dark" : "light");
+    }
+
+    // Keep the theming <style> blocks in <head> so a host that re-renders its
+    // body/#page after load can't wipe them (the loader already heads them; this
+    // also covers the raw-paste-into-a-host-body path).
+    function ensureStyles() {
+      STYLE_IDS.forEach(function (id) {
+        var st = document.getElementById(id);
+        if (st && st.parentElement !== document.head) {
+          document.head.appendChild(st);
+        }
+      });
+    }
 
     // Host-agnostic mount point. Prefer the storefront's own header, but fall
     // back to a shared floating bar on <body> so this snippet still shows its
@@ -176,8 +294,10 @@
         "align-items:center;justify-content:flex-end;max-width:calc(100vw - 20px);" +
         "top:calc(10px + env(safe-area-inset-top, 0px));" +
         "right:calc(10px + env(safe-area-inset-right, 0px));" +
-        "padding:8px 10px;background:rgba(10,77,85,0.96);border-radius:12px;" +
-        "box-shadow:0 8px 24px rgba(0,0,0,0.28);";
+        "padding:8px;background:rgba(18,26,28,0.72);border-radius:16px;" +
+        "border:1px solid rgba(255,255,255,0.12);" +
+        "-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);" +
+        "box-shadow:0 8px 30px rgba(8,20,22,0.28);";
       var barStyle = document.createElement("style");
       barStyle.id = "owlpark-fallback-actions-style";
       barStyle.setAttribute("data-owlpark-fallback", "actions");
@@ -194,17 +314,6 @@
       bar.remove();
       var barStyle = document.getElementById("owlpark-fallback-actions-style");
       if (barStyle) barStyle.remove();
-    }
-
-    function updateLabel() {
-      if (!buttonEl) return;
-      var active = document.body.classList.contains("owlpark-dark-mode-active");
-      buttonEl.textContent = active ? "☀️ Light Mode" : "🌙 Dark Mode";
-    }
-
-    function onClick() {
-      document.body.classList.toggle("owlpark-dark-mode-active");
-      updateLabel();
     }
 
     // Owl Park's header is stable, so dock there. On any OTHER store the header
@@ -224,17 +333,27 @@
       buttonEl = document.createElement("button");
       buttonEl.type = "button";
       buttonEl.className = "owlpark-feat-dark-mode-btn";
-      buttonEl.setAttribute("data-owlpark-feature", "dark-mode");
+      buttonEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+      buttonEl.setAttribute("aria-label", CONFIG.ariaLabel);
       buttonEl.addEventListener("click", onClick);
       resolveDock().prepend(buttonEl);
       updateLabel();
     }
 
     function activate() {
+      // Restore the remembered theme first so the control renders in the right
+      // state on the very first paint.
+      if (readStoredTheme() === "dark") {
+        document.body.classList.add(THEME_CLASS);
+      }
+      ensureStyles();
       ensureButton();
-      // Re-assert the control if the host removes or replaces it after load
-      // (body reveal, template re-render); cheap isConnected check.
-      watchdogId = setInterval(ensureButton, 1000);
+      // Re-assert the control (and the head-parked styles) if the host removes
+      // or replaces them after load (body reveal, template re-render).
+      watchdogId = setInterval(function () {
+        ensureButton();
+        ensureStyles();
+      }, 1000);
     }
 
     function deactivate() {
@@ -242,7 +361,7 @@
         clearInterval(watchdogId);
         watchdogId = null;
       }
-      document.body.classList.remove("owlpark-dark-mode-active");
+      document.body.classList.remove(THEME_CLASS);
       if (buttonEl) {
         buttonEl.removeEventListener("click", onClick);
         buttonEl.remove();
@@ -254,7 +373,7 @@
     activate();
 
     window.__owlParkFeatures = window.__owlParkFeatures || {};
-    window.__owlParkFeatures["dark-mode"] = {
+    window.__owlParkFeatures[FEATURE_ID] = {
       activate: activate,
       deactivate: deactivate,
     };

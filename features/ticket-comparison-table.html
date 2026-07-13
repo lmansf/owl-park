@@ -9,101 +9,318 @@
   }
 </script>
 
-<style>
+<style id="owlpark-ticket-comparison-table-style">
+  /* Docked utility button — a quiet frosted-glass pill. On Owl Park it docks
+     into the LIGHT .catalog-heading; off Owl Park onto the dark floating bar. So
+     it uses the light-glass surface (near-white + ink text) that reads on both,
+     rather than the dark-header glass an always-dark dock would use. */
   .owlpark-feat-ticket-comparison-table-btn {
-    background: white;
-    border: 1px solid var(--cove-border, #e4ddca);
-    color: var(--cove-teal-dark, #0a4d55);
-    border-radius: 999px;
-    padding: 0.4rem 0.9rem;
-    font-size: 0.82rem;
-    font-weight: 700;
-    cursor: pointer;
-    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
     min-height: 44px;
+    box-sizing: border-box;
+    margin-left: auto;
+    padding: 0 0.9rem;
+    background: rgba(255, 255, 255, 0.82) !important;
+    color: #17211f !important;
+    border: 1px solid rgba(17, 33, 31, 0.1) !important;
+    border-radius: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.1px;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(20, 40, 40, 0.05);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    backdrop-filter: blur(16px) saturate(1.4);
+    transition:
+      transform 0.16s cubic-bezier(0.2, 0.6, 0.2, 1),
+      background 0.16s ease;
   }
   .owlpark-feat-ticket-comparison-table-btn:hover {
-    background: var(--cove-sand, #faf3e6);
+    background: rgba(255, 255, 255, 0.95) !important;
+    transform: translateY(-1px);
   }
+  .owlpark-feat-ticket-comparison-table-btn:active {
+    transform: translateY(0);
+  }
+  .owlpark-feat-ticket-comparison-table-btn:focus-visible {
+    outline: 2px solid #0f6f7a;
+    outline-offset: 2px;
+  }
+  .owlpark-feat-ticket-comparison-table-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
   .owlpark-feat-ticket-comparison-table-overlay {
     position: fixed;
     inset: 0;
-    /* inset: 0 sizes this against the *large* viewport on iOS Safari, so its
-       bottom edge — and the safe-area padding on it — lands below what you can
-       see. 100dvh pins it to the visible viewport. */
+    /* inset:0 sizes against iOS Safari's *large* viewport, dropping the bottom
+       edge (and its safe-area padding) below what you can see; 100dvh pins it to
+       the visible viewport. */
     height: 100dvh;
     box-sizing: border-box;
-    background: rgba(10, 30, 32, 0.45);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 65;
-    padding: calc(1rem + env(safe-area-inset-top, 0px))
-      calc(1rem + env(safe-area-inset-right, 0px))
-      calc(1rem + env(safe-area-inset-bottom, 0px))
-      calc(1rem + env(safe-area-inset-left, 0px));
+    z-index: 2147483200;
+    padding: calc(1.25rem + env(safe-area-inset-top, 0px))
+      calc(1.25rem + env(safe-area-inset-right, 0px))
+      calc(1.25rem + env(safe-area-inset-bottom, 0px))
+      calc(1.25rem + env(safe-area-inset-left, 0px));
+    background: rgba(16, 22, 24, 0.38);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    transition: opacity 0.18s ease;
+  }
+  .owlpark-feat-ticket-comparison-table-overlay.is-open {
+    opacity: 1;
   }
   .owlpark-feat-ticket-comparison-table-card {
-    background: white;
-    border-radius: var(--radius-lg, 14px);
-    padding: 1.4rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border: 1px solid rgba(17, 33, 31, 0.08);
+    border-radius: 20px;
+    padding: 2rem;
     max-width: 720px;
     width: 100%;
     box-sizing: border-box;
-    max-height: 80vh;
-    max-height: 80dvh;
-    overflow-x: hidden;
-    overflow-y: auto;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    max-height: 100%;
+    box-shadow: 0 18px 50px rgba(15, 30, 33, 0.18);
+    color: #17211f;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    transform: scale(0.98);
+    opacity: 0;
+    transition:
+      transform 0.2s cubic-bezier(0.2, 0.6, 0.2, 1),
+      opacity 0.2s ease;
   }
-  .owlpark-feat-ticket-comparison-table-card h3 {
-    margin-top: 0;
-    color: var(--cove-teal-dark, #0a4d55);
+  .owlpark-feat-ticket-comparison-table-overlay.is-open
+    .owlpark-feat-ticket-comparison-table-card {
+    transform: scale(1);
+    opacity: 1;
   }
-  /* Wide content scrolls inside its own container: the table pans here while the
-     card keeps the heading and the Close button fixed on screen. */
+  .owlpark-feat-ticket-comparison-table-title {
+    flex: 0 0 auto;
+    margin: 0 2rem 1.25rem 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #17211f;
+  }
+  /* Wide table pans inside its own scroller, so the title and the Close pill
+     stay put and the page body never scrolls sideways. */
   .owlpark-feat-ticket-comparison-table-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
     overflow-x: auto;
+    overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
   .owlpark-feat-ticket-comparison-table-card table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.85rem;
-    /* Five columns cannot be read in 340px, so let the table keep a legible
-       width and pan rather than crushing every column to unreadable slivers. */
+    /* Five columns can't be read at 340px; keep a legible width and pan. */
     min-width: 460px;
   }
   .owlpark-feat-ticket-comparison-table-card th,
   .owlpark-feat-ticket-comparison-table-card td {
     text-align: left;
-    padding: 0.5rem 0.6rem;
-    border-bottom: 1px solid var(--cove-border, #e4ddca);
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid rgba(17, 33, 31, 0.1);
     vertical-align: top;
   }
-  .owlpark-feat-ticket-comparison-table-card th {
-    color: var(--cove-teal-dark, #0a4d55);
+  .owlpark-feat-ticket-comparison-table-card thead th {
+    position: sticky;
+    top: 0;
+    background: #ffffff;
+    color: #17211f;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+  .owlpark-feat-ticket-comparison-table-card tbody td {
+    color: #67736f;
+  }
+  .owlpark-feat-ticket-comparison-table-card tbody tr:last-child td {
+    border-bottom: none;
+  }
+  /* The one restrained accent: the ticket name reads in ink, and the price — the
+     value you actually compare — in quiet teal. */
+  .owlpark-feat-ticket-comparison-table-card
+    tbody
+    td.owlpark-feat-ticket-comparison-table-col-name {
+    color: #17211f;
+    font-weight: 600;
+  }
+  .owlpark-feat-ticket-comparison-table-card
+    tbody
+    td.owlpark-feat-ticket-comparison-table-col-price {
+    color: #0f6f7a;
+    font-weight: 600;
+  }
+  .owlpark-feat-ticket-comparison-table-actions {
+    flex: 0 0 auto;
+  }
+  .owlpark-feat-ticket-comparison-table-x {
+    position: absolute;
+    top: 0.9rem;
+    right: 0.9rem;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: #67736f;
+    font-size: 1.35rem;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      background 0.16s ease,
+      color 0.16s ease;
+  }
+  .owlpark-feat-ticket-comparison-table-x:hover {
+    background: rgba(17, 33, 31, 0.05);
+    color: #17211f;
   }
   .owlpark-feat-ticket-comparison-table-close {
-    margin-top: 1rem;
-    background: var(--cove-teal, #0f6f7a);
-    color: white;
-    border: none;
-    padding: 0.5rem 1.1rem;
-    border-radius: 999px;
-    font-weight: 700;
-    cursor: pointer;
+    margin-top: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     min-height: 44px;
+    padding: 0 1.5rem;
+    background: #0f6f7a;
+    color: #ffffff;
+    border: none;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+      background 0.16s ease,
+      transform 0.16s ease;
+  }
+  .owlpark-feat-ticket-comparison-table-close:hover {
+    background: #0c5f69;
+    transform: translateY(-1px);
+  }
+  .owlpark-feat-ticket-comparison-table-card :focus-visible {
+    outline: 2px solid #0f6f7a;
+    outline-offset: 2px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-ticket-comparison-table-card {
+      background: #12181a;
+      border-color: rgba(255, 255, 255, 0.1);
+      color: #e9edec;
+    }
+    .owlpark-feat-ticket-comparison-table-title {
+      color: #e9edec;
+    }
+    .owlpark-feat-ticket-comparison-table-card th,
+    .owlpark-feat-ticket-comparison-table-card td {
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+    }
+    .owlpark-feat-ticket-comparison-table-card thead th {
+      background: #12181a;
+      color: #e9edec;
+    }
+    .owlpark-feat-ticket-comparison-table-card tbody td {
+      color: #98a4a1;
+    }
+    .owlpark-feat-ticket-comparison-table-card
+      tbody
+      td.owlpark-feat-ticket-comparison-table-col-name {
+      color: #e9edec;
+    }
+    .owlpark-feat-ticket-comparison-table-card
+      tbody
+      td.owlpark-feat-ticket-comparison-table-col-price {
+      color: #5bc7cf;
+    }
+    .owlpark-feat-ticket-comparison-table-x {
+      color: #98a4a1;
+    }
+    .owlpark-feat-ticket-comparison-table-x:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #e9edec;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-ticket-comparison-table-overlay,
+    .owlpark-feat-ticket-comparison-table-card,
+    .owlpark-feat-ticket-comparison-table-btn,
+    .owlpark-feat-ticket-comparison-table-close,
+    .owlpark-feat-ticket-comparison-table-x {
+      transition: none;
+    }
+    .owlpark-feat-ticket-comparison-table-card {
+      transform: none;
+    }
   }
 </style>
 
 <script>
   (function () {
+    /* =========================================================================
+     * Ticket Comparison Table  ·  utility
+     * -------------------------------------------------------------------------
+     * WHAT   A docked "⚖️ Compare" button that opens an accessible modal holding
+     *        a side-by-side table of every ticket / membership the store sells.
+     * HOW    Derives its rows from the store's LIVE rows via owlHost() (the zoo
+     *        web store ships no products.json); on Owl Park it fetches
+     *        data/products.json but never blocks on it (.catch → live rows).
+     *        Docks into Owl Park's stable .catalog-heading, else a self-owned
+     *        floating bar that survives host re-renders via a 1s watchdog. The
+     *        dialog fades/scales in, traps focus, closes on Esc / scrim / × /
+     *        Close, and restores focus to the opener.
+     * HOSTS  Zoo ViewItems + Owl Park + generic. Only categories that have a
+     *        storefront tab are compared; with no tabs, nothing is filtered. If
+     *        no data source resolves at all, the button shows "Compare
+     *        unavailable" and disables itself.
+     * ===================================================================== */
+
     var FEATURE_ID = "ticket-comparison-table";
+
+    // ----- Configuration --------------------------------------------------
+    var CONFIG = {
+      buttonLabel: "⚖️ Compare", // docked control text
+      unavailableLabel: "⚖️ Compare unavailable", // button text if no data source resolves
+      titleIcon: "⚖️", // decorative icon prefixed to the modal title
+      title: "Compare Tickets & Memberships", // modal heading + dialog aria-label
+      // Columns rendered left→right. `key` selects the field on each derived row
+      // object (built from the live store rows); `label` is the column header.
+      // Editing labels / order / which columns appear is safe — the values still
+      // come from the live rows. "name" renders emoji+name; "price" is formatted
+      // and carries the single teal accent.
+      columns: [
+        { key: "name", label: "Name" },
+        { key: "category", label: "Category" },
+        { key: "price", label: "Price" },
+        { key: "unit", label: "Unit" },
+        { key: "plu", label: "PLU" },
+      ],
+    };
+
     var compareBtn = null;
     var overlayEl = null;
     var products = null;
     var watchdogId = null;
+    var lastFocus = null;
+    var keyHandler = null;
 
     // --- Host adapter -------------------------------------------------------
     // Resolves whichever storefront this snippet was pasted into, preferring the
@@ -198,30 +415,27 @@
       });
     }
 
-    function removeOverlay() {
-      if (overlayEl) {
-        overlayEl.remove();
-        overlayEl = null;
-      }
-    }
-
     function formatPrice(price) {
       return typeof price === "number" && isFinite(price)
         ? "$" + price.toFixed(2)
         : "—";
     }
 
+    // Displayed text for one cell — preserves the exact per-column formatting:
+    // name is emoji+name, price is formatted, everything else is the raw field.
+    function cellText(p, key) {
+      if (key === "name") return (p.emoji || "") + " " + (p.name || "");
+      if (key === "price") return formatPrice(p.price);
+      var v = p[key];
+      return v == null ? "" : v;
+    }
+
     function buildRow(p) {
       var tr = document.createElement("tr");
-      [
-        (p.emoji || "") + " " + (p.name || ""),
-        p.category,
-        formatPrice(p.price),
-        p.unit,
-        p.plu,
-      ].forEach(function (value) {
+      CONFIG.columns.forEach(function (col) {
         var td = document.createElement("td");
-        td.textContent = value == null ? "" : value;
+        td.className = "owlpark-feat-ticket-comparison-table-col-" + col.key;
+        td.textContent = cellText(p, col.key);
         tr.appendChild(td);
       });
       return tr;
@@ -253,31 +467,103 @@
       });
     }
 
+    // ----- Modal dialog ---------------------------------------------------
+    function focusable() {
+      if (!overlayEl) return [];
+      return [].slice.call(
+        overlayEl.querySelectorAll('button, [href], input, [tabindex]:not([tabindex="-1"])'),
+      );
+    }
+
+    function onKey(e) {
+      if (e.key === "Escape" || e.key === "Esc") {
+        e.preventDefault();
+        closeOverlay();
+        return;
+      }
+      if (e.key === "Tab") {
+        var f = focusable();
+        if (!f.length) return;
+        var first = f[0];
+        var last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+
     function showOverlay(list) {
+      lastFocus = document.activeElement;
       var overlay = document.createElement("div");
       overlay.className = "owlpark-feat-ticket-comparison-table-overlay";
       overlay.setAttribute("data-owlpark-feature", FEATURE_ID);
+      overlay.setAttribute("role", "dialog");
+      overlay.setAttribute("aria-modal", "true");
+      overlay.setAttribute("aria-label", CONFIG.title);
       overlay.innerHTML =
         '<div class="owlpark-feat-ticket-comparison-table-card">' +
-        "<h3>⚖️ Compare Tickets &amp; Memberships</h3>" +
+        '<button type="button" class="owlpark-feat-ticket-comparison-table-x" aria-label="Close">&times;</button>' +
+        '<h3 class="owlpark-feat-ticket-comparison-table-title"></h3>' +
         '<div class="owlpark-feat-ticket-comparison-table-scroll">' +
-        "<table><thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Unit</th><th>PLU</th></tr></thead>" +
-        "<tbody></tbody></table>" +
+        "<table><thead><tr></tr></thead><tbody></tbody></table>" +
         "</div>" +
+        '<div class="owlpark-feat-ticket-comparison-table-actions">' +
         '<button type="button" class="owlpark-feat-ticket-comparison-table-close">Close</button>' +
+        "</div>" +
         "</div>";
+      overlay.querySelector(".owlpark-feat-ticket-comparison-table-title").textContent =
+        (CONFIG.titleIcon ? CONFIG.titleIcon + " " : "") + CONFIG.title;
+      var headRow = overlay.querySelector("thead tr");
+      CONFIG.columns.forEach(function (col) {
+        var th = document.createElement("th");
+        th.className = "owlpark-feat-ticket-comparison-table-col-" + col.key;
+        th.textContent = col.label;
+        headRow.appendChild(th);
+      });
       var tbody = overlay.querySelector("tbody");
       comparable(list).forEach(function (p) {
         if (p && typeof p === "object") tbody.appendChild(buildRow(p));
       });
       document.body.appendChild(overlay);
+
       overlay
         .querySelector(".owlpark-feat-ticket-comparison-table-close")
-        .addEventListener("click", removeOverlay);
+        .addEventListener("click", closeOverlay);
+      overlay
+        .querySelector(".owlpark-feat-ticket-comparison-table-x")
+        .addEventListener("click", closeOverlay);
       overlay.addEventListener("click", function (e) {
-        if (e.target === overlay) removeOverlay();
+        if (e.target === overlay) closeOverlay();
       });
+      keyHandler = onKey;
+      document.addEventListener("keydown", keyHandler);
       overlayEl = overlay;
+
+      requestAnimationFrame(function () {
+        if (overlayEl) overlayEl.classList.add("is-open");
+        var x = overlayEl && overlayEl.querySelector(".owlpark-feat-ticket-comparison-table-x");
+        if (x) x.focus();
+      });
+    }
+
+    function closeOverlay() {
+      if (!overlayEl) return;
+      var el = overlayEl;
+      overlayEl = null;
+      if (keyHandler) {
+        document.removeEventListener("keydown", keyHandler);
+        keyHandler = null;
+      }
+      el.classList.remove("is-open");
+      setTimeout(function () {
+        el.remove();
+      }, 180);
+      if (lastFocus && typeof lastFocus.focus === "function") lastFocus.focus();
+      lastFocus = null;
     }
 
     function openCompare() {
@@ -306,12 +592,13 @@
           if (list.length) {
             showOverlay(list);
           } else if (compareBtn) {
-            compareBtn.textContent = "⚖️ Compare unavailable";
+            compareBtn.textContent = CONFIG.unavailableLabel;
             compareBtn.disabled = true;
           }
         });
     }
 
+    // ----- Docked button (host-agnostic mount + watchdog) -----------------
     // Owl Park's catalog heading is stable, so dock there. On any OTHER store the
     // heading is a re-rendered template region, so use the self-owned floating
     // bar (a direct child of <body>) which survives the host re-rendering itself.
@@ -325,12 +612,21 @@
       compareBtn.type = "button";
       compareBtn.className = "owlpark-feat-ticket-comparison-table-btn";
       compareBtn.setAttribute("data-owlpark-feature", FEATURE_ID);
-      compareBtn.textContent = "⚖️ Compare";
+      compareBtn.setAttribute("aria-haspopup", "dialog");
+      compareBtn.textContent = CONFIG.buttonLabel;
       compareBtn.addEventListener("click", openCompare);
       resolveDock().appendChild(compareBtn);
     }
 
+    // Relocate the <style> to <head> so it survives a host wiping the body region
+    // where a standalone-pasted snippet would otherwise sit.
+    function ensureStyleInHead() {
+      var st = document.getElementById("owlpark-ticket-comparison-table-style");
+      if (st && st.parentElement !== document.head) document.head.appendChild(st);
+    }
+
     function activate() {
+      ensureStyleInHead();
       ensureButton();
       // Re-assert the control if the host removes or replaces it after load
       // (body reveal, template re-render); cheap isConnected check.
@@ -342,7 +638,7 @@
         clearInterval(watchdogId);
         watchdogId = null;
       }
-      removeOverlay();
+      closeOverlay();
       if (compareBtn) {
         compareBtn.removeEventListener("click", openCompare);
         compareBtn.remove();

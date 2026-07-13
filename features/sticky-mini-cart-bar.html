@@ -9,7 +9,7 @@
   }
 </script>
 
-<style>
+<style id="owlpark-sticky-mini-cart-bar-style">
   .owlpark-feat-sticky-mini-cart-bar {
     position: fixed;
     /* Centred via auto margins rather than left:50% + translate(-50%): with
@@ -27,16 +27,27 @@
     /* Lift clear of the iPhone home indicator, which would otherwise sit on
        top of this bar and swallow taps on "View Cart". */
     bottom: calc(1.2rem + env(safe-area-inset-bottom, 0px));
-    background: var(--cove-ink, #1e2a2b);
-    color: white;
+    /* Sleek/minimal frosted skin: a near-white glass pill with ink text, a
+       hairline border and a soft diffuse shadow. No host CSS vars — it must
+       hold up pasted standalone into any store. */
+    background: rgba(255, 255, 255, 0.82);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    backdrop-filter: blur(16px) saturate(1.4);
+    color: #17211f;
+    border: 1px solid rgba(17, 33, 31, 0.1);
     border-radius: 999px;
     padding: 0.6rem 0.6rem 0.6rem 1.1rem;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+    box-shadow:
+      0 6px 24px rgba(20, 40, 40, 0.09),
+      0 14px 40px rgba(15, 30, 33, 0.12);
     display: flex;
     align-items: center;
     gap: 0.8rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
     font-size: 0.86rem;
     font-weight: 600;
+    letter-spacing: -0.005em;
     z-index: 40;
     box-sizing: border-box;
   }
@@ -110,30 +121,104 @@
        text, so without this the item refuses to shrink and the ellipsis above
        never renders — a long total overflows the bar's rounded background. */
     min-width: 0;
+    color: #17211f;
   }
   .owlpark-feat-sticky-mini-cart-bar .smcb-view-btn {
-    background: white;
-    color: var(--cove-teal-dark, #0a4d55);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #0f6f7a;
+    color: #ffffff;
     border: none;
     border-radius: 999px;
-    padding: 0.4rem 0.9rem;
-    font-weight: 700;
+    padding: 0 1rem;
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.1px;
     cursor: pointer;
     min-height: 44px;
     flex-shrink: 0;
+    transition:
+      background 0.16s ease,
+      transform 0.16s cubic-bezier(0.2, 0.6, 0.2, 1);
+  }
+  .owlpark-feat-sticky-mini-cart-bar .smcb-view-btn:hover {
+    background: #0c5f69;
+    transform: translateY(-1px);
+  }
+  .owlpark-feat-sticky-mini-cart-bar .smcb-view-btn:active {
+    transform: translateY(1px);
+  }
+  .owlpark-feat-sticky-mini-cart-bar .smcb-view-btn:focus-visible {
+    outline: 2px solid #0f6f7a;
+    outline-offset: 2px;
+  }
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-sticky-mini-cart-bar {
+      background: rgba(18, 24, 26, 0.8);
+      border-color: rgba(255, 255, 255, 0.11);
+      color: #e9edec;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    }
+    .owlpark-feat-sticky-mini-cart-bar #smcb-summary {
+      color: #e9edec;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-sticky-mini-cart-bar .smcb-view-btn {
+      transition: none;
+    }
+    .owlpark-feat-sticky-mini-cart-bar .smcb-view-btn:hover,
+    .owlpark-feat-sticky-mini-cart-bar .smcb-view-btn:active {
+      transform: none;
+    }
   }
 </style>
 
 <div class="owlpark-feat-sticky-mini-cart-bar" id="smcb-bar" hidden>
-  <span id="smcb-summary">0 items · $0.00</span>
+  <span id="smcb-summary" role="status" aria-live="polite">0 items · $0.00</span>
   <button type="button" class="smcb-view-btn" id="smcb-view-btn">View Cart</button>
 </div>
 
 <script>
   (function () {
+    /* =========================================================================
+     * Sticky Mini Cart Bar  ·  visual
+     * -------------------------------------------------------------------------
+     * WHAT   A persistent frosted pill fixed at the bottom of the screen showing
+     *        the live item count and running total, with a "View Cart" action.
+     * HOW    Lifts its <style> to <head> and its fixed bar to a direct <body>
+     *        child on activate, so a host that re-renders its content wrapper
+     *        can't take either down. Re-reads every CONFIG.pollMs. On Owl Park it
+     *        prices the localStorage cart through the shared window.OwlPark API
+     *        (itemCount / cartTotal / isGiftOnly) so the bar can never disagree
+     *        with the drawer; on the zoo store (no in-page cart) it sums the
+     *        per-ticket PLU quantity boxes × price into a live "selection" total.
+     * HOSTS  Zoo ViewItems: PLU qty boxes → View follows #ctl00_ViewCartHyperLink.
+     *        Owl Park: localStorage cart → View opens the in-page drawer. Hidden
+     *        when the cart/selection is empty, or on Owl Park until window.OwlPark
+     *        and the product catalog have loaded (it never guesses a total).
+     * ===================================================================== */
+
     var FEATURE_ID = "sticky-mini-cart-bar";
-    var CART_STORAGE_KEY = "owl-park-cart";
-    var POLL_MS = 800;
+
+    // ----- Configuration --------------------------------------------------
+    // Copy, cadence and storage key — safe to edit. Summary strings are kept as
+    // fragments so the count/total interpolate exactly as before.
+    var CONFIG = {
+      pollMs: 800, // re-read + re-render interval (ms); the zoo store isn't event-driven
+      cartStorageKey: "owl-park-cart", // Owl Park in-page cart key (read-only here)
+      viewLabel: "View Cart", // primary action button label
+      copy: {
+        itemSingular: " item · $", // Owl Park: "<n> item · $<total>"
+        itemPlural: " items · $", // Owl Park: "<n> items · $<total>"
+        donation: "Donation · $", // Owl Park gift-only cart (money, no items)
+        ticketSingular: " ticket · $", // zoo: "<n> ticket · $<total> selected"
+        ticketPlural: " tickets · $", // zoo: "<n> tickets · $<total> selected"
+        ticketSuffix: " selected", // zoo selection suffix
+      },
+    };
 
     var pollIntervalId = null;
     var viewClickHandler = null;
@@ -243,12 +328,12 @@
         });
         return s;
       }
-      return localStorage.getItem(CART_STORAGE_KEY) || "";
+      return localStorage.getItem(CONFIG.cartStorageKey) || "";
     }
 
     function readCartLines() {
       try {
-        var raw = localStorage.getItem(CART_STORAGE_KEY);
+        var raw = localStorage.getItem(CONFIG.cartStorageKey);
         return raw ? JSON.parse(raw) : [];
       } catch (e) {
         return [];
@@ -268,9 +353,9 @@
         }
         summary.textContent =
           sel.count +
-          (sel.count === 1 ? " ticket · $" : " tickets · $") +
+          (sel.count === 1 ? CONFIG.copy.ticketSingular : CONFIG.copy.ticketPlural) +
           sel.total.toFixed(2) +
-          " selected";
+          CONFIG.copy.ticketSuffix;
         bar.hidden = false;
         return;
       }
@@ -304,8 +389,10 @@
         typeof api.isGiftOnly === "function" ? api.isGiftOnly(lines) : false;
 
       summary.textContent = giftOnly
-        ? "Donation · $" + total.toFixed(2)
-        : count + (count === 1 ? " item · $" : " items · $") + total.toFixed(2);
+        ? CONFIG.copy.donation + total.toFixed(2)
+        : count +
+          (count === 1 ? CONFIG.copy.itemSingular : CONFIG.copy.itemPlural) +
+          total.toFixed(2);
       bar.hidden = false;
     }
 
@@ -329,9 +416,14 @@
 
     function activate() {
       lastSnapshot = null;
-      // Lift the fixed bar to be a direct child of <body> so a host that
-      // re-renders its own content wrapper (e.g. the zoo store's #page) can't
-      // take the bar down with it. It is position:fixed, so this is invisible.
+      // Lift the <style> to <head> and the fixed bar to a direct child of
+      // <body> so a host that re-renders its own content wrapper (e.g. the zoo
+      // store's #page) can't take either down. Both moves are invisible: the
+      // style is global and the bar is position:fixed.
+      var styleEl = document.getElementById("owlpark-sticky-mini-cart-bar-style");
+      if (styleEl && styleEl.parentElement !== document.head) {
+        document.head.appendChild(styleEl);
+      }
       var barEl = document.getElementById("smcb-bar");
       if (barEl && barEl.parentElement !== document.body) {
         document.body.appendChild(barEl);
@@ -352,11 +444,12 @@
 
       var viewBtn = document.getElementById("smcb-view-btn");
       if (viewBtn) {
+        viewBtn.textContent = CONFIG.viewLabel;
         viewClickHandler = openCart;
         viewBtn.addEventListener("click", viewClickHandler);
       }
 
-      pollIntervalId = setInterval(pollCart, POLL_MS);
+      pollIntervalId = setInterval(pollCart, CONFIG.pollMs);
       render(); // reflect any pre-filled quantities right away on the zoo store
     }
 

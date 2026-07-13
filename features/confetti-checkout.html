@@ -9,69 +9,215 @@
   }
 </script>
 
-<style>
+<style id="owlpark-confetti-checkout-style">
+  /* One confetti piece. Position + rotation are driven per-frame from JS via
+     transform (origin stays top-left of the viewport); size, colour and shape
+     are set inline per piece. Kept sparse and soft for a tasteful burst. */
   .owlpark-feat-confetti-checkout {
     position: fixed;
-    top: -10px;
+    top: 0;
+    left: 0;
     width: 8px;
-    height: 14px;
-    z-index: 70;
+    height: 12px;
+    border-radius: 2px;
+    z-index: 2147483100; /* above the checkout modal (.modal-overlay is z-index 60) */
     pointer-events: none;
-    animation: owlpark-confetti-fall 1.8s ease-in forwards;
+    will-change: transform, opacity;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
   }
-
-  @keyframes owlpark-confetti-fall {
-    0% {
-      transform: translateY(0) rotate(0deg);
-      opacity: 1;
-    }
-    100% {
-      transform: translateY(70vh) rotate(540deg);
-      opacity: 0;
+  /* Belt-and-suspenders: JS already skips the burst under reduced motion, but
+     never paint a stray piece if one somehow exists. */
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-confetti-checkout {
+      display: none !important;
     }
   }
 </style>
 
 <script>
   (function () {
-    var COLORS = ["#e2662d", "#2f8f4e", "#0f6f7a", "#f0a02f", "#a8321f"];
-    var PIECE_COUNT = 60;
+    /* =========================================================================
+     * Confetti Checkout  ·  visual
+     * -------------------------------------------------------------------------
+     * WHAT   A brief, tasteful confetti burst when the checkout confirmation
+     *        appears — a small fountain of teal / sand / ink pieces that arc up
+     *        and settle under gravity, then clear themselves. Not a rainbow.
+     * HOW    Watches #checkout-modal's `class` attribute (the same hook the other
+     *        checkout features use); the moment it loses `.hidden`, burst()
+     *        spawns CONFIG.pieceCount pieces from the confirmation card and runs
+     *        them through a requestAnimationFrame physics loop (launch velocity +
+     *        gravity + drag + graceful fade). Every piece is tagged
+     *        data-owlpark-feature="confetti-checkout" so cleanup catches it.
+     * HOSTS  Owl Park only — the burst needs #checkout-modal, which the zoo
+     *        ViewItems ticket page has no equivalent of, so activate() no-ops
+     *        there. Honours prefers-reduced-motion: reduce with no burst at all.
+     * ===================================================================== */
+
+    var FEATURE_ID = "confetti-checkout";
+
+    // ----- Configuration --------------------------------------------------
+    // Tunable values, safe to edit. Each explained inline.
+    var CONFIG = {
+      modalId: "checkout-modal", // confirmation modal we observe; burst when it un-hides
+      pieceCount: 26, // pieces per burst — kept low for a refined, uncluttered pop
+      // Brand palette only: teal → soft teal → pale teal → sand → light sand →
+      // muted ink. Deliberately not a rainbow.
+      colors: [
+        "#0f6f7a",
+        "#4f9aa2",
+        "#8fbcc0",
+        "#c9b391",
+        "#e3d2ad",
+        "#6b7773",
+      ],
+      durationMs: 1500, // total lifetime of a burst — brief by design
+      gravity: 0.26, // downward acceleration (px per 60fps-frame²) that settles pieces
+      drag: 0.99, // per-frame air resistance (1 = none) — eases the motion
+      launchVelocity: 9, // initial burst speed (px per 60fps-frame)
+      spreadDeg: 150, // width of the fountain arc, centred upward
+      spinDeg: 7, // max rotation change per frame (± random) — a gentle tumble
+      fadeStart: 0.55, // fraction of life after which a piece begins fading out
+      originYFraction: 0.34, // vertical launch point within the confirmation card (0 = top)
+      pieceSize: 8, // base piece size in px (each piece varies slightly around this)
+    };
+
     var observer = null;
+    var rafId = null;
+    var lastTs = 0;
+    var pieces = [];
+
+    function prefersReducedMotion() {
+      return !!(
+        window.matchMedia &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      );
+    }
+
+    function now() {
+      return window.performance && performance.now
+        ? performance.now()
+        : Date.now();
+    }
+
+    // ----- Physics loop ---------------------------------------------------
+    // Delta-time normalised so the arc looks the same at 60Hz and 120Hz.
+    function step(ts) {
+      var dt = lastTs ? (ts - lastTs) / 16.667 : 1;
+      if (dt > 3) dt = 3; // clamp after a tab-away so pieces don't teleport
+      lastTs = ts;
+
+      for (var i = pieces.length - 1; i >= 0; i--) {
+        var p = pieces[i];
+        var life = (ts - p.born) / CONFIG.durationMs;
+        if (life >= 1) {
+          if (p.el && p.el.parentNode) p.el.parentNode.removeChild(p.el);
+          pieces.splice(i, 1);
+          continue;
+        }
+        var dragF = Math.pow(CONFIG.drag, dt);
+        p.vx *= dragF;
+        p.vy = p.vy * dragF + CONFIG.gravity * dt;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.rot += p.vr * dt;
+
+        var fade =
+          life < CONFIG.fadeStart
+            ? 1
+            : Math.max(0, 1 - (life - CONFIG.fadeStart) / (1 - CONFIG.fadeStart));
+        p.el.style.opacity = (p.baseOpacity * fade).toFixed(3);
+        p.el.style.transform =
+          "translate3d(" +
+          p.x.toFixed(1) +
+          "px," +
+          p.y.toFixed(1) +
+          "px,0) rotate(" +
+          p.rot.toFixed(1) +
+          "deg)";
+      }
+
+      if (pieces.length) {
+        rafId = requestAnimationFrame(step);
+      } else {
+        rafId = null;
+        lastTs = 0;
+      }
+    }
 
     function burst() {
-      var modal = document.getElementById("checkout-modal");
-      var rect = modal
-        ? modal.getBoundingClientRect()
-        : { left: window.innerWidth / 2, width: 0 };
-      var centerX = rect.left + rect.width / 2;
+      if (prefersReducedMotion()) return; // reduced motion: no burst at all
 
-      for (var i = 0; i < PIECE_COUNT; i++) {
-        var piece = document.createElement("div");
-        piece.className = "owlpark-feat-confetti-checkout";
-        piece.setAttribute("data-owlpark-feature", "confetti-checkout");
-        piece.style.left = centerX + (Math.random() - 0.5) * 400 + "px";
-        piece.style.background =
-          COLORS[Math.floor(Math.random() * COLORS.length)];
-        piece.style.animationDelay = Math.random() * 0.3 + "s";
-        piece.style.animationDuration = 1.4 + Math.random() * 0.8 + "s";
-        document.body.appendChild(piece);
-        piece.addEventListener("animationend", function () {
-          this.remove();
+      var modal = document.getElementById(CONFIG.modalId);
+      var box = (modal && modal.querySelector(".modal-card")) || modal;
+      var rect = box ? box.getBoundingClientRect() : null;
+      var originX =
+        rect && rect.width ? rect.left + rect.width / 2 : window.innerWidth / 2;
+      var originY =
+        rect && rect.height
+          ? rect.top + rect.height * CONFIG.originYFraction
+          : window.innerHeight * 0.4;
+      var born = now();
+
+      for (var i = 0; i < CONFIG.pieceCount; i++) {
+        var el = document.createElement("div");
+        el.className = "owlpark-feat-confetti-checkout";
+        el.setAttribute("data-owlpark-feature", FEATURE_ID);
+
+        var size = CONFIG.pieceSize * (0.72 + Math.random() * 0.6);
+        if (i % 3 === 0) {
+          // an occasional round dot for a soft, understated mix
+          el.style.width = el.style.height = (size * 0.82).toFixed(1) + "px";
+          el.style.borderRadius = "999px";
+        } else {
+          el.style.width = (size * 0.68).toFixed(1) + "px";
+          el.style.height = (size * 1.25).toFixed(1) + "px";
+          el.style.borderRadius = "2px";
+        }
+        el.style.background =
+          CONFIG.colors[Math.floor(Math.random() * CONFIG.colors.length)];
+
+        var startX = originX + (Math.random() - 0.5) * 28;
+        var startY = originY + (Math.random() - 0.5) * 14;
+        var rot0 = Math.random() * 360;
+        var baseOpacity = 0.82 + Math.random() * 0.18;
+        // Place the piece before the first frame so it never flashes at 0,0.
+        el.style.opacity = baseOpacity.toFixed(3);
+        el.style.transform =
+          "translate3d(" +
+          startX.toFixed(1) +
+          "px," +
+          startY.toFixed(1) +
+          "px,0) rotate(" +
+          rot0.toFixed(1) +
+          "deg)";
+        document.body.appendChild(el);
+
+        var angle =
+          ((-90 + (Math.random() - 0.5) * CONFIG.spreadDeg) * Math.PI) / 180;
+        var speed = CONFIG.launchVelocity * (0.55 + Math.random() * 0.75);
+        pieces.push({
+          el: el,
+          x: startX,
+          y: startY,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          rot: rot0,
+          vr: (Math.random() - 0.5) * 2 * CONFIG.spinDeg,
+          baseOpacity: baseOpacity,
+          born: born,
         });
-        setTimeout(
-          (function (p) {
-            return function () {
-              p.remove();
-            };
-          })(piece),
-          3000,
-        );
+      }
+
+      if (!rafId) {
+        lastTs = 0;
+        rafId = requestAnimationFrame(step);
       }
     }
 
     function activate() {
-      var modal = document.getElementById("checkout-modal");
-      if (!modal) return;
+      var modal = document.getElementById(CONFIG.modalId);
+      if (!modal) return; // no confirmation modal on this host → no-op
       observer = new MutationObserver(function (mutations) {
         for (var i = 0; i < mutations.length; i++) {
           if (mutations[i].attributeName === "class") {
@@ -87,6 +233,12 @@
         observer.disconnect();
         observer = null;
       }
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+      lastTs = 0;
+      pieces = [];
       document
         .querySelectorAll('[data-owlpark-feature="confetti-checkout"]')
         .forEach(function (el) {

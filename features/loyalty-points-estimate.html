@@ -9,26 +9,126 @@
   }
 </script>
 
-<style>
+<style id="owlpark-loyalty-points-estimate-style">
   .owlpark-feat-loyalty-points-estimate {
+    box-sizing: border-box;
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(17, 33, 31, 0.1);
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
     gap: 0.4rem;
-    margin-top: 0.6rem;
-    padding-top: 0.5rem;
-    border-top: 1px dashed #d8cfae;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #9a6a1a;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    color: #17211f;
+    animation: owlpark-lpe-in 0.2s cubic-bezier(0.2, 0.6, 0.2, 1) both;
+  }
+  .owlpark-feat-loyalty-points-estimate .lp-chip {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.4rem 0.7rem;
+    background: rgba(15, 111, 122, 0.09);
+    border: 1px solid rgba(17, 33, 31, 0.1);
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.45;
+    letter-spacing: -0.005em;
   }
   .owlpark-feat-loyalty-points-estimate .lp-icon {
     font-size: 1rem;
+    line-height: 1;
+    opacity: 0.9;
+  }
+  .owlpark-feat-loyalty-points-estimate .lp-copy {
+    color: #67736f;
+  }
+  .owlpark-feat-loyalty-points-estimate .lp-points {
+    font-weight: 700;
+    color: #0f6f7a;
+    letter-spacing: -0.01em;
+  }
+  .owlpark-feat-loyalty-points-estimate .lp-unit {
+    color: #67736f;
+  }
+  .owlpark-feat-loyalty-points-estimate .lp-note {
+    padding-left: 0.15rem;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #67736f;
+  }
+  @keyframes owlpark-lpe-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-loyalty-points-estimate {
+      color: #e9edec;
+      border-top-color: rgba(255, 255, 255, 0.11);
+    }
+    .owlpark-feat-loyalty-points-estimate .lp-chip {
+      background: rgba(91, 199, 207, 0.12);
+      border-color: rgba(255, 255, 255, 0.11);
+    }
+    .owlpark-feat-loyalty-points-estimate .lp-copy,
+    .owlpark-feat-loyalty-points-estimate .lp-unit,
+    .owlpark-feat-loyalty-points-estimate .lp-note {
+      color: #98a4a1;
+    }
+    .owlpark-feat-loyalty-points-estimate .lp-points {
+      color: #5bc7cf;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-loyalty-points-estimate {
+      animation: none;
+    }
   }
 </style>
 
 <script>
   (function () {
+    /* =========================================================================
+     * Loyalty Points Estimate  ·  behavioral
+     * -------------------------------------------------------------------------
+     * WHAT   A quiet accent-soft chip in the checkout order summary estimating
+     *        the loyalty points this order would earn ("You'll earn ~180
+     *        points"). SIMULATED — there is no real loyalty backend; the figure
+     *        is derived from the order total, never fetched.
+     * HOW    Watches #checkout-modal's open (class) state with a
+     *        MutationObserver; when the modal is shown it reads the final total
+     *        already rendered in #order-summary (the last $-amount is the grand
+     *        Total, which main.js builds from resolveLine() output, so off-peak
+     *        discounts and round-up donations are already reflected) and appends
+     *        the estimate line. Re-runs on every reopen and never stacks
+     *        duplicates. Everything it injects is tagged data-owlpark-feature.
+     * HOSTS  Owl Park checkout only. The zoo ViewItems ticket page has no
+     *        checkout modal / order summary, so this stays a no-op there.
+     * ===================================================================== */
+
     var FEATURE_ID = "loyalty-points-estimate";
+
+    // ----- Configuration --------------------------------------------------
+    // Tunable values, safe to edit. This is a demo estimate — there is no real
+    // loyalty program behind it; keep the numbers simulated.
+    var CONFIG = {
+      earnRate: 1, // simulated points earned per $1 of order total (1 pt / $1)
+      glyph: "⭐", // decorative points glyph before the estimate (aria-hidden)
+      lead: "You'll earn", // copy before the emphasized number
+      approx: "~", // prefix marking the figure as an estimate
+      unit: "points", // noun after the number
+      // Optional muted sub-note (tier / redemption hint). Set to "" to hide.
+      tierNote: "Estimate — join Owl Park Rewards to start earning.",
+    };
 
     var observer = null;
 
@@ -52,14 +152,36 @@
       var total = parseTotal(summaryEl);
       if (total <= 0) return;
 
-      var points = Math.round(total); // 1 point per $1 spent
+      // Simulated: CONFIG.earnRate points per $1 spent, rounded to whole points.
+      var points = Math.round(total * CONFIG.earnRate);
+
+      var note = CONFIG.tierNote
+        ? '<span class="lp-note">' + CONFIG.tierNote + "</span>"
+        : "";
+
       var line = document.createElement("div");
       line.className = "owlpark-feat-loyalty-points-estimate";
       line.setAttribute("data-owlpark-feature", FEATURE_ID);
+      line.setAttribute("role", "status");
+      line.setAttribute("aria-live", "polite");
       line.innerHTML =
-        '<span class="lp-icon">⭐</span><span>You\'d earn approximately ' +
+        '<span class="lp-chip">' +
+        '<span class="lp-icon" aria-hidden="true">' +
+        CONFIG.glyph +
+        "</span>" +
+        '<span class="lp-copy">' +
+        CONFIG.lead +
+        " " +
+        '<span class="lp-points">' +
+        CONFIG.approx +
         points +
-        " loyalty points on this order!</span>";
+        "</span> " +
+        '<span class="lp-unit">' +
+        CONFIG.unit +
+        "</span>" +
+        "</span>" +
+        "</span>" +
+        note;
       summaryEl.appendChild(line);
     }
 

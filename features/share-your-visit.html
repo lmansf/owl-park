@@ -9,40 +9,152 @@
   }
 </script>
 
-<style>
+<style id="owlpark-share-your-visit-style">
+  /* Clean confirmation-modal affordance: one primary teal share pill above a
+     quiet inline live-region confirmation. Sits on the white modal card, so the
+     wrapper itself stays transparent — ink/muted type, hairline nothing. */
   .owlpark-feat-share-your-visit {
+    box-sizing: border-box;
     width: 100%;
-    margin-top: 0.6rem;
-    background: var(--cove-teal, #0f6f7a);
-    color: white;
-    border: none;
-    padding: 0.6rem;
-    border-radius: 999px;
-    font-weight: 700;
-    cursor: pointer;
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+  }
+  /* Primary action: understated solid-teal pill, ≥44px tap target. */
+  .owlpark-feat-share-your-visit .sv-btn {
+    box-sizing: border-box;
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
     min-height: 44px;
+    padding: 0.7rem 1.25rem;
+    background: #0f6f7a;
+    color: #ffffff;
+    border: none;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(20, 40, 40, 0.05);
+    transition: all 0.16s cubic-bezier(0.2, 0.6, 0.2, 1);
   }
-  .owlpark-feat-share-your-visit:hover {
-    background: var(--cove-teal-dark, #0a4d55);
+  .owlpark-feat-share-your-visit .sv-btn .sv-ic {
+    flex-shrink: 0;
+    opacity: 0.9;
   }
-  .owlpark-feat-share-your-visit.sv-copied {
-    background: var(--cove-green, #2f8f4e);
+  .owlpark-feat-share-your-visit .sv-btn:hover {
+    background: #0c5f69;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(20, 40, 40, 0.09);
+  }
+  .owlpark-feat-share-your-visit .sv-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(20, 40, 40, 0.05);
+  }
+  .owlpark-feat-share-your-visit .sv-btn:focus-visible {
+    outline: 2px solid #0f6f7a;
+    outline-offset: 2px;
+  }
+  /* Quiet inline confirmation. Empty at rest (reserves one line so nothing
+     jumps); a decorative ✓ appears only when it carries a message. */
+  .owlpark-feat-share-your-visit .sv-status {
+    min-height: 1.1em;
+    font-size: 0.82rem;
+    font-weight: 500;
+    line-height: 1.45;
+    letter-spacing: -0.005em;
+    color: #0f6f7a;
+    text-align: center;
+    transition: opacity 0.16s ease;
+  }
+  .owlpark-feat-share-your-visit .sv-status:not(:empty)::before {
+    content: "\2713";
+    margin-right: 0.35rem;
+    font-weight: 600;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-share-your-visit .sv-btn:hover {
+      background: #12808d;
+    }
+    .owlpark-feat-share-your-visit .sv-status {
+      color: #5bc7cf;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-share-your-visit .sv-btn,
+    .owlpark-feat-share-your-visit .sv-status {
+      transition: none;
+    }
+    .owlpark-feat-share-your-visit .sv-btn:hover {
+      transform: none;
+    }
   }
 </style>
 
 <script>
   (function () {
+    /* =========================================================================
+     * Share Your Visit  ·  behavioral
+     * -------------------------------------------------------------------------
+     * WHAT   A primary "Share Your Visit" pill on the checkout confirmation that
+     *        copies a shareable blurb about the order to the clipboard, with a
+     *        quiet inline "Copied to clipboard" confirmation below it.
+     * HOW    On activate, inserts a wrapper (share pill + polite aria-live status)
+     *        immediately before #close-modal-btn inside Owl Park's order-confirmed
+     *        modal card. The blurb is CONFIG.blurbPrefix + #order-id textContent
+     *        (payload unchanged). Copy uses navigator.clipboard.writeText with a
+     *        hidden-textarea execCommand fallback; the confirmation clears after
+     *        CONFIG.revertMs.
+     * HOSTS  Owl Park only. Hosts without a #close-modal-btn confirmation anchor
+     *        (the zoo ViewItems ticket page, generic stores) no-op — nothing is
+     *        injected there.
+     * ===================================================================== */
+
     var FEATURE_ID = "share-your-visit";
+
+    // ----- Configuration --------------------------------------------------
+    // Tunable values, safe to edit. The shared payload is CONFIG.blurbPrefix
+    // followed verbatim by the #order-id text — keep the prefix intact to keep
+    // the shared text byte-identical.
+    var CONFIG = {
+      // Text prepended to the confirmed order id to form the shared blurb.
+      blurbPrefix: "I just booked my visit to Owl Park \u{1F989}\u{1F319} — ",
+      shareLabel: "Share Your Visit", // label on the primary share pill
+      ariaLabel: "Share your visit", // accessible name for the share button
+      copiedMessage: "Copied to clipboard", // quiet confirmation after a copy
+      revertMs: 2200, // how long the confirmation stays before it clears
+    };
+
+    // Share glyph (Feather "share-2"), decorative — contributes no text.
+    var SHARE_ICON =
+      '<svg class="sv-ic" viewBox="0 0 24 24" width="16" height="16" fill="none" ' +
+      'stroke="currentColor" stroke-width="2" stroke-linecap="round" ' +
+      'stroke-linejoin="round" aria-hidden="true" focusable="false">' +
+      '<circle cx="18" cy="5" r="3"></circle>' +
+      '<circle cx="6" cy="12" r="3"></circle>' +
+      '<circle cx="18" cy="19" r="3"></circle>' +
+      '<line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>' +
+      '<line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>' +
+      "</svg>";
+
+    var rootEl = null;
     var buttonEl = null;
+    var statusEl = null;
     var resetTimeoutId = null;
 
     function buildBlurb() {
       var orderIdEl = document.getElementById("order-id");
       var orderId = orderIdEl ? orderIdEl.textContent : "";
-      return (
-        "I just booked my visit to Owl Park \u{1F989}\u{1F319} — " +
-        orderId
-      );
+      return CONFIG.blurbPrefix + orderId;
     }
 
     function fallbackCopy(text) {
@@ -61,17 +173,12 @@
     }
 
     function showCopied() {
-      if (!buttonEl) return;
-      var original = "📣 Share Your Visit";
-      buttonEl.textContent = "✅ Copied to clipboard!";
-      buttonEl.classList.add("sv-copied");
+      if (!statusEl) return;
+      statusEl.textContent = CONFIG.copiedMessage;
       if (resetTimeoutId) clearTimeout(resetTimeoutId);
       resetTimeoutId = setTimeout(function () {
-        if (buttonEl) {
-          buttonEl.textContent = original;
-          buttonEl.classList.remove("sv-copied");
-        }
-      }, 2200);
+        if (statusEl) statusEl.textContent = "";
+      }, CONFIG.revertMs);
     }
 
     function share() {
@@ -91,14 +198,31 @@
       var closeBtn = document.getElementById("close-modal-btn");
       if (!closeBtn || !closeBtn.parentElement) return;
 
+      rootEl = document.createElement("div");
+      rootEl.className = "owlpark-feat-share-your-visit";
+      rootEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+
       buttonEl = document.createElement("button");
       buttonEl.type = "button";
-      buttonEl.className = "owlpark-feat-share-your-visit";
+      buttonEl.className = "sv-btn";
       buttonEl.setAttribute("data-owlpark-feature", FEATURE_ID);
-      buttonEl.textContent = "📣 Share Your Visit";
+      buttonEl.setAttribute("aria-label", CONFIG.ariaLabel);
+      buttonEl.innerHTML = SHARE_ICON;
+      var labelEl = document.createElement("span");
+      labelEl.className = "sv-btn-label";
+      labelEl.textContent = CONFIG.shareLabel;
+      buttonEl.appendChild(labelEl);
       buttonEl.addEventListener("click", share);
 
-      closeBtn.parentElement.insertBefore(buttonEl, closeBtn);
+      statusEl = document.createElement("span");
+      statusEl.className = "sv-status";
+      statusEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+      statusEl.setAttribute("role", "status");
+      statusEl.setAttribute("aria-live", "polite");
+
+      rootEl.appendChild(buttonEl);
+      rootEl.appendChild(statusEl);
+      closeBtn.parentElement.insertBefore(rootEl, closeBtn);
     }
 
     function deactivate() {
@@ -108,9 +232,13 @@
       }
       if (buttonEl) {
         buttonEl.removeEventListener("click", share);
-        buttonEl.remove();
         buttonEl = null;
       }
+      if (rootEl) {
+        rootEl.remove();
+        rootEl = null;
+      }
+      statusEl = null;
     }
 
     activate();

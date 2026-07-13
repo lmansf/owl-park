@@ -9,110 +9,311 @@
   }
 </script>
 
-<style>
+<style id="owlpark-gift-mode-style">
   .owlpark-feat-gift-mode {
-    margin-top: 0.8rem;
-    border-top: 1px dashed #d8cfae;
-    padding-top: 0.7rem;
+    margin-top: 0.85rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid rgba(17, 33, 31, 0.1);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    color: #17211f;
   }
-  .owlpark-feat-gift-mode .gm-open-btn {
-    min-height: 44px;
-    border: 1px solid #d9b8c8;
-    background: #fdf3f7;
-    color: #8a2f5a;
-    border-radius: 10px;
-    padding: 0.5rem 0.9rem;
-    font-weight: 700;
-    font-size: 0.85rem;
-    cursor: pointer;
-  }
-  /* An author `display` beats the user-agent [hidden] rule, so an element toggled with the `hidden`
-     property has to turn itself off here or it never hides. */
+
+  /* An author `display` beats the user-agent [hidden] rule, so an element toggled
+     with the `hidden` property has to turn itself off here or it never hides. */
   .owlpark-feat-gift-mode .gm-panel[hidden],
   .owlpark-feat-gift-mode .gm-error[hidden] {
     display: none;
   }
-  .owlpark-feat-gift-mode .gm-panel {
-    margin-top: 0.7rem;
-    display: grid;
-    gap: 0.55rem;
-    border: 1px solid #d9b8c8;
-    background: #fdf3f7;
+
+  .owlpark-feat-gift-mode .gm-open-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 44px;
+    padding: 0.5rem 0.85rem;
+    border: 1px solid rgba(17, 33, 31, 0.1);
     border-radius: 12px;
-    padding: 0.75rem;
+    background: #ffffff;
+    color: #17211f;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 0.9rem;
+    letter-spacing: -0.005em;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.16s cubic-bezier(0.2, 0.6, 0.2, 1);
   }
+  .owlpark-feat-gift-mode .gm-open-btn:hover {
+    background: rgba(17, 33, 31, 0.04);
+  }
+  .owlpark-feat-gift-mode .gm-open-btn:active {
+    transform: translateY(1px);
+  }
+  /* Teal "on" state once the panel is expanded. */
+  .owlpark-feat-gift-mode .gm-open-btn[aria-expanded="true"] {
+    border-color: rgba(15, 111, 122, 0.35);
+    background: rgba(15, 111, 122, 0.09);
+    color: #0f6f7a;
+  }
+
+  .owlpark-feat-gift-mode .gm-panel {
+    margin-top: 0.6rem;
+    display: grid;
+    gap: 0.75rem;
+    padding: 0.85rem;
+    border: 1px solid rgba(17, 33, 31, 0.1);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.82);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    backdrop-filter: blur(16px) saturate(1.4);
+    box-shadow: 0 2px 6px rgba(20, 40, 40, 0.05);
+    animation: owlpark-gm-rise 0.2s cubic-bezier(0.2, 0.6, 0.2, 1);
+  }
+  @keyframes owlpark-gm-rise {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
   .owlpark-feat-gift-mode .gm-field {
     display: grid;
-    gap: 0.25rem;
+    gap: 0.3rem;
   }
   .owlpark-feat-gift-mode .gm-label {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: #6d675c;
+    font-size: 0.74rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: #67736f;
   }
+
   .owlpark-feat-gift-mode .gm-input,
   .owlpark-feat-gift-mode .gm-textarea {
     width: 100%;
-    min-height: 44px;
-    border: 1px solid #e4ddca;
-    border-radius: 10px;
-    padding: 0.55rem 0.7rem;
-    font-size: 0.9rem;
-    font-family: inherit;
-    background: #fff;
     box-sizing: border-box;
+    min-height: 44px;
+    padding: 0.6rem 0.7rem;
+    border: 1px solid rgba(17, 33, 31, 0.1);
+    border-radius: 10px;
+    background: #ffffff;
+    color: #17211f;
+    font-family: inherit;
+    font-size: 16px; /* 16px keeps iOS Safari from zooming the page on focus */
+    line-height: 1.45;
+    transition: border-color 0.16s ease;
+  }
+  .owlpark-feat-gift-mode .gm-input::placeholder,
+  .owlpark-feat-gift-mode .gm-textarea::placeholder {
+    color: #98a4a1;
+  }
+  .owlpark-feat-gift-mode .gm-input:focus,
+  .owlpark-feat-gift-mode .gm-textarea:focus {
+    border-color: #0f6f7a;
   }
   .owlpark-feat-gift-mode .gm-textarea {
-    min-height: 66px;
+    min-height: 72px;
     resize: vertical;
   }
+
   .owlpark-feat-gift-mode .gm-add-btn {
-    min-height: 44px;
     width: 100%;
+    min-height: 44px;
+    padding: 0.6rem 0.9rem;
     border: none;
-    border-radius: 10px;
-    background: #8a2f5a;
-    color: #fff;
-    font-weight: 800;
+    border-radius: 999px;
+    background: #0f6f7a;
+    color: #ffffff;
+    font-family: inherit;
+    font-weight: 600;
     font-size: 0.9rem;
-    padding: 0.55rem 0.9rem;
     cursor: pointer;
+    transition:
+      background 0.16s ease,
+      transform 0.16s ease;
   }
+  .owlpark-feat-gift-mode .gm-add-btn:hover {
+    background: #0c5f69;
+    transform: translateY(-1px);
+  }
+  .owlpark-feat-gift-mode .gm-add-btn:active {
+    transform: translateY(0);
+  }
+
   .owlpark-feat-gift-mode .gm-error {
     font-size: 0.78rem;
-    font-weight: 700;
-    color: #a8321f;
+    font-weight: 600;
+    color: #c0341d;
   }
+
+  .owlpark-feat-gift-mode :focus-visible,
+  .owlpark-feat-gift-mode-cert-btn:focus-visible {
+    outline: 2px solid #0f6f7a;
+    outline-offset: 2px;
+  }
+
+  /* Checkout: printable-certificate button. It is injected into #checkout-modal,
+     so it lives outside .owlpark-feat-gift-mode and carries its own styles. */
   .owlpark-feat-gift-mode-cert-btn {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
     width: 100%;
+    box-sizing: border-box;
     min-height: 44px;
     margin-top: 0.7rem;
-    border: 1px solid #d9b8c8;
-    background: #fdf3f7;
-    color: #8a2f5a;
-    border-radius: 10px;
-    padding: 0.55rem 0.9rem;
-    font-weight: 800;
+    padding: 0.6rem 0.9rem;
+    border: 1px solid rgba(17, 33, 31, 0.1);
+    border-radius: 12px;
+    background: #ffffff;
+    color: #17211f;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    font-weight: 600;
     font-size: 0.9rem;
     cursor: pointer;
+    transition: all 0.16s cubic-bezier(0.2, 0.6, 0.2, 1);
   }
-  @media (hover: hover) {
-    .owlpark-feat-gift-mode .gm-add-btn:hover {
-      background: #71264a;
+  .owlpark-feat-gift-mode-cert-btn:hover {
+    border-color: rgba(15, 111, 122, 0.35);
+    background: rgba(15, 111, 122, 0.06);
+    color: #0f6f7a;
+  }
+  .owlpark-feat-gift-mode-cert-btn:active {
+    transform: translateY(1px);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-gift-mode {
+      color: #e9edec;
+      border-top-color: rgba(255, 255, 255, 0.11);
+    }
+    .owlpark-feat-gift-mode .gm-open-btn {
+      background: #12181a;
+      border-color: rgba(255, 255, 255, 0.11);
+      color: #e9edec;
+    }
+    .owlpark-feat-gift-mode .gm-open-btn:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .owlpark-feat-gift-mode .gm-open-btn[aria-expanded="true"] {
+      border-color: rgba(91, 199, 207, 0.4);
+      background: rgba(91, 199, 207, 0.12);
+      color: #5bc7cf;
+    }
+    .owlpark-feat-gift-mode .gm-panel {
+      background: rgba(18, 24, 26, 0.8);
+      border-color: rgba(255, 255, 255, 0.11);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+    .owlpark-feat-gift-mode .gm-label {
+      color: #98a4a1;
+    }
+    .owlpark-feat-gift-mode .gm-input,
+    .owlpark-feat-gift-mode .gm-textarea {
+      background: #12181a;
+      border-color: rgba(255, 255, 255, 0.11);
+      color: #e9edec;
+    }
+    .owlpark-feat-gift-mode .gm-input::placeholder,
+    .owlpark-feat-gift-mode .gm-textarea::placeholder {
+      color: #6b7775;
+    }
+    .owlpark-feat-gift-mode .gm-input:focus,
+    .owlpark-feat-gift-mode .gm-textarea:focus {
+      border-color: #5bc7cf;
+    }
+    .owlpark-feat-gift-mode .gm-error {
+      color: #f0857a;
+    }
+    .owlpark-feat-gift-mode-cert-btn {
+      background: #12181a;
+      border-color: rgba(255, 255, 255, 0.11);
+      color: #e9edec;
+    }
+    .owlpark-feat-gift-mode-cert-btn:hover {
+      border-color: rgba(91, 199, 207, 0.35);
+      background: rgba(91, 199, 207, 0.12);
+      color: #5bc7cf;
+    }
+    .owlpark-feat-gift-mode :focus-visible,
+    .owlpark-feat-gift-mode-cert-btn:focus-visible {
+      outline-color: #5bc7cf;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-gift-mode .gm-open-btn,
+    .owlpark-feat-gift-mode .gm-add-btn,
+    .owlpark-feat-gift-mode .gm-input,
+    .owlpark-feat-gift-mode .gm-textarea,
+    .owlpark-feat-gift-mode-cert-btn {
+      transition: none;
+    }
+    .owlpark-feat-gift-mode .gm-panel {
+      animation: none;
+    }
+    .owlpark-feat-gift-mode .gm-open-btn:active,
+    .owlpark-feat-gift-mode .gm-add-btn:hover,
+    .owlpark-feat-gift-mode .gm-add-btn:active,
+    .owlpark-feat-gift-mode-cert-btn:active {
+      transform: none;
     }
   }
 </style>
 
 <script>
   (function () {
+    /* =========================================================================
+     * Gift Mode  ·  behavioral
+     * -------------------------------------------------------------------------
+     * WHAT   Adds a "Buying this as a gift?" disclosure to each membership row:
+     *        capture a recipient, a personal message and a delivery date, and the
+     *        membership rides the cart as a gift line. At checkout, a "Print gift
+     *        certificate" button opens a printable keepsake for each recipient.
+     * HOW    Reads data/products.json (Owl Park only) to learn which rows are
+     *        memberships, decorates #catalog-grid .product-row, and re-applies via
+     *        a MutationObserver after renderCatalog() rewrites the grid. Cart writes
+     *        go through localStorage["owl-park-cart"] then an "owl-park-cart-changed"
+     *        event, and every cart read is taken fresh at click time. A capture-phase
+     *        click listener snapshots gift lines before checkout clears the cart; an
+     *        observer on #order-id re-injects the certificate button per order.
+     * HOSTS  Owl Park only. The zoo ViewItems page has no .product-row and 404s on
+     *        products.json, so every path no-ops there (no rows decorated, no button).
+     * ===================================================================== */
+
     var FEATURE_ID = "gift-mode";
     var CART_KEY = "owl-park-cart";
+
+    // ----- Configuration --------------------------------------------------
+    // Tunable copy + limits for the gift control. Behaviour is unchanged.
+    var CONFIG = {
+      openLabel: "🎁 Buying this as a gift?", // row disclosure toggle label (holds the 🎁 glyph)
+      addLabel: "Add as a gift", // primary action inside the panel
+      recipientLabel: "Recipient", // field label — who the gift is for
+      messageLabel: "Personal message (optional)", // field label — the certificate note
+      deliveryLabel: "Deliver on", // field label — delivery date
+      recipientPlaceholder: "Who's it for?", // recipient input placeholder / help copy
+      messagePlaceholder: "A line they'll read on the certificate", // message help copy
+      missingRecipientError: "Who is the gift for? Add a name first.", // shown when the name is blank
+      maxRecipient: 60, // max characters for the recipient name
+      maxMessage: 240, // max characters for the personal message
+      giftableCategory: "membership", // only rows in this catalog category get the gift control
+      certButtonPrefix: "🎁 Print gift certificate for ", // checkout button copy; recipient name appended
+    };
 
     var gridObserver = null;
     var orderObserver = null;
     var pendingGifts = [];
     var products = null;
+    var panelSeq = 0;
     // Bumped on every activate and deactivate: an in-flight catalog fetch whose generation no longer
     // matches belongs to an activation that has since been torn down, and must touch nothing.
     var generation = 0;
@@ -206,27 +407,31 @@
       block.className = "owlpark-feat-gift-mode";
       block.setAttribute("data-owlpark-feature", FEATURE_ID);
 
+      var panelId = "owlpark-gm-panel-" + ++panelSeq;
+
       var openBtn = document.createElement("button");
       openBtn.type = "button";
       openBtn.className = "gm-open-btn";
-      openBtn.textContent = "🎁 Buying this as a gift?";
+      openBtn.textContent = CONFIG.openLabel;
       openBtn.setAttribute("aria-expanded", "false");
+      openBtn.setAttribute("aria-controls", panelId);
       block.appendChild(openBtn);
 
       var panel = document.createElement("div");
       panel.className = "gm-panel";
+      panel.id = panelId;
       panel.hidden = true;
 
       var recipient = document.createElement("input");
       recipient.type = "text";
       recipient.className = "gm-input";
-      recipient.maxLength = 60;
-      recipient.placeholder = "Who's it for?";
+      recipient.maxLength = CONFIG.maxRecipient;
+      recipient.placeholder = CONFIG.recipientPlaceholder;
 
       var message = document.createElement("textarea");
       message.className = "gm-textarea";
-      message.maxLength = 240;
-      message.placeholder = "A line they'll read on the certificate";
+      message.maxLength = CONFIG.maxMessage;
+      message.placeholder = CONFIG.messagePlaceholder;
 
       var deliveryDate = document.createElement("input");
       deliveryDate.type = "date";
@@ -236,18 +441,19 @@
 
       var error = document.createElement("div");
       error.className = "gm-error";
+      error.setAttribute("role", "alert");
       error.hidden = true;
 
       var addBtn = document.createElement("button");
       addBtn.type = "button";
       addBtn.className = "gm-add-btn";
-      addBtn.textContent = "Add as a gift";
+      addBtn.textContent = CONFIG.addLabel;
 
       addBtn.addEventListener("click", function () {
         var name = recipient.value.trim();
         if (!name) {
           error.hidden = false;
-          error.textContent = "Who is the gift for? Add a name first.";
+          error.textContent = CONFIG.missingRecipientError;
           recipient.focus();
           return;
         }
@@ -264,9 +470,9 @@
       });
 
       panel.append(
-        field("Recipient", recipient),
-        field("Personal message (optional)", message),
-        field("Deliver on", deliveryDate),
+        field(CONFIG.recipientLabel, recipient),
+        field(CONFIG.messageLabel, message),
+        field(CONFIG.deliveryLabel, deliveryDate),
         error,
         addBtn,
       );
@@ -298,7 +504,7 @@
         var product = products.filter(function (p) {
           return p.id === id;
         })[0];
-        if (!product || product.category !== "membership") return;
+        if (!product || product.category !== CONFIG.giftableCategory) return;
         buildGiftBlock(row, id);
       });
     }
@@ -314,12 +520,12 @@
 
       var style = doc.createElement("style");
       style.textContent =
-        "body{font-family:Georgia,serif;margin:0;padding:32px;background:#fdf3f7;color:#2c2a26}" +
-        ".cert{border:3px double #8a2f5a;border-radius:16px;background:#fff;padding:32px;text-align:center}" +
-        ".mark{font-size:48px}h1{font-size:22px;letter-spacing:.08em;text-transform:uppercase;color:#8a2f5a}" +
+        "body{font-family:Georgia,serif;margin:0;padding:32px;background:#f7f8f7;color:#17211f}" +
+        ".cert{border:3px double #0f6f7a;border-radius:16px;background:#fff;padding:32px;text-align:center}" +
+        ".mark{font-size:48px}h1{font-size:22px;letter-spacing:.08em;text-transform:uppercase;color:#0f6f7a}" +
         ".for{font-size:28px;margin:18px 0 6px}.what{font-size:17px;font-weight:bold}" +
         ".msg{margin:22px auto;max-width:34em;font-style:italic;white-space:pre-wrap}" +
-        ".when{margin-top:18px;font-size:14px;color:#6d675c}" +
+        ".when{margin-top:18px;font-size:14px;color:#67736f}" +
         "@media print{body{background:#fff;padding:0}}";
       doc.head.appendChild(style);
 
@@ -369,7 +575,7 @@
         btn.type = "button";
         btn.className = "owlpark-feat-gift-mode-cert-btn";
         btn.setAttribute("data-owlpark-feature", FEATURE_ID);
-        btn.textContent = "🎁 Print gift certificate for " + entry.gift.recipient;
+        btn.textContent = CONFIG.certButtonPrefix + entry.gift.recipient;
         btn.addEventListener("click", function () {
           openCertificate(entry.gift, entry.productName);
         });

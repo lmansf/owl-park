@@ -9,128 +9,292 @@
   }
 </script>
 
-<style>
+<style id="owlpark-conservation-roundup-style">
   .owlpark-feat-conservation-roundup[hidden] {
     display: none;
   }
+  /* Warm-but-restrained callout: a faint accent-soft wash on a hairline card,
+     so it reads as a distinct ask inside the cart without shouting. */
   .owlpark-feat-conservation-roundup {
+    box-sizing: border-box;
     flex-shrink: 0;
-    border: 1px solid #e0d3bb;
-    background: #fdf8ee;
-    border-radius: 12px;
-    padding: 0.7rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 1rem;
+    border: 1px solid rgba(17, 33, 31, 0.1);
+    border-radius: 20px;
+    background: rgba(15, 111, 122, 0.06);
+    box-shadow: 0 2px 6px rgba(20, 40, 40, 0.05);
+    color: #17211f;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.45;
   }
   .owlpark-feat-conservation-roundup .cru-title {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: 0.45rem;
+    margin: 0;
     font-size: 0.72rem;
-    font-weight: 800;
+    font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: #9a6a1a;
-    margin-bottom: 0.35rem;
+    color: #67736f;
+  }
+  .owlpark-feat-conservation-roundup .cru-glyph {
+    font-size: 0.95rem;
+    line-height: 1;
   }
   .owlpark-feat-conservation-roundup .cru-line {
-    font-size: 0.86rem;
-    line-height: 1.35;
-    color: #2c2a26;
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.45;
+    color: #17211f;
+  }
+  /* The one place a committed amount is emphasized. */
+  .owlpark-feat-conservation-roundup .cru-amount {
+    font-weight: 600;
+    color: #0f6f7a;
+    white-space: nowrap;
   }
   .owlpark-feat-conservation-roundup .cru-fine {
-    margin-top: 0.3rem;
-    font-size: 0.76rem;
-    line-height: 1.35;
-    color: #6d675c;
+    margin: 0;
+    font-size: 0.82rem;
+    line-height: 1.45;
+    color: #67736f;
   }
+  /* Primary action: one restrained solid-teal pill. */
   .owlpark-feat-conservation-roundup .cru-roundup-btn {
-    margin-top: 0.55rem;
+    box-sizing: border-box;
     width: 100%;
     min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
     border: none;
-    border-radius: 10px;
-    background: #9a6a1a;
-    color: #fff;
-    font-weight: 800;
-    font-size: 0.88rem;
-    padding: 0.5rem 0.9rem;
+    border-radius: 999px;
+    background: #0f6f7a;
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.1px;
     cursor: pointer;
+    transition: all 0.16s cubic-bezier(0.2, 0.6, 0.2, 1);
   }
+  .owlpark-feat-conservation-roundup .cru-roundup-btn:hover {
+    background: #0c5f69;
+    transform: translateY(-1px);
+  }
+  .owlpark-feat-conservation-roundup .cru-roundup-btn:active {
+    transform: translateY(1px);
+  }
+  /* Suggested giving tiers: quiet chips, horizontally scrollable. */
   .owlpark-feat-conservation-roundup .cru-tiers {
-    margin-top: 0.55rem;
+    margin: 0;
     display: flex;
     gap: 0.4rem;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    padding-bottom: 0.2rem;
+    padding-bottom: 0.15rem;
   }
   .owlpark-feat-conservation-roundup .cru-tier-btn {
+    box-sizing: border-box;
     flex: 0 0 auto;
     min-height: 44px;
     min-width: 44px;
-    border: 1px solid #e0d3bb;
-    background: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.1rem;
+    padding: 0.4rem 0.75rem;
+    border: 1px solid rgba(17, 33, 31, 0.1);
     border-radius: 10px;
-    padding: 0.35rem 0.7rem;
+    background: #ffffff;
     text-align: left;
     cursor: pointer;
-    line-height: 1.2;
+    transition: all 0.16s cubic-bezier(0.2, 0.6, 0.2, 1);
+  }
+  .owlpark-feat-conservation-roundup .cru-tier-btn:hover {
+    border-color: rgba(15, 111, 122, 0.5);
+    transform: translateY(-1px);
+  }
+  .owlpark-feat-conservation-roundup .cru-tier-btn:active {
+    transform: translateY(0);
   }
   .owlpark-feat-conservation-roundup .cru-tier-amount {
     display: block;
-    font-weight: 800;
     font-size: 0.9rem;
-    color: #9a6a1a;
+    font-weight: 600;
+    color: #17211f;
   }
   .owlpark-feat-conservation-roundup .cru-tier-label {
     display: block;
     font-size: 0.72rem;
-    color: #6d675c;
+    color: #67736f;
     white-space: nowrap;
   }
   .owlpark-feat-conservation-roundup .cru-given {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.5rem;
+    gap: 0.6rem;
     flex-wrap: wrap;
   }
-  .owlpark-feat-conservation-roundup .cru-remove-btn {
-    min-height: 44px;
-    border: 1px solid #e0d3bb;
-    background: #fff;
-    border-radius: 10px;
-    padding: 0.4rem 0.9rem;
-    font-weight: 700;
-    font-size: 0.82rem;
-    color: #a8321f;
-    cursor: pointer;
+  .owlpark-feat-conservation-roundup .cru-given .cru-line {
+    flex: 1 1 auto;
+    min-width: 60%;
   }
-  @media (hover: hover) {
-    .owlpark-feat-conservation-roundup .cru-roundup-btn:hover {
-      background: #82590f;
+  /* Remove: a quiet ghost, never a loud danger button. */
+  .owlpark-feat-conservation-roundup .cru-remove-btn {
+    box-sizing: border-box;
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid rgba(17, 33, 31, 0.1);
+    border-radius: 12px;
+    background: transparent;
+    color: #67736f;
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.16s cubic-bezier(0.2, 0.6, 0.2, 1);
+  }
+  .owlpark-feat-conservation-roundup .cru-remove-btn:hover {
+    background: rgba(17, 33, 31, 0.05);
+    color: #17211f;
+  }
+  .owlpark-feat-conservation-roundup .cru-remove-btn:active {
+    transform: translateY(1px);
+  }
+  .owlpark-feat-conservation-roundup :focus-visible {
+    outline: 2px solid #0f6f7a;
+    outline-offset: 2px;
+  }
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-conservation-roundup {
+      background: rgba(15, 111, 122, 0.12);
+      border-color: rgba(255, 255, 255, 0.11);
+      color: #e9edec;
+    }
+    .owlpark-feat-conservation-roundup .cru-title {
+      color: #98a4a1;
+    }
+    .owlpark-feat-conservation-roundup .cru-line {
+      color: #e9edec;
+    }
+    .owlpark-feat-conservation-roundup .cru-amount {
+      color: #5bc7cf;
+    }
+    .owlpark-feat-conservation-roundup .cru-fine {
+      color: #98a4a1;
+    }
+    .owlpark-feat-conservation-roundup .cru-tier-btn {
+      background: #1a2224;
+      border-color: rgba(255, 255, 255, 0.11);
     }
     .owlpark-feat-conservation-roundup .cru-tier-btn:hover {
-      border-color: #9a6a1a;
+      border-color: rgba(91, 199, 207, 0.6);
+    }
+    .owlpark-feat-conservation-roundup .cru-tier-amount {
+      color: #e9edec;
+    }
+    .owlpark-feat-conservation-roundup .cru-tier-label {
+      color: #98a4a1;
+    }
+    .owlpark-feat-conservation-roundup .cru-remove-btn {
+      border-color: rgba(255, 255, 255, 0.11);
+      color: #98a4a1;
+    }
+    .owlpark-feat-conservation-roundup .cru-remove-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #e9edec;
+    }
+    .owlpark-feat-conservation-roundup :focus-visible {
+      outline-color: #5bc7cf;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-conservation-roundup .cru-roundup-btn,
+    .owlpark-feat-conservation-roundup .cru-tier-btn,
+    .owlpark-feat-conservation-roundup .cru-remove-btn {
+      transition: none;
+    }
+    .owlpark-feat-conservation-roundup .cru-roundup-btn:hover,
+    .owlpark-feat-conservation-roundup .cru-roundup-btn:active,
+    .owlpark-feat-conservation-roundup .cru-tier-btn:hover,
+    .owlpark-feat-conservation-roundup .cru-tier-btn:active,
+    .owlpark-feat-conservation-roundup .cru-remove-btn:active {
+      transform: none;
     }
   }
 </style>
 
 <script>
   (function () {
+    /* =========================================================================
+     * Conservation Round-Up  ·  behavioral
+     * -------------------------------------------------------------------------
+     * WHAT   A quiet donation callout inside the cart: offers to round the order
+     *        up to the next whole $5 for the Owl Rehabilitation Fund, plus a few
+     *        suggested giving tiers. Never pre-selected; opt-in only.
+     * HOW    Mounts a panel in #cart-items (the SCROLLING region, so Total and
+     *        Checkout stay reachable on a phone) and re-appends it via a
+     *        MutationObserver after every renderCart(). Reads the cart from
+     *        localStorage ("owl-park-cart") on a poll + the owl-park-cart-changed
+     *        event, and prices the purchase with the core window.OwlPark.cartTotal
+     *        API off data/products.json. Adding/removing writes a donation line
+     *        (custom.source "roundup"|"tier", custom.price absolute) back to the
+     *        cart key and dispatches owl-park-cart-changed. The round-up is
+     *        recomputed from a FRESH cart read at click time and declined if the
+     *        cart no longer supports the amount the button named.
+     * HOSTS  Owl Park only — it needs window.OwlPark + data/products.json. On any
+     *        host that publishes neither, the panel stays hidden (a clean no-op).
+     * ===================================================================== */
+
     var FEATURE_ID = "conservation-roundup";
-    var CART_KEY = "owl-park-cart";
-    var POLL_MS = 700;
 
-    var DONATION_LINE_ID = "give-owl-rehab-fund";
-    var FUND_NAME = "Owl Rehabilitation Fund";
-    var ROUND_TO = 5; // round the order up to the next whole $5
+    // ----- Configuration --------------------------------------------------
+    // Tunable values, safe to edit. Each explained inline.
+    var CONFIG = {
+      // --- Cart plumbing (values the storefront relies on; keep the shape) ---
+      cartKey: "owl-park-cart", // localStorage key the storefront cart lives under
+      pollMs: 700, // ms between cart re-checks for changes made elsewhere
+      donationLineId: "give-owl-rehab-fund", // id + key used for the gift cart line
+      donationEmoji: "🦉", // emoji stored on the gift line (cart display)
 
-    // Suggested giving amounts, not prices — the shopper chooses one, or none.
-    var ADOPT_TIERS = [
-      { amount: 5, label: "A day of fish & mice" },
-      { amount: 10, label: "A week of feeding" },
-      { amount: 25, label: "Adopt an owl for a month" },
-    ];
+      // --- The cause + the ask ---------------------------------------------
+      fundName: "Owl Rehabilitation Fund", // cause name (shown + stored on the line)
+      glyph: "🌿", // small conservation glyph in the callout (decorative)
+      roundTo: 5, // round the order up to the next whole $ multiple
+
+      // Suggested giving amounts, not prices — the shopper picks one, or none.
+      tiers: [
+        { amount: 5, label: "A day of fish & mice" },
+        { amount: 10, label: "A week of feeding" },
+        { amount: 25, label: "Adopt an owl for a month" },
+      ],
+
+      // --- Copy. {amount}/{target}/{gift}/{total}/{fund}/{label} fill at
+      //     render time; {amount} marks the one emphasized number. -----------
+      copy: {
+        intro: "Every rescued owl we rehabilitate is funded by visitors like you.",
+        thanks: "You're giving {amount} to the {fund}. Thank you.",
+        cartChanged: "Your cart has changed since — your order now comes to {total}.",
+        tierPrompt: "Or change the amount — every owl helps:",
+        optional:
+          "Entirely optional — nothing is added to your total until you choose an amount.",
+        roundUpBtn: "Round up to {target} and give {gift}",
+        removeBtn: "Remove donation",
+        removeAria: "Remove your {amount} donation to the {fund}",
+        tierAria: "Give {amount} — {label}",
+      },
+    };
 
     var products = null;
     var panelEl = null;
@@ -143,7 +307,7 @@
 
     function readCart() {
       try {
-        var raw = localStorage.getItem(CART_KEY);
+        var raw = localStorage.getItem(CONFIG.cartKey);
         var lines = raw ? JSON.parse(raw) : [];
         return Array.isArray(lines) ? lines : [];
       } catch (err) {
@@ -152,12 +316,20 @@
     }
 
     function writeCart(lines) {
-      localStorage.setItem(CART_KEY, JSON.stringify(lines));
+      localStorage.setItem(CONFIG.cartKey, JSON.stringify(lines));
       window.dispatchEvent(new CustomEvent("owl-park-cart-changed"));
     }
 
     function money(n) {
       return "$" + n.toFixed(2);
+    }
+
+    /** Fill {token} placeholders from `vars`; leave unknown tokens intact so
+     *  {amount} can survive to mark the emphasis split point. */
+    function fill(tpl, vars) {
+      return String(tpl).replace(/\{(\w+)\}/g, function (m, k) {
+        return vars && k in vars ? vars[k] : m;
+      });
     }
 
     function isDonation(line) {
@@ -188,12 +360,12 @@
     }
 
     function isRound(amount) {
-      return Math.round(amount * 100) % (ROUND_TO * 100) === 0;
+      return Math.round(amount * 100) % (CONFIG.roundTo * 100) === 0;
     }
 
     /** The next whole $5 above `subtotal`, and the gift that gets an order there. */
     function nextRound(subtotal) {
-      var target = (Math.floor(subtotal / ROUND_TO) + 1) * ROUND_TO;
+      var target = (Math.floor(subtotal / CONFIG.roundTo) + 1) * CONFIG.roundTo;
       return { target: target, gift: target - subtotal };
     }
 
@@ -231,15 +403,15 @@
       var custom = {
         kind: "donation",
         fixed: true,
-        name: FUND_NAME,
-        emoji: "🦉",
+        name: CONFIG.fundName,
+        emoji: CONFIG.donationEmoji,
         unit: "donation",
         price: Math.round(amount * 100) / 100,
       };
       if (source) custom.source = source;
       lines.push({
-        id: DONATION_LINE_ID,
-        key: DONATION_LINE_ID,
+        id: CONFIG.donationLineId,
+        key: CONFIG.donationLineId,
         qty: 1,
         custom: custom,
       });
@@ -281,13 +453,46 @@
       return el;
     }
 
+    /** A line with exactly one emphasized amount: the template is split on the
+     *  literal {amount} token and the middle is rendered as .cru-amount. */
+    function amountLine(className, template, amountText, vars) {
+      var el = document.createElement("div");
+      el.className = className;
+      var parts = fill(template, vars).split("{amount}");
+      el.appendChild(document.createTextNode(parts[0] || ""));
+      var strong = document.createElement("strong");
+      strong.className = "cru-amount";
+      strong.textContent = amountText;
+      el.appendChild(strong);
+      el.appendChild(
+        document.createTextNode(parts.length > 1 ? parts.slice(1).join("{amount}") : ""),
+      );
+      return el;
+    }
+
+    function titleEl() {
+      var title = document.createElement("div");
+      title.className = "cru-title";
+      var glyph = document.createElement("span");
+      glyph.className = "cru-glyph";
+      glyph.setAttribute("aria-hidden", "true");
+      glyph.textContent = CONFIG.glyph;
+      title.appendChild(glyph);
+      title.appendChild(document.createTextNode(CONFIG.fundName));
+      return title;
+    }
+
     function tierRow() {
       var row = document.createElement("div");
       row.className = "cru-tiers";
-      ADOPT_TIERS.forEach(function (tier) {
+      CONFIG.tiers.forEach(function (tier) {
         var btn = document.createElement("button");
         btn.type = "button";
         btn.className = "cru-tier-btn";
+        btn.setAttribute(
+          "aria-label",
+          fill(CONFIG.copy.tierAria, { amount: money(tier.amount), label: tier.label }),
+        );
 
         var amount = document.createElement("span");
         amount.className = "cru-tier-amount";
@@ -324,28 +529,33 @@
       }
       panelEl.hidden = false;
 
-      var title = document.createElement("div");
-      title.className = "cru-title";
-      title.textContent = "🦉 " + FUND_NAME;
-      panelEl.appendChild(title);
+      panelEl.appendChild(titleEl());
 
       if (donation) {
         var given = document.createElement("div");
         given.className = "cru-given";
-        given.appendChild(
-          textLine(
-            "cru-line",
-            "You're giving " +
-              money(donation.custom.price) +
-              " to the " +
-              FUND_NAME +
-              ". Thank you.",
-          ),
+
+        var thanks = amountLine(
+          "cru-line",
+          CONFIG.copy.thanks,
+          money(donation.custom.price),
+          { fund: CONFIG.fundName },
         );
+        thanks.setAttribute("role", "status");
+        thanks.setAttribute("aria-live", "polite");
+        given.appendChild(thanks);
+
         var remove = document.createElement("button");
         remove.type = "button";
         remove.className = "cru-remove-btn";
-        remove.textContent = "Remove donation";
+        remove.textContent = CONFIG.copy.removeBtn;
+        remove.setAttribute(
+          "aria-label",
+          fill(CONFIG.copy.removeAria, {
+            amount: money(donation.custom.price),
+            fund: CONFIG.fundName,
+          }),
+        );
         remove.addEventListener("click", clearDonation);
         given.appendChild(remove);
         panelEl.appendChild(given);
@@ -361,16 +571,16 @@
           panelEl.appendChild(
             textLine(
               "cru-fine",
-              "Your cart has changed since — your order now comes to " +
-                money(orderTotal) +
-                ".",
+              fill(CONFIG.copy.cartChanged, { total: money(orderTotal) }),
             ),
           );
           var reBtn = document.createElement("button");
           reBtn.type = "button";
           reBtn.className = "cru-roundup-btn";
-          reBtn.textContent =
-            "Round up to " + money(reUp.target) + " and give " + money(reUp.gift);
+          reBtn.textContent = fill(CONFIG.copy.roundUpBtn, {
+            target: money(reUp.target),
+            gift: money(reUp.gift),
+          });
           reBtn.addEventListener("click", function () {
             giveRoundUp(reUp, function (now) {
               var pinned = currentDonation();
@@ -380,27 +590,22 @@
           panelEl.appendChild(reBtn);
         }
 
-        panelEl.appendChild(
-          textLine("cru-fine", "Or change the amount — every owl helps:"),
-        );
+        panelEl.appendChild(textLine("cru-fine", CONFIG.copy.tierPrompt));
         panelEl.appendChild(tierRow());
         return;
       }
 
-      panelEl.appendChild(
-        textLine(
-          "cru-line",
-          "Every rescued owl we rehabilitate is funded by visitors like you.",
-        ),
-      );
+      panelEl.appendChild(textLine("cru-line", CONFIG.copy.intro));
 
       var up = subtotal > 0 ? roundUp(subtotal) : null;
       if (up) {
         var btn = document.createElement("button");
         btn.type = "button";
         btn.className = "cru-roundup-btn";
-        btn.textContent =
-          "Round up to " + money(up.target) + " and give " + money(up.gift);
+        btn.textContent = fill(CONFIG.copy.roundUpBtn, {
+          target: money(up.target),
+          gift: money(up.gift),
+        });
         btn.addEventListener("click", function () {
           giveRoundUp(up, roundUp);
         });
@@ -408,21 +613,16 @@
       }
 
       panelEl.appendChild(tierRow());
-      panelEl.appendChild(
-        textLine(
-          "cru-fine",
-          "Entirely optional — nothing is added to your total until you choose an amount.",
-        ),
-      );
+      panelEl.appendChild(textLine("cru-fine", CONFIG.copy.optional));
     }
 
     function refresh() {
-      lastSerialized = localStorage.getItem(CART_KEY);
+      lastSerialized = localStorage.getItem(CONFIG.cartKey);
       render();
     }
 
     function sync() {
-      if (localStorage.getItem(CART_KEY) === lastSerialized) return;
+      if (localStorage.getItem(CONFIG.cartKey) === lastSerialized) return;
       refresh();
     }
 
@@ -470,7 +670,7 @@
           );
         });
 
-      pollId = setInterval(sync, POLL_MS);
+      pollId = setInterval(sync, CONFIG.pollMs);
       window.addEventListener("owl-park-cart-changed", sync);
     }
 

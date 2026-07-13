@@ -9,23 +9,80 @@
   }
 </script>
 
-<style>
+<style id="owlpark-species-fact-ticker-style">
   .owlpark-feat-species-fact-ticker {
-    background: var(--cove-teal-dark, #0a4d55);
-    color: white;
+    box-sizing: border-box;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    position: relative;
+    padding: 0.45rem 1rem;
+    padding-left: calc(1rem + env(safe-area-inset-left, 0px));
+    padding-right: calc(1rem + env(safe-area-inset-right, 0px));
+    background: rgba(255, 255, 255, 0.82);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    backdrop-filter: blur(16px) saturate(1.4);
+    border-top: 1px solid rgba(17, 33, 31, 0.1);
+    border-bottom: 1px solid rgba(17, 33, 31, 0.1);
+    color: #17211f;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    z-index: 20;
+  }
+  .owlpark-feat-species-fact-ticker .sft-glyph {
+    flex-shrink: 0;
+    font-size: 0.95rem;
+    line-height: 1;
+    opacity: 0.5; /* muted owl mark */
+  }
+  .owlpark-feat-species-fact-ticker .sft-viewport {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
     overflow: hidden;
-    white-space: nowrap;
-    padding: 0.45rem 0;
+    /* soft edge-fade so facts slip in/out rather than hard-cutting */
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 2.5rem,
+      #000 calc(100% - 2.5rem),
+      transparent
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 2.5rem,
+      #000 calc(100% - 2.5rem),
+      transparent
+    );
   }
   .owlpark-feat-species-fact-ticker .sft-track {
     display: inline-block;
+    white-space: nowrap;
     padding-left: 100%;
-    animation: owlpark-sft-scroll 32s linear infinite;
+    animation: owlpark-sft-scroll 42s linear infinite;
     font-size: 0.82rem;
-    font-weight: 600;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+  }
+  /* Let readers pause a fact under the pointer. */
+  .owlpark-feat-species-fact-ticker:hover .sft-track {
+    animation-play-state: paused;
   }
   .owlpark-feat-species-fact-ticker .sft-track span {
     margin-right: 3rem;
+  }
+  .owlpark-feat-species-fact-ticker .sft-track span::before {
+    content: "";
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    margin-right: 0.8rem;
+    border-radius: 999px;
+    background: #0f6f7a; /* the one restrained teal accent, as a lead dot */
+    opacity: 0.55;
+    vertical-align: middle;
   }
   @keyframes owlpark-sft-scroll {
     from {
@@ -35,33 +92,110 @@
       transform: translateX(-100%);
     }
   }
+
+  /* Stepping mode (reduced motion): no marquee — one fact at a time, crisp. */
+  .owlpark-feat-species-fact-ticker.sft-reduced .sft-viewport {
+    overflow-x: auto;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .owlpark-feat-species-fact-ticker.sft-reduced .sft-track {
+    animation: none;
+    padding-left: 0;
+  }
+
+  @media (max-width: 560px) {
+    .owlpark-feat-species-fact-ticker .sft-track {
+      font-size: 0.8rem;
+    }
+  }
+  /* No-JS safety net: stop the scroll and leave a static, scrollable strip. */
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-species-fact-ticker .sft-track {
+      animation: none;
+      padding-left: 0;
+    }
+    .owlpark-feat-species-fact-ticker .sft-viewport {
+      overflow-x: auto;
+    }
+  }
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-species-fact-ticker {
+      background: rgba(18, 24, 26, 0.8);
+      border-top-color: rgba(255, 255, 255, 0.11);
+      border-bottom-color: rgba(255, 255, 255, 0.11);
+      color: #e9edec;
+    }
+    .owlpark-feat-species-fact-ticker .sft-track span::before {
+      background: #5bc7cf;
+    }
+  }
 </style>
 
-<div class="owlpark-feat-species-fact-ticker">
-  <div class="sft-track" id="sft-track"></div>
+<div class="owlpark-feat-species-fact-ticker" role="region" aria-label="Owl facts">
+  <span class="sft-glyph" aria-hidden="true">🦉</span>
+  <div class="sft-viewport">
+    <div class="sft-track" id="sft-track"></div>
+  </div>
 </div>
 
 <script>
   (function () {
-    var FEATURE_ID = "species-fact-ticker";
-    var FACTS = [
-      "🦉 An owl's eyes are fixed in their sockets — that's why they can rotate their heads up to 270°.",
-      "🦉 Barn owls can hear a mouse's heartbeat under a foot of snow.",
-      "🦉 A group of owls is called a 'parliament'.",
-      "🦉 Owls have asymmetrical ear openings, which helps them pinpoint prey by sound alone.",
-      "🦉 The Great Grey Owl is one of the tallest owl species, but mostly feathers — it weighs less than most house cats.",
-      "🦉 Owl feathers have a comb-like edge that muffles the sound of their wingbeats.",
-    ];
+    /* =========================================================================
+     * Species Fact Ticker  ·  visual
+     * -------------------------------------------------------------------------
+     * WHAT   A slim, frosted strip below the header that gently scrolls a
+     *        marquee of rotating owl facts, led by a small muted owl glyph.
+     * HOW    Injects its own full-width strip and relocates it to sit right
+     *        below the Owl Park hero (.hero-banner), else below the zoo store
+     *        heading (#ContentHeading / #sub-header). Facts + scroll speed come
+     *        from CONFIG; the marquee is a CSS keyframe pass that pauses on
+     *        hover. Under prefers-reduced-motion it stops scrolling and steps
+     *        through facts one at a time on a timer (instant swaps, announced
+     *        politely); a CSS fallback keeps the strip a static, horizontally
+     *        scrollable line if matchMedia is unavailable.
+     * HOSTS  Renders on every host — the facts are self-contained, so it needs
+     *        no store data and works on the zoo store, Owl Park, and the
+     *        generic fallback alike.
+     * ===================================================================== */
 
-    function activate() {
-      var track = document.getElementById("sft-track");
-      if (!track) return;
+    var FEATURE_ID = "species-fact-ticker";
+
+    // ----- Configuration --------------------------------------------------
+    var CONFIG = {
+      // Facts cycled through the ticker, in order. Plain strings — the muted
+      // owl glyph is drawn once at the strip's edge, so no per-fact emoji.
+      facts: [
+        "An owl's eyes are fixed in their sockets — that's why they can rotate their heads up to 270°.",
+        "Barn owls can hear a mouse's heartbeat under a foot of snow.",
+        "A group of owls is called a 'parliament'.",
+        "Owls have asymmetrical ear openings, which helps them pinpoint prey by sound alone.",
+        "The Great Grey Owl is one of the tallest owl species, but mostly feathers — it weighs less than most house cats.",
+        "Owl feathers have a comb-like edge that muffles the sound of their wingbeats.",
+      ],
+      scrollSeconds: 42, // one full marquee pass; higher = slower, gentler drift
+      stepSeconds: 6, // reduced-motion: seconds each fact rests before the next
+    };
+
+    var stepTimerId = null;
+    var stepIndex = 0;
+    var mql = null;
+    var mqlHandler = null;
+
+    function makeSpan(text) {
+      var s = document.createElement("span");
+      s.textContent = text;
+      return s;
+    }
+
+    // Sit the strip right below the host header — Owl Park hero first, else the
+    // zoo store heading. (Kept verbatim: this is the feature's relocation logic.)
+    function relocate(track) {
       var ticker = track.closest(".owlpark-feat-species-fact-ticker");
       var hero = document.querySelector(".hero-banner");
       if (ticker && hero && ticker.previousElementSibling !== hero) {
         hero.insertAdjacentElement("afterend", ticker);
       } else if (ticker) {
-        // No Owl Park hero — sit the ticker just under the zoo store heading.
         var zooAnchor =
           document.getElementById("ContentHeading") ||
           document.getElementById("sub-header");
@@ -73,14 +207,83 @@
           zooAnchor.insertAdjacentElement("afterend", ticker);
         }
       }
-      track.innerHTML = FACTS.map(function (fact) {
-        return "<span>" + fact + "</span>";
-      }).join("");
+    }
+
+    function stopStep() {
+      if (stepTimerId) {
+        clearInterval(stepTimerId);
+        stepTimerId = null;
+      }
+    }
+
+    function reducedMotion() {
+      return !!(mql && mql.matches);
+    }
+
+    // Continuous marquee (default) vs. discrete stepping (reduced motion).
+    function render() {
+      var track = document.getElementById("sft-track");
+      if (!track) return;
+      var ticker = track.closest(".owlpark-feat-species-fact-ticker");
+      stopStep();
+      track.textContent = "";
+
+      if (reducedMotion()) {
+        if (ticker) ticker.classList.add("sft-reduced");
+        track.setAttribute("aria-live", "polite");
+        track.setAttribute("aria-atomic", "true");
+        stepIndex = 0;
+        track.appendChild(makeSpan(CONFIG.facts[stepIndex]));
+        stepTimerId = setInterval(function () {
+          var t = document.getElementById("sft-track");
+          if (!t) {
+            stopStep();
+            return;
+          }
+          stepIndex = (stepIndex + 1) % CONFIG.facts.length;
+          t.textContent = "";
+          t.appendChild(makeSpan(CONFIG.facts[stepIndex]));
+        }, CONFIG.stepSeconds * 1000);
+      } else {
+        if (ticker) ticker.classList.remove("sft-reduced");
+        track.removeAttribute("aria-live");
+        track.removeAttribute("aria-atomic");
+        track.style.animationDuration = CONFIG.scrollSeconds + "s";
+        CONFIG.facts.forEach(function (fact) {
+          track.appendChild(makeSpan(fact));
+        });
+      }
+    }
+
+    function activate() {
+      var track = document.getElementById("sft-track");
+      if (!track) return;
+      relocate(track);
+
+      mql = window.matchMedia
+        ? window.matchMedia("(prefers-reduced-motion: reduce)")
+        : null;
+      if (mql) {
+        mqlHandler = function () {
+          render();
+        };
+        if (mql.addEventListener) mql.addEventListener("change", mqlHandler);
+        else if (mql.addListener) mql.addListener(mqlHandler);
+      }
+
+      render();
     }
 
     function deactivate() {
+      stopStep();
+      if (mql && mqlHandler) {
+        if (mql.removeEventListener) mql.removeEventListener("change", mqlHandler);
+        else if (mql.removeListener) mql.removeListener(mqlHandler);
+      }
+      mql = null;
+      mqlHandler = null;
       var track = document.getElementById("sft-track");
-      if (track) track.innerHTML = "";
+      if (track) track.textContent = "";
     }
 
     activate();

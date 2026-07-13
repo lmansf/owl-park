@@ -9,62 +9,218 @@
   }
 </script>
 
-<style>
+<style id="owlpark-recently-viewed-style">
   .owlpark-feat-recently-viewed {
+    box-sizing: border-box;
+    width: 100%;
     display: flex;
     align-items: center;
-    gap: 0.7rem;
-    background: var(--cove-sand, #faf3e6);
-    border-bottom: 1px solid #e4ddca;
-    padding: 0.5rem 1.2rem;
+    gap: 1rem;
+    padding: 0.6rem 1.25rem;
+    padding-left: calc(1.25rem + env(safe-area-inset-left, 0px));
+    padding-right: calc(1.25rem + env(safe-area-inset-right, 0px));
+    background: rgba(255, 255, 255, 0.82);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    backdrop-filter: blur(16px) saturate(1.4);
+    border-bottom: 1px solid rgba(17, 33, 31, 0.1);
+    color: #17211f;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
     font-size: 0.82rem;
-    flex-wrap: wrap;
+    font-weight: 500;
+    line-height: 1.45;
   }
   .owlpark-feat-recently-viewed[hidden] {
     display: none;
   }
   .owlpark-feat-recently-viewed .rv-label {
-    font-weight: 700;
-    color: var(--cove-teal-dark, #0a4d55);
-    white-space: nowrap;
-  }
-  .owlpark-feat-recently-viewed .rv-chips {
-    display: flex;
-    gap: 0.4rem;
-    flex-wrap: wrap;
-  }
-  .owlpark-feat-recently-viewed .rv-chip {
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
-    background: white;
-    border: 1px solid #e4ddca;
-    border-radius: 999px;
-    padding: 0.2rem 0.6rem 0.2rem 0.35rem;
-    font-size: 0.78rem;
-    color: #3c4849;
+    gap: 0.4rem;
+    flex-shrink: 0;
+    color: #67736f;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
   }
-  .owlpark-feat-recently-viewed .rv-chip-emoji {
+  .owlpark-feat-recently-viewed .rv-icon {
     font-size: 0.9rem;
+    opacity: 0.75;
+  }
+  .owlpark-feat-recently-viewed .rv-track {
+    display: flex;
+    align-items: stretch;
+    gap: 0.5rem;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(17, 33, 31, 0.2) transparent;
+    padding: 2px;
+    margin: -2px;
+  }
+  .owlpark-feat-recently-viewed .rv-track::-webkit-scrollbar {
+    height: 6px;
+  }
+  .owlpark-feat-recently-viewed .rv-track::-webkit-scrollbar-thumb {
+    background: rgba(17, 33, 31, 0.15);
+    border-radius: 999px;
+  }
+  .owlpark-feat-recently-viewed .rv-track::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .owlpark-feat-recently-viewed .rv-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 0 0 auto;
+    min-height: 44px;
+    box-sizing: border-box;
+    padding: 0.25rem 0.7rem 0.25rem 0.3rem;
+    background: #ffffff;
+    border: 1px solid rgba(17, 33, 31, 0.1);
+    border-radius: 12px;
+    color: #17211f;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: default;
+    transition: all 0.16s cubic-bezier(0.2, 0.6, 0.2, 1);
+  }
+  .owlpark-feat-recently-viewed .rv-item:hover {
+    transform: translateY(-1px);
+    border-color: rgba(17, 33, 31, 0.18);
+    box-shadow: 0 2px 6px rgba(20, 40, 40, 0.05);
+  }
+  .owlpark-feat-recently-viewed .rv-item:active {
+    transform: translateY(0);
+  }
+  .owlpark-feat-recently-viewed .rv-item:focus-visible {
+    outline: 2px solid #0f6f7a;
+    outline-offset: 2px;
+  }
+  .owlpark-feat-recently-viewed .rv-thumb {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: #f7f8f7;
+    border: 1px solid rgba(17, 33, 31, 0.06);
+    font-size: 1.15rem;
+    line-height: 1;
+  }
+  .owlpark-feat-recently-viewed .rv-name {
+    max-width: 16ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #17211f;
+  }
+  @media (max-width: 560px) {
+    .owlpark-feat-recently-viewed {
+      gap: 0.7rem;
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+    }
+  }
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-recently-viewed {
+      background: rgba(18, 24, 26, 0.8);
+      border-bottom-color: rgba(255, 255, 255, 0.11);
+      color: #e9edec;
+    }
+    .owlpark-feat-recently-viewed .rv-label {
+      color: #98a4a1;
+    }
+    .owlpark-feat-recently-viewed .rv-track {
+      scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+    }
+    .owlpark-feat-recently-viewed .rv-track::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.18);
+    }
+    .owlpark-feat-recently-viewed .rv-item {
+      background: #12181a;
+      border-color: rgba(255, 255, 255, 0.11);
+      color: #e9edec;
+    }
+    .owlpark-feat-recently-viewed .rv-item:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+    .owlpark-feat-recently-viewed .rv-item:focus-visible {
+      outline-color: #5bc7cf;
+    }
+    .owlpark-feat-recently-viewed .rv-thumb {
+      background: #1a2224;
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+    .owlpark-feat-recently-viewed .rv-name {
+      color: #e9edec;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-recently-viewed .rv-item {
+      transition: none;
+    }
+    .owlpark-feat-recently-viewed .rv-item:hover,
+    .owlpark-feat-recently-viewed .rv-item:active {
+      transform: none;
+    }
   }
 </style>
 
 <div class="owlpark-feat-recently-viewed" id="recently-viewed-strip" hidden>
-  <span class="rv-label">👁️ Recently viewed:</span>
-  <div class="rv-chips" id="rv-chips"></div>
+  <span class="rv-label">
+    <span class="rv-icon" aria-hidden="true">👁</span>
+    <span class="rv-title">Recently viewed</span>
+  </span>
+  <div class="rv-track" id="rv-chips" role="list" aria-label="Recently viewed products"></div>
 </div>
 
 <script>
   (function () {
-    var STORAGE_KEY = "owl-park-recently-viewed";
-    var MAX_ITEMS = 5;
+    /* =========================================================================
+     * Recently Viewed  ·  behavioral
+     * -------------------------------------------------------------------------
+     * WHAT   A slim, frosted strip that shows the shopper's recently viewed
+     *        products as small thumbnail cards in a single horizontal row that
+     *        scrolls inside its own container (the page body never scrolls).
+     * HOW    Renders its own static markup (the loader mounts it). A capturing
+     *        "mouseenter" listener on document records a product id whenever the
+     *        pointer enters an Owl Park product row (CONFIG.rowSelector); the
+     *        ordered id list persists in sessionStorage (CONFIG.storageKey,
+     *        capped at CONFIG.maxItems). Each id resolves to an emoji + name from
+     *        the cached CONFIG.productsUrl catalog and renders as a focusable card.
+     * HOSTS  Owl Park storefront — its ".product-row" grid is the only view
+     *        source. On the zoo ViewItems page (rows are "tr.pluRow", not
+     *        ".product-row") and generic hosts nothing is recorded, so the strip
+     *        stays empty and hidden.
+     * ===================================================================== */
+
+    var FEATURE_ID = "recently-viewed";
+
+    // ----- Configuration --------------------------------------------------
+    // Tunable values, safe to edit. Each explained inline.
+    var CONFIG = {
+      heading: "Recently viewed", // quiet section heading shown at the strip's left
+      maxItems: 5, // how many recently-viewed products to keep + show
+      storageKey: "owl-park-recently-viewed", // sessionStorage key holding the ordered id list
+      productsUrl: "data/products.json", // catalog source for a viewed product's emoji + name
+      rowSelector: ".product-row[data-product-id]", // host product rows whose hover records a view
+      idAttribute: "data-product-id", // attribute on a row that holds the product id
+    };
 
     var productsCache = null;
     var mouseEnterHandler = null;
 
     function readViewed() {
       try {
-        var raw = sessionStorage.getItem(STORAGE_KEY);
+        var raw = sessionStorage.getItem(CONFIG.storageKey);
         return raw ? JSON.parse(raw) : [];
       } catch (e) {
         return [];
@@ -77,14 +233,14 @@
         return id !== productId;
       });
       ids.unshift(productId);
-      ids = ids.slice(0, MAX_ITEMS);
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+      ids = ids.slice(0, CONFIG.maxItems);
+      sessionStorage.setItem(CONFIG.storageKey, JSON.stringify(ids));
       renderStrip();
     }
 
     function getProducts() {
       if (productsCache) return Promise.resolve(productsCache);
-      return fetch("data/products.json")
+      return fetch(CONFIG.productsUrl)
         .then(function (res) {
           return res.json();
         })
@@ -92,6 +248,28 @@
           productsCache = data;
           return productsCache;
         });
+    }
+
+    function buildChip(p) {
+      var item = document.createElement("span");
+      item.className = "rv-item";
+      item.setAttribute("role", "listitem");
+      item.setAttribute("tabindex", "0");
+      item.setAttribute("data-owlpark-feature", FEATURE_ID);
+      item.setAttribute("aria-label", "Recently viewed: " + p.name);
+
+      var thumb = document.createElement("span");
+      thumb.className = "rv-thumb";
+      thumb.setAttribute("aria-hidden", "true");
+      thumb.textContent = p.emoji;
+
+      var name = document.createElement("span");
+      name.className = "rv-name";
+      name.textContent = p.name;
+
+      item.appendChild(thumb);
+      item.appendChild(name);
+      return item;
     }
 
     function renderStrip() {
@@ -106,34 +284,30 @@
       }
 
       return getProducts().then(function (products) {
-        chipsEl.innerHTML = ids
-          .map(function (id) {
-            var p = products.find(function (prod) {
-              return prod.id === id;
-            });
-            if (!p) return "";
-            return (
-              '<span class="rv-chip"><span class="rv-chip-emoji">' +
-              p.emoji +
-              "</span>" +
-              p.name +
-              "</span>"
-            );
-          })
-          .join("");
+        chipsEl.textContent = "";
+        ids.forEach(function (id) {
+          var p = products.find(function (prod) {
+            return prod.id === id;
+          });
+          if (!p) return;
+          chipsEl.appendChild(buildChip(p));
+        });
         strip.hidden = false;
       });
     }
 
     function activate() {
+      var titleEl = document.querySelector("#recently-viewed-strip .rv-title");
+      if (titleEl) titleEl.textContent = CONFIG.heading;
+
       renderStrip();
       // mouseenter doesn't bubble, but a capturing listener on document still
       // observes it as the event travels down to the actual target.
       mouseEnterHandler = function (event) {
         var row =
           event.target.closest &&
-          event.target.closest(".product-row[data-product-id]");
-        if (row) recordView(row.getAttribute("data-product-id"));
+          event.target.closest(CONFIG.rowSelector);
+        if (row) recordView(row.getAttribute(CONFIG.idAttribute));
       };
       document.addEventListener("mouseenter", mouseEnterHandler, true);
     }
@@ -148,7 +322,7 @@
     activate();
 
     window.__owlParkFeatures = window.__owlParkFeatures || {};
-    window.__owlParkFeatures["recently-viewed"] = {
+    window.__owlParkFeatures[FEATURE_ID] = {
       activate: activate,
       deactivate: deactivate,
     };

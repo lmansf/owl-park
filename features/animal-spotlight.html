@@ -9,103 +9,349 @@
   }
 </script>
 
-<style>
+<style id="owlpark-animal-spotlight-style">
   .owlpark-feat-animal-spotlight {
+    box-sizing: border-box;
+    width: min(560px, calc(100% - 2rem));
+    margin: 1rem auto;
+    padding: 1.5rem 1.75rem;
+    background: rgba(255, 255, 255, 0.82);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    backdrop-filter: blur(16px) saturate(1.4);
+    border: 1px solid rgba(17, 33, 31, 0.1);
+    border-radius: 20px;
+    box-shadow: 0 6px 24px rgba(20, 40, 40, 0.09);
+    color: #17211f;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.45;
+  }
+  .owlpark-feat-animal-spotlight .as-head {
     display: flex;
     align-items: center;
-    gap: 0.9rem;
-    background: linear-gradient(90deg, #0f6f7a, #0a4d55);
-    color: white;
-    padding: 0.7rem 1.3rem;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
   }
-  .owlpark-feat-animal-spotlight .as-emoji {
-    font-size: 2.1rem;
+  .owlpark-feat-animal-spotlight .as-kicker {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #0f6f7a;
+  }
+  .owlpark-feat-animal-spotlight .as-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15rem;
     flex-shrink: 0;
   }
-  .owlpark-feat-animal-spotlight .as-label {
-    font-size: 0.68rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    opacity: 0.85;
-    font-weight: 700;
+  .owlpark-feat-animal-spotlight .as-btn {
+    position: relative;
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: #67736f;
+    font-size: 1.3rem;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      background 0.16s ease,
+      color 0.16s ease,
+      transform 0.16s cubic-bezier(0.2, 0.6, 0.2, 1);
+  }
+  /* Expand the visual 34px control to a 46px tap target. */
+  .owlpark-feat-animal-spotlight .as-btn::before {
+    content: "";
+    position: absolute;
+    inset: -6px;
+  }
+  .owlpark-feat-animal-spotlight .as-btn:hover {
+    background: rgba(17, 33, 31, 0.05);
+    color: #17211f;
+  }
+  .owlpark-feat-animal-spotlight .as-btn:active {
+    transform: translateY(1px);
+  }
+  .owlpark-feat-animal-spotlight .as-body {
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s cubic-bezier(0.2, 0.6, 0.2, 1);
+  }
+  .owlpark-feat-animal-spotlight.as-swapping .as-body {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  .owlpark-feat-animal-spotlight .as-emoji {
+    flex-shrink: 0;
+    width: 66px;
+    height: 66px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    background: rgba(15, 111, 122, 0.09);
+    font-size: 2.3rem;
+    line-height: 1;
+  }
+  .owlpark-feat-animal-spotlight .as-text {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
   }
   .owlpark-feat-animal-spotlight .as-name {
-    font-weight: 700;
-    font-size: 1rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+    color: #17211f;
   }
   .owlpark-feat-animal-spotlight .as-fact {
-    font-size: 0.82rem;
-    opacity: 0.9;
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #67736f;
+  }
+  .owlpark-feat-animal-spotlight :focus-visible {
+    outline: 2px solid #0f6f7a;
+    outline-offset: 2px;
+  }
+  @media (max-width: 480px) {
+    .owlpark-feat-animal-spotlight {
+      padding: 1.25rem;
+    }
+    .owlpark-feat-animal-spotlight .as-emoji {
+      width: 56px;
+      height: 56px;
+      font-size: 2rem;
+    }
+    .owlpark-feat-animal-spotlight .as-name {
+      font-size: 1.1rem;
+    }
+  }
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-animal-spotlight {
+      background: rgba(18, 24, 26, 0.8);
+      border-color: rgba(255, 255, 255, 0.11);
+      color: #e9edec;
+    }
+    .owlpark-feat-animal-spotlight .as-kicker {
+      color: #5bc7cf;
+    }
+    .owlpark-feat-animal-spotlight .as-emoji {
+      background: rgba(91, 199, 207, 0.12);
+    }
+    .owlpark-feat-animal-spotlight .as-name {
+      color: #e9edec;
+    }
+    .owlpark-feat-animal-spotlight .as-fact {
+      color: #98a4a1;
+    }
+    .owlpark-feat-animal-spotlight .as-btn {
+      color: #98a4a1;
+    }
+    .owlpark-feat-animal-spotlight .as-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #e9edec;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-animal-spotlight .as-body,
+    .owlpark-feat-animal-spotlight .as-btn {
+      transition: none;
+    }
+    .owlpark-feat-animal-spotlight.as-swapping .as-body {
+      opacity: 1;
+      transform: none;
+    }
   }
 </style>
 
-<div class="owlpark-feat-animal-spotlight">
-  <span class="as-emoji">🦉</span>
-  <div>
-    <div class="as-label">Owl of the Day</div>
-    <div class="as-name">Barn Owl</div>
-    <div class="as-fact">
-      Barn owls can locate prey in total darkness using hearing alone.
+<div class="owlpark-feat-animal-spotlight" role="region" aria-label="Owl of the Day spotlight">
+  <div class="as-head">
+    <span class="as-kicker">Owl of the Day</span>
+    <div class="as-nav">
+      <button type="button" class="as-btn as-prev" aria-label="Previous owl">&lsaquo;</button>
+      <button type="button" class="as-btn as-next" aria-label="Next owl">&rsaquo;</button>
+    </div>
+  </div>
+  <div class="as-body" role="status" aria-live="polite">
+    <span class="as-emoji" aria-hidden="true">🦉</span>
+    <div class="as-text">
+      <div class="as-name">Barn Owl</div>
+      <div class="as-fact">
+        Barn owls can locate prey in total darkness using hearing alone.
+      </div>
     </div>
   </div>
 </div>
 
 <script>
   (function () {
-    var OWLS = [
-      {
-        emoji: "🦉",
-        name: "Barn Owl",
-        fact: "Barn owls can locate prey in total darkness using hearing alone.",
-      },
-      {
-        emoji: "🦉",
-        name: "Snowy Owl",
-        fact: "Snowy owls are one of the few owl species that hunt during the day, not just at night.",
-      },
-      {
-        emoji: "🦉",
-        name: "Great Horned Owl",
-        fact: "A great horned owl's grip strength is roughly 28 pounds per square inch.",
-      },
-      {
-        emoji: "🦉",
-        name: "Elf Owl",
-        fact: "Elf owls are the smallest owl species in the world, weighing about as much as a handful of coins.",
-      },
-    ];
+    /* =========================================================================
+     * Owl Spotlight  ·  visual
+     * -------------------------------------------------------------------------
+     * WHAT   A clean, frosted "Owl of the Day" card that spotlights one Owl Park
+     *        resident — large emoji, name and fact — and crossfades to the next
+     *        on a timer, with quiet ghost prev/next controls.
+     * HOW    Renders its own static card (the loader appends it into #feature-root
+     *        or <body>). A timer advances an index through CONFIG.owls; each step
+     *        fades the body out, swaps emoji/name/fact, fades it back in. Hovering
+     *        pauses rotation; prev/next step manually and re-base the timer. Touches
+     *        no host DOM, so no adapter/watchdog is needed.
+     * HOSTS  Self-contained; renders identically on every host (needs no store data).
+     * ===================================================================== */
 
-    var intervalId = null;
+    var FEATURE_ID = "animal-spotlight";
 
-    function render(index) {
-      var root = document.querySelector(".owlpark-feat-animal-spotlight");
-      if (!root) return;
-      var owl = OWLS[index];
-      root.querySelector(".as-emoji").textContent = owl.emoji;
-      root.querySelector(".as-name").textContent = owl.name;
-      root.querySelector(".as-fact").textContent = owl.fact;
+    // ----- Configuration --------------------------------------------------
+    var CONFIG = {
+      rotateMs: 6000, // dwell time on each owl before auto-advancing
+      swapMs: 200, // crossfade duration — keep in sync with the CSS transition
+      pauseOnHover: true, // hold rotation while the pointer is over the card
+      showControls: true, // show the ghost prev/next navigation
+      kicker: "Owl of the Day", // small label shown above the owl's name
+      // The roster of spotlighted owls. Edit / reorder freely.
+      owls: [
+        {
+          emoji: "🦉",
+          name: "Barn Owl",
+          fact: "Barn owls can locate prey in total darkness using hearing alone.",
+        },
+        {
+          emoji: "🦉",
+          name: "Snowy Owl",
+          fact: "Snowy owls are one of the few owl species that hunt during the day, not just at night.",
+        },
+        {
+          emoji: "🦉",
+          name: "Great Horned Owl",
+          fact: "A great horned owl's grip strength is roughly 28 pounds per square inch.",
+        },
+        {
+          emoji: "🦉",
+          name: "Elf Owl",
+          fact: "Elf owls are the smallest owl species in the world, weighing about as much as a handful of coins.",
+        },
+      ],
+    };
+
+    var rootEl = null;
+    var emojiEl = null;
+    var nameEl = null;
+    var factEl = null;
+    var index = 0;
+    var timerId = null;
+    var paused = false;
+
+    function render(i) {
+      var owl = CONFIG.owls[i];
+      if (!owl) return;
+      if (emojiEl) emojiEl.textContent = owl.emoji;
+      if (nameEl) nameEl.textContent = owl.name;
+      if (factEl) factEl.textContent = owl.fact;
+    }
+
+    function goTo(i, animate) {
+      if (!CONFIG.owls.length) return;
+      index = (i + CONFIG.owls.length) % CONFIG.owls.length;
+      if (animate === false || !rootEl) {
+        render(index);
+        return;
+      }
+      rootEl.classList.add("as-swapping");
+      setTimeout(function () {
+        render(index);
+        if (rootEl) rootEl.classList.remove("as-swapping");
+      }, CONFIG.swapMs);
+    }
+
+    function tick() {
+      if (!paused) goTo(index + 1, true);
+    }
+
+    function restartTimer() {
+      if (timerId) clearInterval(timerId);
+      timerId = setInterval(tick, CONFIG.rotateMs);
+    }
+
+    function onPrev() {
+      goTo(index - 1, true);
+      restartTimer();
+    }
+    function onNext() {
+      goTo(index + 1, true);
+      restartTimer();
+    }
+    function onEnter() {
+      paused = true;
+    }
+    function onLeave() {
+      paused = false;
     }
 
     function activate() {
-      var index = 0;
-      render(index);
-      intervalId = setInterval(function () {
-        index = (index + 1) % OWLS.length;
-        render(index);
-      }, 6000);
+      rootEl = document.querySelector(".owlpark-feat-animal-spotlight");
+      if (!rootEl) return;
+      emojiEl = rootEl.querySelector(".as-emoji");
+      nameEl = rootEl.querySelector(".as-name");
+      factEl = rootEl.querySelector(".as-fact");
+
+      var kickerEl = rootEl.querySelector(".as-kicker");
+      if (kickerEl) kickerEl.textContent = CONFIG.kicker;
+
+      var navEl = rootEl.querySelector(".as-nav");
+      var prevBtn = rootEl.querySelector(".as-prev");
+      var nextBtn = rootEl.querySelector(".as-next");
+      if (!CONFIG.showControls) {
+        if (navEl) navEl.hidden = true;
+      } else {
+        if (prevBtn) prevBtn.addEventListener("click", onPrev);
+        if (nextBtn) nextBtn.addEventListener("click", onNext);
+      }
+
+      if (CONFIG.pauseOnHover) {
+        rootEl.addEventListener("mouseenter", onEnter);
+        rootEl.addEventListener("mouseleave", onLeave);
+      }
+
+      index = 0;
+      goTo(0, false);
+      restartTimer();
     }
 
     function deactivate() {
-      if (intervalId) {
-        clearInterval(intervalId);
-        intervalId = null;
+      if (timerId) {
+        clearInterval(timerId);
+        timerId = null;
       }
+      paused = false;
+      if (rootEl) {
+        var prevBtn = rootEl.querySelector(".as-prev");
+        var nextBtn = rootEl.querySelector(".as-next");
+        if (prevBtn) prevBtn.removeEventListener("click", onPrev);
+        if (nextBtn) nextBtn.removeEventListener("click", onNext);
+        rootEl.removeEventListener("mouseenter", onEnter);
+        rootEl.removeEventListener("mouseleave", onLeave);
+        rootEl.classList.remove("as-swapping");
+      }
+      rootEl = emojiEl = nameEl = factEl = null;
     }
 
     activate();
 
     window.__owlParkFeatures = window.__owlParkFeatures || {};
-    window.__owlParkFeatures["animal-spotlight"] = {
+    window.__owlParkFeatures[FEATURE_ID] = {
       activate: activate,
       deactivate: deactivate,
     };
