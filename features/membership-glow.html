@@ -12,7 +12,7 @@
 <style>
   .owlpark-feat-membership-glow-highlight {
     position: relative;
-    border-color: var(--cove-orange) !important;
+    border-color: var(--cove-orange, #e2662d) !important;
     animation: owlpark-membership-glow-pulse 2.2s ease-in-out infinite;
   }
 
@@ -21,12 +21,12 @@
     100% {
       box-shadow:
         0 0 0 0 rgba(226, 102, 45, 0.45),
-        var(--shadow-card);
+        var(--shadow-card, 0 6px 20px rgba(0, 0, 0, 0.08));
     }
     50% {
       box-shadow:
         0 0 0 10px rgba(226, 102, 45, 0),
-        var(--shadow-card);
+        var(--shadow-card, 0 6px 20px rgba(0, 0, 0, 0.08));
     }
   }
 
@@ -34,7 +34,7 @@
     position: absolute;
     top: -0.6rem;
     left: 1.1rem;
-    background: var(--cove-orange);
+    background: var(--cove-orange, #e2662d);
     color: white;
     font-size: 0.68rem;
     font-weight: 700;
@@ -44,21 +44,120 @@
     border-radius: 999px;
     box-shadow: 0 3px 8px rgba(226, 102, 45, 0.45);
   }
+
+  /* Zoo PLU rows are <tr>; absolute children misbehave in a table, so the
+     ribbon rides inline next to the product name instead. */
+  .owlpark-feat-membership-glow-ribbon.owlpark-feat-membership-glow-ribbon--inline {
+    position: static;
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 0.5rem;
+    top: auto;
+    left: auto;
+  }
 </style>
 
 <script>
   (function () {
     var FEATURE_ID = "membership-glow";
+    // --- Host adapter -------------------------------------------------------
+    // Resolves whichever storefront this snippet was pasted into, preferring the
+    // ZooTampa web store (ASP.NET PLU rows), then the Owl Park storefront, then a
+    // generic fallback. Shared defensively on window so features pasted together
+    // reuse one instance. Keeps every feature speaking one host vocabulary.
+    function owlHost() {
+      if (window.__owlHost) return window.__owlHost;
+      var d = document;
+      function q(s, r) { return (r || d).querySelector(s); }
+      function num(t) { return parseFloat(String(t).replace(/[^0-9.]/g, "")) || 0; }
+      function bar() {
+        var b = d.getElementById("owlpark-fallback-actions");
+        if (b) return b;
+        b = d.createElement("div");
+        b.id = "owlpark-fallback-actions";
+        b.setAttribute("data-owlpark-fallback", "actions");
+        b.style.cssText =
+          "position:fixed;z-index:2147483000;display:flex;flex-wrap:wrap;gap:8px;" +
+          "align-items:center;justify-content:flex-end;max-width:calc(100vw - 20px);" +
+          "top:calc(10px + env(safe-area-inset-top, 0px));" +
+          "right:calc(10px + env(safe-area-inset-right, 0px));" +
+          "padding:8px 10px;background:rgba(10,77,85,0.96);border-radius:12px;" +
+          "box-shadow:0 8px 24px rgba(0,0,0,0.28);";
+        var st = d.createElement("style");
+        st.id = "owlpark-fallback-actions-style";
+        st.setAttribute("data-owlpark-fallback", "actions");
+        st.textContent =
+          "#owlpark-fallback-actions>button,#owlpark-fallback-actions>a" +
+          "{min-height:44px;box-sizing:border-box;}";
+        d.head.appendChild(st);
+        d.body.appendChild(b);
+        return b;
+      }
+      var H = {
+        isZoo: function () { return !!d.getElementById("SalesChannelDetailRepeater"); },
+        // Where header/utility buttons dock (zoo sub-header -> Owl Park header -> float).
+        dock: function () { return q(".view-cart") || q("#sub-header") || q(".header-actions") || bar(); },
+        fallbackBar: bar,
+        pruneBar: function () {
+          var b = d.getElementById("owlpark-fallback-actions");
+          if (!b || b.children.length) return;
+          b.remove();
+          var st = d.getElementById("owlpark-fallback-actions-style");
+          if (st) st.remove();
+        },
+        heading: function () { return q("#ContentHeading") || q(".catalog-heading"); },
+        // Product list container to observe for re-renders.
+        grid: function () { return d.getElementById("SalesChannelDetailRepeater") || d.getElementById("catalog-grid"); },
+        // Live product rows (skips Angular {{template}} rows on the zoo page).
+        rows: function () {
+          var out = [];
+          d.querySelectorAll("tr.pluRow[data-plu], .product-row[data-product-id]").forEach(function (r) {
+            var id = H.rowId(r);
+            if (id && id.indexOf("{{") === -1) out.push(r);
+          });
+          return out;
+        },
+        isPlu: function (r) { return !!(r.matches && r.matches("tr.pluRow")); },
+        rowId: function (r) { return r.getAttribute("data-plu") || r.getAttribute("data-product-id") || ""; },
+        rowName: function (r) { var e = q(".pluName, h3", r); return e ? e.textContent.trim() : ""; },
+        rowPriceEl: function (r) { return q('.pluPrice [data-text="price"], [data-text="price"], .price-amount', r); },
+        rowPrice: function (r) {
+          var h = q('input[id$="PLUPriceHiddenField"]', r);
+          if (h && h.value) return num(h.value);
+          var e = H.rowPriceEl(r);
+          return e ? num(e.textContent) : 0;
+        },
+        // Inline anchor to hang a small decoration next to the product name.
+        rowNameCell: function (r) { return q(".pluNameShortName, .row-title-line, .pluName, h3", r); },
+        // Block anchor under the product's descriptive text.
+        rowInfoCell: function (r) { return q(".pluInfo, .row-body", r) || r; },
+        rowQty: function (r) { return q("input.PLUQtyTextBox, [data-add-id]", r); },
+        qtyInputs: function () { return d.querySelectorAll("input.PLUQtyTextBox"); },
+        num: num,
+        q: q
+      };
+      window.__owlHost = H;
+      return H;
+    }
+    // ------------------------------------------------------------------------
+    var H = owlHost();
     var HIGHLIGHT_CLASS = "owlpark-feat-membership-glow-highlight";
-    var featuredProduct = null;
     var observer = null;
 
-    function applyHighlight() {
-      if (!featuredProduct) return;
+    // Store-agnostic selection: the first product row whose name mentions
+    // "member". No products.json dependency — everything comes off the row via
+    // H. On a page with no membership rows (e.g. single-day admission) this
+    // returns null and the feature no-ops cleanly.
+    function findMembershipRow() {
+      var rows = H.rows();
+      for (var i = 0; i < rows.length; i++) {
+        if (/member/i.test(H.rowName(rows[i]))) return rows[i];
+      }
+      return null;
+    }
 
-      var row = document.querySelector(
-        '.product-row[data-product-id="' + featuredProduct.id + '"]',
-      );
+    function applyHighlight() {
+      var row = findMembershipRow();
       if (!row) return;
       if (row.querySelector('[data-owlpark-feature="' + FEATURE_ID + '"]'))
         return;
@@ -73,30 +172,28 @@
       ribbon.className = "owlpark-feat-membership-glow-ribbon";
       ribbon.setAttribute("data-owlpark-feature", FEATURE_ID);
       ribbon.textContent = "Recommended";
-      row.appendChild(ribbon);
+
+      if (H.isPlu(row)) {
+        // Table row: hang the ribbon inline in the name cell (static position).
+        ribbon.classList.add("owlpark-feat-membership-glow-ribbon--inline");
+        var cell = H.rowNameCell(row) || row;
+        cell.appendChild(ribbon);
+      } else {
+        // Owl Park card: keep the original absolute placement on the row.
+        row.appendChild(ribbon);
+      }
     }
 
     function activate() {
-      fetch("data/products.json")
-        .then(function (res) {
-          return res.json();
-        })
-        .then(function (products) {
-          featuredProduct = products.find(function (p) {
-            return p.category === "membership" && p.featured;
-          });
-          if (!featuredProduct) return;
+      applyHighlight();
 
+      var grid = H.grid();
+      if (grid) {
+        observer = new MutationObserver(function () {
           applyHighlight();
-
-          var grid = document.getElementById("catalog-grid");
-          if (grid) {
-            observer = new MutationObserver(function () {
-              applyHighlight();
-            });
-            observer.observe(grid, { childList: true });
-          }
         });
+        observer.observe(grid, { childList: true, subtree: true });
+      }
     }
 
     function deactivate() {
@@ -112,7 +209,6 @@
         .forEach(function (el) {
           el.remove();
         });
-      featuredProduct = null;
     }
 
     activate();

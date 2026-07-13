@@ -9,23 +9,23 @@
   }
 </script>
 
-<style>
+<style id="owlpark-weather-widget-style">
   .owlpark-feat-weather-widget {
     position: fixed;
     top: 5.4rem;
     right: 1.2rem;
     z-index: 30;
     background: white;
-    border: 1px solid var(--cove-border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-card);
+    border: 1px solid var(--cove-border, #e4ddca);
+    border-radius: var(--radius-md, 10px);
+    box-shadow: var(--shadow-card, 0 6px 20px rgba(0, 0, 0, 0.12));
     padding: 0.55rem 0.9rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
     font-size: 0.85rem;
     font-weight: 600;
-    color: var(--cove-teal-dark);
+    color: var(--cove-teal-dark, #0a4d55);
     max-width: 240px;
   }
 
@@ -65,12 +65,32 @@
     ];
 
     var intervalId = null;
+    var watchdogId = null;
+    var rootEl = null;
+
+    // The badge is position:fixed, so its on-screen spot never depends on where
+    // it sits in the DOM. Lift it to be a direct child of <body> so a store that
+    // reveals or re-renders its own content wrapper (e.g. the zoo store's #page)
+    // after load can't take the badge down with it; re-attach if it ever does.
+    function ensureMounted() {
+      if (rootEl && !(rootEl.isConnected && rootEl.parentElement === document.body)) {
+        document.body.appendChild(rootEl);
+      }
+      // The badge's own <style> is part of the pasted snippet; if it was dropped
+      // inside a region the host re-renders, keep it alive in <head> so the badge
+      // never loses its border/shadow/colour along with that region.
+      var styleEl = document.getElementById("owlpark-weather-widget-style");
+      if (styleEl && styleEl.parentElement !== document.head) {
+        document.head.appendChild(styleEl);
+      }
+    }
 
     function activate() {
-      var root = document.querySelector(".owlpark-feat-weather-widget");
-      if (!root) return;
-      var iconEl = root.querySelector(".ww-icon");
-      var textEl = root.querySelector(".ww-text");
+      rootEl = document.querySelector(".owlpark-feat-weather-widget");
+      if (!rootEl) return;
+      ensureMounted();
+      var iconEl = rootEl.querySelector(".ww-icon");
+      var textEl = rootEl.querySelector(".ww-text");
 
       function applyRandomForecast() {
         var pick = FORECASTS[Math.floor(Math.random() * FORECASTS.length)];
@@ -80,12 +100,17 @@
 
       applyRandomForecast();
       intervalId = setInterval(applyRandomForecast, 10000);
+      watchdogId = setInterval(ensureMounted, 1000);
     }
 
     function deactivate() {
       if (intervalId) {
         clearInterval(intervalId);
         intervalId = null;
+      }
+      if (watchdogId) {
+        clearInterval(watchdogId);
+        watchdogId = null;
       }
     }
 

@@ -11,14 +11,20 @@
 
 <style>
   .owlpark-feat-park-map-modal-link {
-    background: transparent;
-    border: none;
-    color: white;
-    text-decoration: underline;
+    background: #0a4d55 !important;
+    border: 1px solid rgba(255, 255, 255, 0.35) !important;
+    color: #ffffff !important;
+    text-decoration: none;
     cursor: pointer;
     font-size: 0.85rem;
     font-weight: 700;
-    padding: 0.4rem 0.5rem;
+    padding: 0.4rem 0.7rem;
+    border-radius: 8px;
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+  .owlpark-feat-park-map-modal-link:hover {
+    background: #0c5b64 !important;
   }
   .owlpark-feat-park-map-modal-overlay {
     position: fixed;
@@ -79,6 +85,7 @@
     var FEATURE_ID = "park-map-modal";
     var linkBtn = null;
     var overlayEl = null;
+    var watchdogId = null;
 
     // Host-agnostic mount point. Prefer the storefront's own header, but fall
     // back to a shared floating bar on <body> so this snippet still shows its
@@ -155,20 +162,38 @@
       });
     }
 
-    function activate() {
-      var actions =
-        document.querySelector(".header-actions") || owlparkFallbackBar();
+    // Owl Park's header is stable, so dock there. On any OTHER store the header
+    // chrome may be hidden before the host reveals its body, re-rendered from a
+    // template after load, or styled unpredictably — so use the self-owned
+    // floating bar, which is a direct child of <body> (a sibling of the host's
+    // own content wrapper) and therefore survives the host re-rendering itself.
+    function resolveDock() {
+      return document.querySelector(".header-actions") || owlparkFallbackBar();
+    }
 
+    function ensureButton() {
+      if (linkBtn && linkBtn.isConnected) return;
       linkBtn = document.createElement("button");
       linkBtn.type = "button";
       linkBtn.className = "owlpark-feat-park-map-modal-link";
       linkBtn.setAttribute("data-owlpark-feature", FEATURE_ID);
       linkBtn.textContent = "🗺️ Park Map";
       linkBtn.addEventListener("click", openMap);
-      actions.prepend(linkBtn);
+      resolveDock().prepend(linkBtn);
+    }
+
+    function activate() {
+      ensureButton();
+      // Re-assert the control if the host removes or replaces it after load
+      // (body reveal, template re-render); cheap isConnected check.
+      watchdogId = setInterval(ensureButton, 1000);
     }
 
     function deactivate() {
+      if (watchdogId) {
+        clearInterval(watchdogId);
+        watchdogId = null;
+      }
       removeOverlay();
       if (linkBtn) {
         linkBtn.removeEventListener("click", openMap);

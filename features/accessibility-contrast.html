@@ -11,17 +11,20 @@
 
 <style>
   .owlpark-feat-accessibility-contrast {
-    background: rgba(255, 255, 255, 0.15);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    background: #0a4d55 !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.35) !important;
     padding: 0.4rem 0.7rem;
     border-radius: 8px;
     font-size: 0.85rem;
     font-weight: 700;
     cursor: pointer;
+    min-height: 44px;
+    box-sizing: border-box;
+    text-decoration: none;
   }
   .owlpark-feat-accessibility-contrast:hover {
-    background: rgba(255, 255, 255, 0.28);
+    background: #0c5b64 !important;
   }
 
   body.high-contrast-active {
@@ -87,11 +90,68 @@
     color: #ffff00 !important;
     text-decoration: underline !important;
   }
+
+  /* --- ZooTampa web store surfaces (ASP.NET PLU layout) --- */
+  body.high-contrast-active #page,
+  body.high-contrast-active #MasterLayout,
+  body.high-contrast-active #container,
+  body.high-contrast-active #ContentWrapper,
+  body.high-contrast-active .ContentCell {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  body.high-contrast-active #Header,
+  body.high-contrast-active #sub-header {
+    background: #000000 !important;
+    color: #ffffff !important;
+  }
+  body.high-contrast-active #ContentHeading,
+  body.high-contrast-active #ContentHeading span,
+  body.high-contrast-active .categoryDescription,
+  body.high-contrast-active .parentSCDName,
+  body.high-contrast-active .pluName,
+  body.high-contrast-active .pluShortName,
+  body.high-contrast-active .pluDescription,
+  body.high-contrast-active .pluInfoHeader,
+  body.high-contrast-active [data-text="price"] {
+    color: #000000 !important;
+  }
+  body.high-contrast-active .pluRow,
+  body.high-contrast-active .pluTable,
+  body.high-contrast-active .SalesChannelDetailPLURepeater {
+    background: #ffffff !important;
+    border: 2px solid #000000 !important;
+  }
+  body.high-contrast-active .parentSCDheader {
+    background: #ffffff !important;
+    border: 2px solid #000000 !important;
+  }
+  body.high-contrast-active .addToCart {
+    background: #000000 !important;
+    color: #ffffff !important;
+    border: 2px solid #000000 !important;
+  }
+  body.high-contrast-active .PLUQtyTextBox {
+    border: 2px solid #000000 !important;
+    color: #000000 !important;
+    background: #ffffff !important;
+  }
+  body.high-contrast-active #sub-header a,
+  body.high-contrast-active .completeDetails {
+    color: #ffff00 !important;
+    text-decoration: underline !important;
+  }
 </style>
 
 <script>
   (function () {
     var buttonEl = null;
+    var watchdogId = null;
+
+    function onClick() {
+      document.body.classList.toggle("high-contrast-active");
+      updateLabel();
+    }
 
     // Host-agnostic mount point. Prefer the storefront's own header, but fall
     // back to a shared floating bar on <body> so this snippet still shows its
@@ -133,26 +193,44 @@
       buttonEl.textContent = active ? "◐ Standard Contrast" : "◐ High Contrast";
     }
 
-    function activate() {
-      var actions =
-        document.querySelector(".header-actions") || owlparkFallbackBar();
+    // Owl Park's header is stable, so dock there. On any OTHER store the header
+    // chrome may be hidden before the host reveals its body, re-rendered from a
+    // template after load, or styled unpredictably — so use the self-owned
+    // floating bar, which is a direct child of <body> (a sibling of the host's
+    // own content wrapper) and therefore survives the host re-rendering itself.
+    function resolveDock() {
+      return document.querySelector(".header-actions") || owlparkFallbackBar();
+    }
 
+    function ensureButton() {
+      if (buttonEl && buttonEl.isConnected) {
+        updateLabel();
+        return;
+      }
       buttonEl = document.createElement("button");
       buttonEl.type = "button";
       buttonEl.className = "owlpark-feat-accessibility-contrast";
       buttonEl.setAttribute("data-owlpark-feature", "accessibility-contrast");
-      actions.prepend(buttonEl);
+      buttonEl.addEventListener("click", onClick);
+      resolveDock().prepend(buttonEl);
       updateLabel();
+    }
 
-      buttonEl.addEventListener("click", function () {
-        document.body.classList.toggle("high-contrast-active");
-        updateLabel();
-      });
+    function activate() {
+      ensureButton();
+      // Re-assert the control if the host removes or replaces it after load
+      // (body reveal, template re-render); cheap isConnected check.
+      watchdogId = setInterval(ensureButton, 1000);
     }
 
     function deactivate() {
+      if (watchdogId) {
+        clearInterval(watchdogId);
+        watchdogId = null;
+      }
       document.body.classList.remove("high-contrast-active");
       if (buttonEl) {
+        buttonEl.removeEventListener("click", onClick);
         buttonEl.remove();
         buttonEl = null;
       }
