@@ -77,8 +77,10 @@
      which is also what Enter/Space on the focused icon fires, so touch and
      keyboard share one path. Focus must NOT open the panel on its own: a second
      tap or keypress could not then close it, because the icon still holds focus.
-     Hover is a desktop-only preview gated on (hover: hover), or iOS Safari's
-     sticky emulated hover would likewise pin the panel open after a tap. */
+     Hover is a preview for the floating desktop panel only: it is gated on
+     (hover: hover), or iOS Safari's sticky emulated hover would likewise pin the
+     panel open after a tap, and it is deliberately not extended to the in-flow
+     mobile panel, where merely hovering would reflow the whole row. */
   .owlpark-feat-product-info-tooltips.pit-info-wrap.pit-open .pit-tooltip {
     visibility: visible;
     opacity: 1;
@@ -120,11 +122,6 @@
       transition: none;
     }
     .owlpark-feat-product-info-tooltips.pit-info-wrap.pit-open .pit-tooltip {
-      display: block;
-    }
-  }
-  @media (max-width: 560px) and (hover: hover) {
-    .owlpark-feat-product-info-tooltips.pit-info-wrap:hover .pit-tooltip {
       display: block;
     }
   }

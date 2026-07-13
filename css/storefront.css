@@ -414,12 +414,14 @@ main {
   opacity: 0.9;
 }
 
-@media (max-width: 560px) {
-  /* Every feature module that adds a header button makes the action row longer.
-     Wrapping them all would grow the *sticky* header without bound (it hit
-     296px — 44% of an iPhone SE screen — with every module enabled). Instead the
-     actions become one swipeable strip, with the cart pinned to the right edge
-     so the primary action is never scrolled out of reach. */
+/* Every feature module that adds a header button makes the action row longer.
+   Wrapping them all would grow the *sticky* header without bound (it hit
+   296px — 44% of an iPhone SE screen — with every module enabled). Instead the
+   actions become one swipeable strip, with the cart pinned to the right edge
+   so the primary action is never scrolled out of reach. A phone held sideways
+   is 667px wide — past the phone breakpoint but with only ~375px of height to
+   spend — so it needs the strip too, guarded the same way as the hero banner. */
+@media (max-width: 560px), (orientation: landscape) and (max-height: 500px) {
   .header-actions {
     flex-wrap: nowrap;
     overflow-x: auto;
@@ -442,7 +444,9 @@ main {
     right: 0;
     margin-left: auto;
   }
+}
 
+@media (max-width: 560px) {
   .row-header {
     flex-direction: column;
   }
