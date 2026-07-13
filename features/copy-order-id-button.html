@@ -9,36 +9,152 @@
   }
 </script>
 
-<style>
+<style id="owlpark-copy-order-id-button-style">
+  /* Quiet secondary/ghost control: transparent surface, hairline border, ink
+     text. Icon is an inline SVG; the label is rendered via ::after (a CSS custom
+     property) so NO real text node lands inside #order-id — that keeps the
+     order line the button copies free of the button's own label. */
   .owlpark-feat-copy-order-id-button {
-    background: transparent;
-    border: none;
-    color: var(--cove-teal, #0f6f7a);
-    cursor: pointer;
-    font-size: 0.9rem;
-    margin-left: 0.35rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
     vertical-align: middle;
-    /* A bare 30x19 emoji is not a tappable control on a phone. */
+    margin-left: 0.5rem;
+    box-sizing: border-box;
     min-width: 44px;
     min-height: 44px;
+    padding: 0 0.7rem;
+    background: transparent;
+    border: 1px solid rgba(17, 33, 31, 0.1);
+    border-radius: 12px;
+    color: #17211f;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.16s cubic-bezier(0.2, 0.6, 0.2, 1);
+  }
+  .owlpark-feat-copy-order-id-button::after {
+    content: var(--coi-label, "Copy");
+  }
+  .owlpark-feat-copy-order-id-button .coi-ic {
+    flex-shrink: 0;
+    opacity: 0.75;
+    transition: opacity 0.16s ease;
   }
   .owlpark-feat-copy-order-id-button:hover {
-    color: var(--cove-teal-dark, #0a4d55);
+    background: rgba(17, 33, 31, 0.05);
+    border-color: rgba(17, 33, 31, 0.18);
+    transform: translateY(-1px);
   }
-  .owlpark-feat-copy-order-id-button::before {
-    content: "📋";
+  .owlpark-feat-copy-order-id-button:active {
+    transform: translateY(0);
   }
-  .owlpark-feat-copy-order-id-button.copied::before {
-    content: "✅";
+  .owlpark-feat-copy-order-id-button:focus-visible {
+    outline: 2px solid #0f6f7a;
+    outline-offset: 2px;
+  }
+  /* Success: soft teal-tinted confirmation, label swaps to "Copied ✓". */
+  .owlpark-feat-copy-order-id-button.is-copied {
+    color: #0f6f7a;
+    border-color: rgba(15, 111, 122, 0.35);
+    background: rgba(15, 111, 122, 0.09);
+  }
+  .owlpark-feat-copy-order-id-button.is-copied .coi-ic {
+    opacity: 1;
+  }
+  .owlpark-feat-copy-order-id-button.is-copied::after {
+    content: var(--coi-copied, "Copied \2713");
+  }
+  /* Visually hidden polite live region (announces "Copied ✓"). Lives on <body>,
+     outside #order-id, so its text is never mixed into the copied order line. */
+  .owlpark-feat-copy-order-id-live {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-copy-order-id-button {
+      border-color: rgba(255, 255, 255, 0.14);
+      color: #e9edec;
+    }
+    .owlpark-feat-copy-order-id-button:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.22);
+    }
+    .owlpark-feat-copy-order-id-button.is-copied {
+      color: #5bc7cf;
+      border-color: rgba(91, 199, 207, 0.4);
+      background: rgba(91, 199, 207, 0.12);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-copy-order-id-button,
+    .owlpark-feat-copy-order-id-button .coi-ic {
+      transition: none;
+    }
+    .owlpark-feat-copy-order-id-button:hover {
+      transform: none;
+    }
   }
 </style>
 
 <script>
   (function () {
+    /* =========================================================================
+     * Copy Order ID Button  ·  utility
+     * -------------------------------------------------------------------------
+     * WHAT   A quiet secondary "Copy" button beside the order id on the checkout
+     *        confirmation. One click copies the full order line to the clipboard;
+     *        the button briefly confirms "Copied ✓", then reverts.
+     * HOW    Appends the button inside #order-id and re-applies through a
+     *        MutationObserver, because js/main.js overwrites #order-id's
+     *        textContent on every checkout. An idempotency guard keeps it from
+     *        duplicating. Copy uses navigator.clipboard with a hidden-textarea
+     *        execCommand fallback. The button carries no real text (SVG icon +
+     *        ::after label) so #order-id's textContent stays exactly the order
+     *        line; success is announced via a visually hidden role="status"
+     *        aria-live region parked on <body>.
+     * HOSTS  Owl Park only. The zoo ViewItems ticket page has no #order-id
+     *        confirmation anchor, so ensureButton() no-ops and nothing is
+     *        injected there.
+     * ===================================================================== */
+
     var FEATURE_ID = "copy-order-id-button";
+
+    // ----- Configuration --------------------------------------------------
+    // Tunable values, safe to edit.
+    var CONFIG = {
+      buttonLabel: "Copy", // resting label shown on the button
+      copiedLabel: "Copied ✓", // success label (shown + announced) after a copy
+      ariaLabel: "Copy order ID", // stable accessible name for the button
+      revertMs: 1800, // how long the "copied" state stays before reverting
+    };
+
     var buttonEl = null;
+    var liveEl = null;
     var resetTimeoutId = null;
     var observer = null;
+
+    // Copy icon (Feather "copy"), decorative — contributes no textContent.
+    var ICON_SVG =
+      '<svg class="coi-ic" viewBox="0 0 24 24" width="15" height="15" fill="none" ' +
+      'stroke="currentColor" stroke-width="2" stroke-linecap="round" ' +
+      'stroke-linejoin="round" aria-hidden="true" focusable="false">' +
+      '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>' +
+      '<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>' +
+      "</svg>";
 
     function fallbackCopy(text) {
       var textarea = document.createElement("textarea");
@@ -60,11 +176,13 @@
       var text = orderIdEl ? orderIdEl.textContent : "";
       var showCheck = function () {
         if (!buttonEl) return;
-        buttonEl.classList.add("copied");
+        buttonEl.classList.add("is-copied");
+        if (liveEl) liveEl.textContent = CONFIG.copiedLabel;
         if (resetTimeoutId) clearTimeout(resetTimeoutId);
         resetTimeoutId = setTimeout(function () {
-          if (buttonEl) buttonEl.classList.remove("copied");
-        }, 1800);
+          if (buttonEl) buttonEl.classList.remove("is-copied");
+          if (liveEl) liveEl.textContent = "";
+        }, CONFIG.revertMs);
       };
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(showCheck, function () {
@@ -77,6 +195,19 @@
       }
     }
 
+    // Polite live region kept on <body> (outside #order-id) so the announced
+    // "Copied ✓" never contaminates the order line the button copies.
+    function ensureLiveRegion() {
+      if (liveEl && liveEl.isConnected) return liveEl;
+      liveEl = document.createElement("span");
+      liveEl.className = "owlpark-feat-copy-order-id-live";
+      liveEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+      liveEl.setAttribute("role", "status");
+      liveEl.setAttribute("aria-live", "polite");
+      document.body.appendChild(liveEl);
+      return liveEl;
+    }
+
     function ensureButton() {
       var orderIdEl = document.getElementById("order-id");
       if (!orderIdEl) return;
@@ -87,9 +218,13 @@
       buttonEl.type = "button";
       buttonEl.className = "owlpark-feat-copy-order-id-button";
       buttonEl.setAttribute("data-owlpark-feature", FEATURE_ID);
-      buttonEl.setAttribute("aria-label", "Copy order id");
+      buttonEl.setAttribute("aria-label", CONFIG.ariaLabel);
+      buttonEl.style.setProperty("--coi-label", JSON.stringify(CONFIG.buttonLabel));
+      buttonEl.style.setProperty("--coi-copied", JSON.stringify(CONFIG.copiedLabel));
+      buttonEl.innerHTML = ICON_SVG;
       buttonEl.addEventListener("click", copyOrderId);
       orderIdEl.appendChild(buttonEl);
+      ensureLiveRegion();
     }
 
     function activate() {
@@ -118,6 +253,7 @@
           el.remove();
         });
       buttonEl = null;
+      liveEl = null;
     }
 
     activate();

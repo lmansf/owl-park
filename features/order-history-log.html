@@ -9,92 +9,323 @@
   }
 </script>
 
-<style>
+<style id="owlpark-order-history-log-style">
+  /* Docked utility button: a quiet glass pill that reads on Owl Park's teal
+     header — the only host this feature mounts on. */
   .owlpark-feat-order-history-log-btn {
-    background: rgba(255, 255, 255, 0.15);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    padding: 0.4rem 0.7rem;
-    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 44px;
+    box-sizing: border-box;
+    padding: 0 0.9rem;
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.22) !important;
+    border-radius: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
     font-size: 0.85rem;
-    font-weight: 700;
+    font-weight: 600;
+    letter-spacing: 0.1px;
     cursor: pointer;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    transition:
+      transform 0.16s cubic-bezier(0.2, 0.6, 0.2, 1),
+      background 0.16s ease;
   }
   .owlpark-feat-order-history-log-btn:hover {
-    background: rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.2) !important;
+    transform: translateY(-1px);
   }
+  .owlpark-feat-order-history-log-btn:active {
+    transform: translateY(0);
+  }
+  .owlpark-feat-order-history-log-btn:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.85);
+    outline-offset: 2px;
+  }
+
+  /* Scrim + centered dialog card. */
   .owlpark-feat-order-history-log-overlay {
     position: fixed;
     inset: 0;
-    /* inset: 0 sizes this against the *large* viewport on iOS Safari, so its
-       bottom edge — and the safe-area padding on it — lands below what you can
-       see. 100dvh pins it to the visible viewport. */
+    /* inset:0 sizes against iOS Safari's *large* viewport, dropping the bottom
+       edge below what's visible; 100dvh pins it to the visible viewport. */
     height: 100dvh;
     box-sizing: border-box;
-    background: rgba(10, 30, 32, 0.45);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 65;
-    padding: calc(1rem + env(safe-area-inset-top, 0px))
-      calc(1rem + env(safe-area-inset-right, 0px))
-      calc(1rem + env(safe-area-inset-bottom, 0px))
-      calc(1rem + env(safe-area-inset-left, 0px));
+    z-index: 2147483200;
+    padding: calc(1.25rem + env(safe-area-inset-top, 0px))
+      calc(1.25rem + env(safe-area-inset-right, 0px))
+      calc(1.25rem + env(safe-area-inset-bottom, 0px))
+      calc(1.25rem + env(safe-area-inset-left, 0px));
+    background: rgba(16, 22, 24, 0.38);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    transition: opacity 0.18s ease;
+  }
+  .owlpark-feat-order-history-log-overlay.is-open {
+    opacity: 1;
   }
   .owlpark-feat-order-history-log-card {
-    background: white;
-    border-radius: var(--radius-lg, 14px);
-    padding: 1.4rem;
-    max-width: 460px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border: 1px solid rgba(17, 33, 31, 0.08);
+    border-radius: 20px;
+    padding: 1.75rem;
+    max-width: 440px;
     width: 100%;
     box-sizing: border-box;
-    max-height: 70vh;
-    max-height: 70dvh;
-    overflow: auto;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    max-height: 100%;
+    box-shadow: 0 18px 50px rgba(15, 30, 33, 0.18);
+    color: #17211f;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    transform: scale(0.98);
+    opacity: 0;
+    transition:
+      transform 0.2s cubic-bezier(0.2, 0.6, 0.2, 1),
+      opacity 0.2s ease;
+  }
+  .owlpark-feat-order-history-log-overlay.is-open
+    .owlpark-feat-order-history-log-card {
+    transform: scale(1);
+    opacity: 1;
   }
   .owlpark-feat-order-history-log-card h3 {
-    margin-top: 0;
-    color: var(--cove-teal-dark, #0a4d55);
+    margin: 0 2rem 1.1rem 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #17211f;
+  }
+
+  /* The list is the one scroll surface; heading + Close stay put. */
+  .owlpark-feat-order-history-log-card .ohl-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    margin: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
   }
   .owlpark-feat-order-history-log-card .ohl-entry {
     display: flex;
+    align-items: baseline;
     justify-content: space-between;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid var(--cove-border, #e4ddca);
-    font-size: 0.85rem;
+    gap: 0.75rem;
+    padding: 0.7rem 0.8rem;
+    border: 1px solid rgba(17, 33, 31, 0.1);
+    border-radius: 10px;
+    background: #f7f8f7;
+  }
+  .owlpark-feat-order-history-log-card .ohl-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+  .owlpark-feat-order-history-log-card .ohl-id {
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    color: #17211f;
+    word-break: break-word;
+  }
+  .owlpark-feat-order-history-log-card .ohl-meta {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: #67736f;
+  }
+  .owlpark-feat-order-history-log-card .ohl-total {
+    flex: 0 0 auto;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #17211f;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
   }
   .owlpark-feat-order-history-log-card .ohl-empty {
-    color: #6b7677;
-    font-size: 0.85rem;
+    margin: 0;
+    padding: 1.25rem 1rem;
+    text-align: center;
+    color: #67736f;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.45;
+    border: 1px dashed rgba(17, 33, 31, 0.14);
+    border-radius: 12px;
+  }
+
+  /* Quiet corner dismiss; ::before pads the hit area to ~46px. */
+  .owlpark-feat-order-history-log-x {
+    position: absolute;
+    top: 0.9rem;
+    right: 0.9rem;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: #67736f;
+    font-size: 1.35rem;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      background 0.16s ease,
+      color 0.16s ease;
+  }
+  .owlpark-feat-order-history-log-x::before {
+    content: "";
+    position: absolute;
+    inset: -6px;
+  }
+  .owlpark-feat-order-history-log-x:hover {
+    background: rgba(17, 33, 31, 0.05);
+    color: #17211f;
   }
   .owlpark-feat-order-history-log-close {
-    margin-top: 1rem;
-    background: var(--cove-teal, #0f6f7a);
-    color: white;
-    border: none;
-    padding: 0.5rem 1.1rem;
-    border-radius: 999px;
-    font-weight: 700;
-    cursor: pointer;
+    margin-top: 1.5rem;
+    align-self: stretch;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     min-height: 44px;
+    padding: 0 1.5rem;
+    background: #0f6f7a;
+    color: #ffffff;
+    border: none;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+      background 0.16s ease,
+      transform 0.16s ease;
+  }
+  .owlpark-feat-order-history-log-close:hover {
+    background: #0c5f69;
+    transform: translateY(-1px);
+  }
+  .owlpark-feat-order-history-log-close:active {
+    transform: translateY(0);
+  }
+  .owlpark-feat-order-history-log-card :focus-visible {
+    outline: 2px solid #0f6f7a;
+    outline-offset: 2px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-order-history-log-card {
+      background: #12181a;
+      border-color: rgba(255, 255, 255, 0.1);
+      color: #e9edec;
+    }
+    .owlpark-feat-order-history-log-card h3 {
+      color: #e9edec;
+    }
+    .owlpark-feat-order-history-log-card .ohl-entry {
+      background: #1a2224;
+      border-color: rgba(255, 255, 255, 0.11);
+    }
+    .owlpark-feat-order-history-log-card .ohl-id,
+    .owlpark-feat-order-history-log-card .ohl-total {
+      color: #e9edec;
+    }
+    .owlpark-feat-order-history-log-card .ohl-meta {
+      color: #98a4a1;
+    }
+    .owlpark-feat-order-history-log-card .ohl-empty {
+      color: #98a4a1;
+      border-color: rgba(255, 255, 255, 0.14);
+    }
+    .owlpark-feat-order-history-log-x {
+      color: #98a4a1;
+    }
+    .owlpark-feat-order-history-log-x:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #e9edec;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-order-history-log-overlay,
+    .owlpark-feat-order-history-log-card,
+    .owlpark-feat-order-history-log-btn,
+    .owlpark-feat-order-history-log-close,
+    .owlpark-feat-order-history-log-x {
+      transition: none;
+    }
+    .owlpark-feat-order-history-log-card {
+      transform: none;
+    }
   }
 </style>
 
 <script>
   (function () {
+    /* =========================================================================
+     * Order History Log  ·  utility
+     * -------------------------------------------------------------------------
+     * WHAT   A "My Orders" button in the header that opens a clean dialog
+     *        listing past mock orders (order id, its date, and the total),
+     *        newest first.
+     * HOW    Records each checkout by observing #checkout-modal: when the
+     *        confirmation modal is shown it reads the freshly-written #order-id
+     *        and the total parsed from #order-summary, then unshifts
+     *        { orderText, total } into a localStorage log (CONFIG.storageKey,
+     *        capped at CONFIG.maxEntries), de-duped by the last recorded order
+     *        id so the same order is never logged twice. The dialog fades/scales
+     *        in, traps focus, and closes on Esc / scrim / × / Close.
+     * HOSTS  Owl Park only: the button mounts into .header-actions and the
+     *        recorder attaches to #checkout-modal — both absent on the zoo
+     *        ViewItems ticket page, so the feature is a no-op there (no button,
+     *        nothing recorded).
+     * ===================================================================== */
+
     var FEATURE_ID = "order-history-log";
-    var STORAGE_KEY = "owl-park-order-history";
-    var MAX_ENTRIES = 25;
+
+    // ----- Configuration --------------------------------------------------
+    // Tunable values, safe to edit. Each explained inline.
+    var CONFIG = {
+      // localStorage key holding the log: an array of { orderText, total }.
+      storageKey: "owl-park-order-history",
+      // Cap on stored entries; newest are kept, oldest fall off the end.
+      maxEntries: 25,
+      // Header button label + dialog heading copy.
+      buttonLabel: "🧾 My Orders",
+      title: "🧾 My Orders",
+      // Shown when the log is empty.
+      emptyText: "No orders yet — complete a checkout to see it here.",
+      // js/main.js writes #order-id as "Order OP-###### · M/D/YYYY"; for display
+      // only, the stored text is split on this token into an ink order id + a
+      // muted date. The full string is what gets stored (format unchanged).
+      dateSeparator: " · ",
+    };
 
     var historyBtn = null;
     var overlayEl = null;
     var checkoutObserver = null;
     var lastOrderId = "";
+    var lastFocus = null;
+    var keyHandler = null;
 
+    // ----- Storage --------------------------------------------------------
     function readHistory() {
       try {
-        var raw = localStorage.getItem(STORAGE_KEY);
+        var raw = localStorage.getItem(CONFIG.storageKey);
         var parsed = raw ? JSON.parse(raw) : [];
         if (!Array.isArray(parsed)) return [];
         return parsed.filter(function (e) {
@@ -106,7 +337,10 @@
     }
 
     function writeHistory(entries) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries.slice(0, MAX_ENTRIES)));
+      localStorage.setItem(
+        CONFIG.storageKey,
+        JSON.stringify(entries.slice(0, CONFIG.maxEntries)),
+      );
     }
 
     function parseTotal(summaryEl) {
@@ -115,6 +349,7 @@
       return matches && matches.length ? matches[matches.length - 1] : "";
     }
 
+    // ----- Recording (observes the checkout confirmation) -----------------
     function recordOrder() {
       var orderIdEl = document.getElementById("order-id");
       var summaryEl = document.getElementById("order-summary");
@@ -127,56 +362,141 @@
       writeHistory(entries);
     }
 
+    // ----- Dialog ---------------------------------------------------------
     function removeOverlay() {
+      if (keyHandler) {
+        document.removeEventListener("keydown", keyHandler);
+        keyHandler = null;
+      }
       if (overlayEl) {
         overlayEl.remove();
         overlayEl = null;
       }
+      if (lastFocus && typeof lastFocus.focus === "function") lastFocus.focus();
+      lastFocus = null;
+    }
+
+    function splitOrderText(text) {
+      var t = String(text || "");
+      var i = t.indexOf(CONFIG.dateSeparator);
+      if (i === -1) return { id: t, date: "" };
+      return { id: t.slice(0, i), date: t.slice(i + CONFIG.dateSeparator.length) };
     }
 
     function buildEntry(e) {
+      var parts = splitOrderText(e.orderText);
       var row = document.createElement("div");
       row.className = "ohl-entry";
-      var orderSpan = document.createElement("span");
-      orderSpan.textContent = e.orderText || "";
-      var totalSpan = document.createElement("span");
-      totalSpan.textContent = e.total || "";
-      row.appendChild(orderSpan);
-      row.appendChild(totalSpan);
+      row.setAttribute("role", "listitem");
+
+      var main = document.createElement("div");
+      main.className = "ohl-main";
+      var idEl = document.createElement("span");
+      idEl.className = "ohl-id";
+      idEl.textContent = parts.id || e.orderText || "";
+      main.appendChild(idEl);
+      if (parts.date) {
+        var metaEl = document.createElement("span");
+        metaEl.className = "ohl-meta";
+        metaEl.textContent = parts.date;
+        main.appendChild(metaEl);
+      }
+
+      var totalEl = document.createElement("span");
+      totalEl.className = "ohl-total";
+      totalEl.textContent = e.total || "";
+
+      row.appendChild(main);
+      row.appendChild(totalEl);
       return row;
+    }
+
+    function focusable() {
+      if (!overlayEl) return [];
+      return [].slice.call(
+        overlayEl.querySelectorAll(
+          'button, [href], input, [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+    }
+
+    function onKey(e) {
+      if (e.key === "Escape" || e.key === "Esc") {
+        e.preventDefault();
+        removeOverlay();
+        return;
+      }
+      if (e.key === "Tab") {
+        var f = focusable();
+        if (!f.length) return;
+        var first = f[0];
+        var last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     }
 
     function openHistory() {
       if (overlayEl) return;
+      lastFocus = document.activeElement;
       var entries = readHistory();
 
       overlayEl = document.createElement("div");
       overlayEl.className = "owlpark-feat-order-history-log-overlay";
       overlayEl.setAttribute("data-owlpark-feature", FEATURE_ID);
+      overlayEl.setAttribute("role", "dialog");
+      overlayEl.setAttribute("aria-modal", "true");
+      overlayEl.setAttribute("aria-label", CONFIG.title);
       overlayEl.innerHTML =
         '<div class="owlpark-feat-order-history-log-card">' +
-        "<h3>🧾 My Orders</h3>" +
+        '<button type="button" class="owlpark-feat-order-history-log-x" aria-label="Close">&times;</button>' +
+        "<h3></h3>" +
+        '<div class="ohl-list"></div>' +
         '<button type="button" class="owlpark-feat-order-history-log-close">Close</button>' +
         "</div>";
-      var card = overlayEl.querySelector(".owlpark-feat-order-history-log-card");
-      var closeBtn = overlayEl.querySelector(".owlpark-feat-order-history-log-close");
+
+      var heading = overlayEl.querySelector("h3");
+      heading.textContent = CONFIG.title;
+      var list = overlayEl.querySelector(".ohl-list");
+      var closeBtn = overlayEl.querySelector(
+        ".owlpark-feat-order-history-log-close",
+      );
+      var xBtn = overlayEl.querySelector(".owlpark-feat-order-history-log-x");
+
       if (entries.length) {
+        list.setAttribute("role", "list");
         entries.forEach(function (e) {
-          card.insertBefore(buildEntry(e), closeBtn);
+          list.appendChild(buildEntry(e));
         });
       } else {
         var empty = document.createElement("div");
         empty.className = "ohl-empty";
-        empty.textContent = "No orders yet — complete a checkout to see it here.";
-        card.insertBefore(empty, closeBtn);
+        empty.textContent = CONFIG.emptyText;
+        list.appendChild(empty);
       }
+
       document.body.appendChild(overlayEl);
+
       closeBtn.addEventListener("click", removeOverlay);
+      xBtn.addEventListener("click", removeOverlay);
       overlayEl.addEventListener("click", function (e) {
         if (e.target === overlayEl) removeOverlay();
       });
+      keyHandler = onKey;
+      document.addEventListener("keydown", keyHandler);
+
+      requestAnimationFrame(function () {
+        if (overlayEl) overlayEl.classList.add("is-open");
+        if (xBtn) xBtn.focus();
+      });
     }
 
+    // ----- Lifecycle ------------------------------------------------------
     function activate() {
       var actions = document.querySelector(".header-actions");
       if (actions) {
@@ -184,7 +504,8 @@
         historyBtn.type = "button";
         historyBtn.className = "owlpark-feat-order-history-log-btn";
         historyBtn.setAttribute("data-owlpark-feature", FEATURE_ID);
-        historyBtn.textContent = "🧾 My Orders";
+        historyBtn.setAttribute("aria-haspopup", "dialog");
+        historyBtn.textContent = CONFIG.buttonLabel;
         historyBtn.addEventListener("click", openHistory);
         actions.prepend(historyBtn);
       }
