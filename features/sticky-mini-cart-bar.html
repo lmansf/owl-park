@@ -14,9 +14,14 @@
     position: fixed;
     /* Centred via auto margins rather than left:50% + translate(-50%): with
        left:50% the shrink-to-fit width is capped at *half* the viewport, which
-       on a phone squeezed the running total out of the bar entirely. */
-    left: env(safe-area-inset-left, 0px);
-    right: env(safe-area-inset-right, 0px);
+       on a phone squeezed the running total out of the bar entirely.
+       The 1rem here is the screen-edge gutter, and it is on the offsets rather
+       than on a max-width so that it survives the widget rules below, which push
+       ONE side further in: whichever side they do not touch keeps this gutter
+       instead of falling back to the bare edge. The insets keep it off the notch
+       when landscape safe areas are non-zero. */
+    left: calc(1rem + env(safe-area-inset-left, 0px));
+    right: calc(1rem + env(safe-area-inset-right, 0px));
     margin-inline: auto;
     width: fit-content;
     /* Lift clear of the iPhone home indicator, which would otherwise sit on
@@ -33,12 +38,6 @@
     font-size: 0.86rem;
     font-weight: 600;
     z-index: 40;
-    /* Never let a long total push the bar past the screen edges on a phone, or
-       under the notch when landscape insets are non-zero. */
-    max-width: calc(
-      100vw - 2rem - env(safe-area-inset-left, 0px) -
-        env(safe-area-inset-right, 0px)
-    );
     box-sizing: border-box;
   }
   /* font-size-adjuster (bottom-right, ~158px wide) and keyboard-shortcuts-helper
@@ -68,31 +67,32 @@
       .owlpark-feat-sticky-mini-cart-bar {
       right: calc(1.2rem + 158px + 0.5rem + env(safe-area-inset-right, 0px));
     }
-    /* With both widgets up, the band between them is narrower than the bar's
-       min-content width, and `fit-content` floors there — it would overflow the
-       band and slide back under the adjuster. Stretching to the band instead
-       lets the summary shrink (its min-width: 0) and ellipsize, which is what
-       keeps the button inside. Only the two-widget case needs this; with one
-       widget the band is wider than the bar and it stays centred in it. */
-    body:has(.owlpark-feat-keyboard-shortcuts-helper-btn):has(
-        .owlpark-feat-font-size-adjuster
-      )
-      .owlpark-feat-sticky-mini-cart-bar {
-      width: auto;
-    }
-    /* Trim the bar's own horizontal padding in the squeezed case so the button
-       still fits inside the rounded background instead of spilling out of it. */
+    /* Either widget alone already narrows the band past the bar's *min-content*
+       width, and `fit-content` floors there rather than at the band — the bar
+       would overflow and slide right back under the widget. Stretching to the
+       band gives the flex layout a definite width, and only then does the
+       summary's min-width: 0 let it shrink and ellipsize, which is what keeps
+       the button inside the band. */
     body:has(.owlpark-feat-keyboard-shortcuts-helper-btn)
       .owlpark-feat-sticky-mini-cart-bar,
     body:has(.owlpark-feat-font-size-adjuster)
       .owlpark-feat-sticky-mini-cart-bar {
+      width: auto;
+    }
+    /* Trim the bar's own horizontal padding in that same squeezed two-widget
+       case so the button still fits inside the rounded background instead of
+       spilling out of it. One widget alone leaves room to spare, so it keeps the
+       roomier default padding. */
+    body:has(.owlpark-feat-keyboard-shortcuts-helper-btn):has(
+        .owlpark-feat-font-size-adjuster
+      )
+      .owlpark-feat-sticky-mini-cart-bar {
       padding-left: 0.6rem;
       padding-right: 0.4rem;
     }
-    body:has(.owlpark-feat-keyboard-shortcuts-helper-btn)
-      .owlpark-feat-sticky-mini-cart-bar
-      .smcb-view-btn,
-    body:has(.owlpark-feat-font-size-adjuster)
+    body:has(.owlpark-feat-keyboard-shortcuts-helper-btn):has(
+        .owlpark-feat-font-size-adjuster
+      )
       .owlpark-feat-sticky-mini-cart-bar
       .smcb-view-btn {
       padding-left: 0.6rem;

@@ -137,7 +137,6 @@
 
     var observer = null;
     var byId = {};
-    var hoverSuppressed = false;
     /* Where the panel floats beside the icon and a pointer can rest on it. Below
        561px the panel is an in-flow disclosure that reflows the row, so hover
        must not open it there; without (hover: hover), iOS Safari's sticky
@@ -176,14 +175,25 @@
             finePrint +
             "</div>";
           var icon = wrap.querySelector(".pit-info-icon");
+          /* Both flags live per row, in this closure, so one icon's state cannot
+             leak into another's and it dies with the row when renderCatalog()
+             replaces the grid — a shared flag could be stranded by a row that is
+             removed while the pointer is still over it, since boundary events
+             are not reliably dispatched for a removed node. */
+          var openedByHover = false;
+          var hoverSuppressed = false;
+
           icon.addEventListener("click", function (ev) {
             ev.stopPropagation();
             var wasOpen = wrap.classList.contains("pit-open");
             closeAllTooltips();
             if (!wasOpen) setOpen(wrap, true);
-            /* The pointer is still resting on the icon after a click that closed
+            /* An explicit click (or Enter/Space, which fires click too) pins the
+               panel: only another click, Escape, or a click outside may close it.
+               The pointer is still resting on the icon after a click that closed
                the panel, so hover would immediately re-open it and the click
                would look inert. Stay closed until the pointer leaves. */
+            openedByHover = false;
             hoverSuppressed = wasOpen;
           });
           wrap.addEventListener("mouseenter", function () {
@@ -191,10 +201,16 @@
             if (wrap.classList.contains("pit-open")) return;
             closeAllTooltips();
             setOpen(wrap, true);
+            openedByHover = true;
           });
           wrap.addEventListener("mouseleave", function () {
             hoverSuppressed = false;
             if (!desktopHover.matches) return;
+            /* Hover only takes back what hover gave: a pinned panel must not be
+               dismissed by the pointer drifting off the icon on its way to the
+               panel's fine print. */
+            if (!openedByHover) return;
+            openedByHover = false;
             setOpen(wrap, false);
           });
 
@@ -234,7 +250,6 @@
     }
 
     function activate() {
-      hoverSuppressed = false;
       document.addEventListener("click", onDocumentClick);
       document.addEventListener("keydown", onDocumentKeydown);
       fetch("data/products.json")
