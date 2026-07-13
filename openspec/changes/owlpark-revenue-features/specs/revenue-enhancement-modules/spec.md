@@ -39,25 +39,40 @@ number SHALL be derived at render time from `data/products.json` and the current
 membership prices and against cheaper equivalent ticket bundles, and offer a one-tap swap when — and
 only when — the arithmetic favours the shopper.
 
+An offer SHALL only be made when the target **strictly covers** the cart: its `capacity.adults` is at
+least the cart's adults and its `capacity.kids` is at least the cart's kids, each summed from the
+ticket lines' product capacity × qty. The two dimensions SHALL NOT be summed into a single head count.
+
 #### Scenario: Membership break-even is stated honestly
 
-- **WHEN** the cart's ticket subtotal is $99 and a Family & Household Membership costs $179 and covers
-  at least as many admissions as the cart
+- **WHEN** the cart holds one Family Day Pass (2 adults + 3 kids, $99) and a Family & Household
+  Membership ($179) covers 2 adults + up to 4 kids
 - **THEN** the module states the day-out cost, the membership price, and the computed break-even
   (`ceil(179 / 99)` = the 2nd visit), and offers a swap that replaces the ticket lines with the
   membership
 
-#### Scenario: Quantity-break swap names a real saving
+#### Scenario: An offer that would leave someone at the gate is not made
 
-- **WHEN** the cart holds three General Admission tickets ($102) and a Family Day Pass ($99) admits
-  more people for less
-- **THEN** the module offers the swap, names the target's actual coverage ("2 adults + up to 3 kids")
-  and the exact computed saving ($3.00), and does not claim the target covers the shopper's party
+- **WHEN** the cart holds three General Admission tickets ($102, three adults) and the only cheaper
+  multi-person ticket is a Family Day Pass that admits 2 adults + 3 kids
+- **THEN** the module offers neither the swap nor a membership, because no product in the catalog
+  covers three adults, and shows nothing at all rather than a saving that admits only two of them
+
+#### Scenario: A swap keeps the visit date and off-peak rate the shopper chose
+
+- **WHEN** the shopper's ticket lines all carry the same `meta.visit` date and `custom.discountRate`,
+  and a ticket → ticket swap is offered
+- **THEN** the replacement line carries that same visit date and discount basis, and the advertised
+  saving is computed against the discounted price the line is actually charged at
+- **AND WHEN** the ticket lines carry more than one distinct visit date
+- **THEN** no swap is offered, since one replacement line cannot carry two dates
+- **AND WHEN** the swap target is a membership (which admits any open day, so the dates do not carry)
+- **THEN** the offer copy states that the swap replaces the dated tickets
 
 #### Scenario: Nothing is said when the math does not favour the shopper
 
 - **WHEN** a swap would cost the shopper more, or the membership break-even exceeds the plausible
-  threshold, or the cart holds no tickets
+  threshold, or the target does not strictly cover the cart, or the cart holds no tickets
 - **THEN** the module shows no offer at all
 
 ### Requirement: conservation-roundup attaches an optional donation
@@ -75,8 +90,16 @@ non-catalog cart line included in the cart total and the checkout summary.
 #### Scenario: Accepting a donation keeps every total correct
 
 - **WHEN** the shopper taps the round-up offer
-- **THEN** a donation line for exactly the offered amount is added, the cart total increases by exactly
-  that amount, the checkout summary lists it, and a Remove control for it is shown
+- **THEN** a donation line for exactly the offered amount is added (tagged `custom.source = "roundup"`),
+  the cart total increases by exactly that amount, the checkout summary lists it, and a Remove control
+  for it is shown
+
+#### Scenario: A later cart change never edits the gift, and never leaves a stale promise
+
+- **WHEN** the cart changes after a round-up was accepted, so the order total is no longer a whole $5
+- **THEN** the donation stays pinned at exactly the amount the shopper tapped, and the panel states the
+  new order total and offers an explicit re-round the shopper can take or ignore — the gift changes
+  only on a further tap
 
 ### Requirement: visit-addons offers one-tap contextual add-ons
 

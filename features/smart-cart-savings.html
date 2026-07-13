@@ -138,19 +138,57 @@
 
     function capacityOf(product) {
       var cap = product.capacity || {};
-      var adults = cap.adults || 0;
-      var kids = cap.kids || 0;
-      return { adults: adults, kids: kids, heads: adults + kids };
+      return { adults: cap.adults || 0, kids: cap.kids || 0 };
+    }
+
+    /**
+     * Coverage is per-dimension, never a head count: adults must cover adults AND kids must cover
+     * kids. Summing them would offer a party of three adults a pass that admits two, leaving someone
+     * at the gate — a "saving" that is not one.
+     */
+    function covers(product, basket) {
+      var cap = capacityOf(product);
+      return cap.adults >= basket.adults && cap.kids >= basket.kids;
+    }
+
+    /** The smallest number of `product` that admits the whole basket, or null if no number ever does. */
+    function qtyToCover(product, basket) {
+      var cap = capacityOf(product);
+      var qty = 0;
+      if (basket.adults > 0) {
+        if (cap.adults <= 0) return null;
+        qty = Math.max(qty, Math.ceil(basket.adults / cap.adults));
+      }
+      if (basket.kids > 0) {
+        if (cap.kids <= 0) return null;
+        qty = Math.max(qty, Math.ceil(basket.kids / cap.kids));
+      }
+      return qty > 0 ? qty : null;
+    }
+
+    /** What a ticket line carries beyond its id: the shopper's visit date and its off-peak basis. */
+    function carryOf(line) {
+      var custom = line.custom || {};
+      return {
+        visit: (line.meta && line.meta.visit) || null,
+        discountRate:
+          typeof custom.discountRate === "number" ? custom.discountRate : null,
+      };
     }
 
     /** Everything the offers are computed from: the cart's ticket lines, priced as they'll be charged. */
     function readTicketBasket() {
       var lines = readCart();
       var subtotal = 0;
-      var heads = 0;
+      var adults = 0;
+      var kids = 0;
       var count = 0;
       var hasMembership = false;
       var ticketKeys = [];
+      var carry = null;
+      var mixedCarry = false;
+      var dated = false;
+      var discounted = false;
 
       for (var i = 0; i < lines.length; i++) {
         var line = lines[i];
@@ -160,17 +198,33 @@
           hasMembership = true;
         }
         if (product.category !== "ticket") continue;
+        var cap = capacityOf(product);
         subtotal += linePrice(line, product) * line.qty;
-        heads += capacityOf(product).heads * line.qty;
+        adults += cap.adults * line.qty;
+        kids += cap.kids * line.qty;
         count += line.qty;
         ticketKeys.push(line.key || line.id);
+
+        var lineCarry = carryOf(line);
+        if (lineCarry.visit) dated = true;
+        if (lineCarry.discountRate !== null) discounted = true;
+        if (carry === null) {
+          carry = lineCarry;
+        } else if (JSON.stringify(carry) !== JSON.stringify(lineCarry)) {
+          mixedCarry = true;
+        }
       }
       return {
         subtotal: subtotal,
-        heads: heads,
+        adults: adults,
+        kids: kids,
         count: count,
         hasMembership: hasMembership,
         ticketKeys: ticketKeys,
+        carry: carry || { visit: null, discountRate: null },
+        mixedCarry: mixedCarry,
+        dated: dated,
+        discounted: discounted,
       };
     }
 
@@ -187,8 +241,8 @@
     }
 
     /**
-     * The cheapest membership that covers at least as many admissions as the cart, and pays for
-     * itself within a plausible number of visits at what the shopper is about to spend today.
+     * The cheapest membership that admits everyone the cart's tickets admit, and pays for itself
+     * within a plausible number of visits at what the shopper is about to spend today.
      */
     function membershipOffer(basket) {
       if (basket.subtotal <= 0 || basket.hasMembership) return null;
@@ -197,7 +251,7 @@
       for (var i = 0; i < products.length; i++) {
         var p = products[i];
         if (p.category !== "membership") continue;
-        if (capacityOf(p).heads < basket.heads) continue; // would not cover the party in the cart
+        if (!covers(p, basket)) continue; // would leave someone in the cart at the gate
         var breakEven = Math.ceil(p.price / basket.subtotal);
         if (breakEven > MAX_PLAUSIBLE_BREAK_EVEN) continue;
         if (!best || p.price < best.product.price) {
@@ -211,18 +265,25 @@
      * A single ticket product that admits everyone in the cart for strictly less than the cart's
      * ticket subtotal. Only multi-person passes are considered — swapping one per-person ticket for
      * a different per-person ticket is a different day out, not a better price for the same one.
+     * The replacement carries the shopper's visit date and off-peak basis, so the cost quoted here
+     * is the cost they are actually charged; with tickets on more than one date there is one line to
+     * carry two answers, so no swap is offered rather than one that quietly drops a date.
      */
     function swapOffer(basket) {
-      if (basket.subtotal <= 0 || basket.heads <= 0) return null;
+      if (basket.subtotal <= 0) return null;
+      if (basket.adults + basket.kids <= 0) return null;
+      if (basket.mixedCarry) return null;
 
+      var rate = basket.carry.discountRate;
       var best = null;
       for (var i = 0; i < products.length; i++) {
         var p = products[i];
         if (p.category !== "ticket") continue;
         var cap = capacityOf(p);
-        if (cap.heads <= 1) continue;
-        var qty = Math.ceil(basket.heads / cap.heads);
-        var cost = qty * p.price;
+        if (cap.adults + cap.kids <= 1) continue;
+        var qty = qtyToCover(p, basket);
+        if (!qty) continue;
+        var cost = qty * offpeakPrice(p, rate);
         var saving = basket.subtotal - cost;
         if (saving < 0.01) continue; // only when the math genuinely favours the shopper
         if (!best || saving > best.saving) {
@@ -232,20 +293,41 @@
       return best;
     }
 
-    /** Replace every ticket line with `qty` of `productId`, leaving add-ons and donations alone. */
-    function swapTicketsFor(productId, qty) {
+    /** A product's price under a carried off-peak basis, rounded by core so it matches what is charged. */
+    function offpeakPrice(product, rate) {
+      if (rate === null) return product.price;
+      return Math.max(0, product.price - window.OwlPark.discountOf(product.price, rate));
+    }
+
+    /**
+     * Replace every ticket line with `qty` of `productId`, leaving add-ons and donations alone.
+     * `carry` is the visit date and off-peak basis to move onto the replacement — null when the
+     * replacement is a membership, which admits any open day and so has no date to keep.
+     */
+    function swapTicketsFor(productId, qty, carry) {
       var basket = readTicketBasket();
       var keep = readCart().filter(function (line) {
         return basket.ticketKeys.indexOf(line.key || line.id) === -1;
       });
+
+      var replacement = { id: productId, qty: qty };
+      if (carry && carry.visit) {
+        replacement.key = productId + "#visit-" + carry.visit.date;
+        replacement.meta = { visit: carry.visit };
+      }
+      if (carry && carry.discountRate !== null) {
+        replacement.custom = { discountRate: carry.discountRate };
+      }
+
+      var key = replacement.key || replacement.id;
       var existing = null;
       for (var i = 0; i < keep.length; i++) {
-        if ((keep[i].key || keep[i].id) === productId) existing = keep[i];
+        if ((keep[i].key || keep[i].id) === key) existing = keep[i];
       }
       if (existing) {
         existing.qty += qty;
       } else {
-        keep.push({ id: productId, qty: qty });
+        keep.push(replacement);
       }
       writeCart(keep);
     }
@@ -302,6 +384,18 @@
                   ", unlimited visits for 12 months.",
               ),
             );
+            if (basket.dated) {
+              el.appendChild(
+                textLine(
+                  "scs-fine",
+                  "Swapping replaces the tickets in your cart, so the visit " +
+                    (basket.count === 1 ? "date" : "dates") +
+                    " you picked" +
+                    (basket.discounted ? " and their off-peak rate" : "") +
+                    " come off — a membership admits you on any open day.",
+                ),
+              );
+            }
             var btn = document.createElement("button");
             btn.type = "button";
             btn.className = "scs-swap-btn";
@@ -310,7 +404,7 @@
               money(membership.product.price) +
               ")";
             btn.addEventListener("click", function () {
-              swapTicketsFor(membership.product.id, 1);
+              swapTicketsFor(membership.product.id, 1, null);
             });
             el.appendChild(btn);
           }),
@@ -343,9 +437,15 @@
             el.appendChild(
               textLine(
                 "scs-fine",
-                "If that matches your group, swapping saves " +
+                "That admits everyone your tickets admit, so swapping saves " +
                   money(swap.saving) +
-                  ".",
+                  "." +
+                  (basket.carry.visit
+                    ? " Your chosen visit date carries over" +
+                      (basket.carry.discountRate !== null
+                        ? ", off-peak rate included."
+                        : ".")
+                    : ""),
               ),
             );
             var btn = document.createElement("button");
@@ -353,7 +453,7 @@
             btn.className = "scs-swap-btn";
             btn.textContent = "Swap and save " + money(swap.saving);
             btn.addEventListener("click", function () {
-              swapTicketsFor(swap.product.id, swap.qty);
+              swapTicketsFor(swap.product.id, swap.qty, basket.carry);
             });
             el.appendChild(btn);
           }),

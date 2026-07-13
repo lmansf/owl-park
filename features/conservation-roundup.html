@@ -184,22 +184,33 @@
       return { target: target, gift: target - subtotal };
     }
 
-    function setDonation(amount) {
+    function isRound(amount) {
+      return Math.round(amount * 100) % (ROUND_TO * 100) === 0;
+    }
+
+    /**
+     * `source` records that a gift came from the round-up offer, so a later cart change can tell a
+     * round-up (whose promise the new total may have broken) from a tier gift (which promised nothing
+     * about the total). The amount itself is never recomputed behind the shopper's back.
+     */
+    function setDonation(amount, source) {
       var lines = readCart().filter(function (line) {
         return !isDonation(line);
       });
+      var custom = {
+        kind: "donation",
+        fixed: true,
+        name: FUND_NAME,
+        emoji: "🦉",
+        unit: "donation",
+        price: Math.round(amount * 100) / 100,
+      };
+      if (source) custom.source = source;
       lines.push({
         id: DONATION_LINE_ID,
         key: DONATION_LINE_ID,
         qty: 1,
-        custom: {
-          kind: "donation",
-          fixed: true,
-          name: FUND_NAME,
-          emoji: "🦉",
-          unit: "donation",
-          price: Math.round(amount * 100) / 100,
-        },
+        custom: custom,
       });
       writeCart(lines);
     }
@@ -282,6 +293,35 @@
         remove.addEventListener("click", clearDonation);
         given.appendChild(remove);
         panelEl.appendChild(given);
+
+        // Their cart changed after they rounded up, so the total they were promised is no longer the
+        // one they'd pay. The gift stays exactly as they left it; re-rounding is theirs to choose.
+        var orderTotal = subtotal + donation.custom.price;
+        if (
+          donation.custom.source === "roundup" &&
+          subtotal > 0 &&
+          !isRound(orderTotal)
+        ) {
+          var reUp = roundUp(subtotal);
+          panelEl.appendChild(
+            textLine(
+              "cru-fine",
+              "Your cart has changed since — your order now comes to " +
+                money(orderTotal) +
+                ".",
+            ),
+          );
+          var reBtn = document.createElement("button");
+          reBtn.type = "button";
+          reBtn.className = "cru-roundup-btn";
+          reBtn.textContent =
+            "Round up to " + money(reUp.target) + " and give " + money(reUp.gift);
+          reBtn.addEventListener("click", function () {
+            setDonation(reUp.gift, "roundup");
+          });
+          panelEl.appendChild(reBtn);
+        }
+
         panelEl.appendChild(
           textLine("cru-fine", "Or change the amount — every owl helps:"),
         );
@@ -304,7 +344,7 @@
         btn.textContent =
           "Round up to " + money(up.target) + " and give " + money(up.gift);
         btn.addEventListener("click", function () {
-          setDonation(up.gift);
+          setDonation(up.gift, "roundup");
         });
         panelEl.appendChild(btn);
       }

@@ -4,6 +4,10 @@ import {
   toggleFeature,
   applyEnabledFeatures,
 } from "./feature-loader.js";
+// Features activated on this page price cart lines through `window.OwlPark`, which js/products.js
+// publishes as a side effect. Without this import the pricing API is missing here but present on the
+// storefront, so a feature would work on one page and not the other.
+import "./products.js";
 
 let features = [];
 

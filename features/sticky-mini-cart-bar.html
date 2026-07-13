@@ -156,7 +156,9 @@
       if (!bar || !summary) return;
 
       var lines = readCartLines();
-      if (!productsLoaded || lines.length === 0) {
+      var api = window.OwlPark;
+      var canPrice = !!api && typeof api.cartTotal === "function";
+      if (!productsLoaded || !canPrice || lines.length === 0) {
         bar.hidden = true;
         return;
       }
@@ -168,8 +170,9 @@
 
       // Priced by core's own cart arithmetic (window.OwlPark, js/products.js), so this bar can never
       // show a different total from the cart drawer: it honours a line's off-peak discount, and
-      // counts a line with no catalog product behind it at all, such as a donation.
-      var total = window.OwlPark.cartTotal(lines, products);
+      // counts a line with no catalog product behind it at all, such as a donation. A page that does
+      // not publish that API cannot be priced honestly, so the bar stays hidden rather than guessing.
+      var total = api.cartTotal(lines, products);
 
       summary.textContent = count + (count === 1 ? " item · $" : " items · $") + total.toFixed(2);
       bar.hidden = false;

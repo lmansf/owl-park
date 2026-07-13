@@ -39,7 +39,11 @@ This file is the project's committed home for project-intrinsic agent knowledge:
   absolute only for a line with no catalog product (the donation). Since features can't import
   `js/products.js` either, those rules are published on `window.OwlPark` (`resolveLine`, `cartTotal`,
   `discountOf`) — a feature that prices cart lines MUST use them instead of `product.price × qty`,
-  which drops donation lines and ignores off-peak discounts. See README.md's "The cart line model".
+  which drops donation lines and ignores off-peak discounts. That API is an import side effect of
+  `js/products.js`, so EVERY page that activates features must import it: `js/main.js` does, and
+  `js/manager.js` imports it purely for that (features-manager.html activates default-on features
+  too, and a feature that reached for `window.OwlPark` there used to throw on every poll tick).
+  See README.md's "The cart line model".
 - Only product categories that have a filter tab in `index.html` are rendered in the catalog
   (`renderCatalog()` derives the list from `.tab-btn[data-filter]`), which is what keeps the `addon`
   products out of the storefront — they're attached from the cart by `visit-addons`.

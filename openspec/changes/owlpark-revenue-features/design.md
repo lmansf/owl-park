@@ -94,18 +94,32 @@ features would need the `localStorage` fallback anyway; the event bridge keeps o
 
 - **Never state a saving that isn't arithmetic.** `smart-cart-savings` only renders a swap when
   `candidateCost < currentTicketSubtotal`, and it prints the difference it actually computed.
-- **Never overstate coverage.** A swap card always names the target's real capacity in the copy
-  ("covers 2 adults + up to 3 kids") and never asserts that it covers the shopper's party; it offers
-  the cheaper option and lets the shopper judge. A membership is only offered when its capacity is at
-  least the number of admissions in the cart.
+- **Never overstate coverage.** Coverage is checked per dimension, never as a head count: a candidate
+  is offered only when `candidate.capacity.adults >= basket.adults && candidate.capacity.kids >=
+  basket.kids`, where the basket's adults and kids are summed from each ticket line's product capacity
+  × qty. Summing the two into one scalar would offer a party of three adults a pass that admits two —
+  a "saving" that leaves someone at the gate. A swap card names the target's real capacity in the copy
+  ("covers 2 adults + up to 3 kids"), and with strict coverage it can honestly say that target admits
+  everyone the cart's tickets admit. With the current catalog this means three General Admission
+  tickets get no offer at all: nothing in the catalog covers three adults, so there is nothing
+  truthful to say.
+- **A swap never loses what the shopper entered.** A ticket → ticket swap carries the visit date
+  (`meta.visit`) and the off-peak basis (`custom.discountRate`) onto the replacement line, and quotes
+  the saving against the discounted price it will actually charge. A swap can only carry one date, so
+  tickets on more than one date get no swap offer rather than a swap that quietly drops one. A ticket →
+  membership swap does drop the dates — a membership admits any open day — and says so in the copy.
 - **Break-even is computed, never written.** `ceil(membershipPrice / ticketSubtotal)` → "pays for
   itself on your Nth visit". If that count exceeds `MAX_PLAUSIBLE_BREAK_EVEN` (4), the feature says
   nothing rather than making a weak claim.
-- **The donation is opt-in only.** Nothing is pre-selected, nothing is added to a total until the
-  shopper taps an amount, and a donation already in the cart shows an explicit Remove control. The
-  round-up amount is recomputed from the live non-donation subtotal each time the offer renders; once
-  added, the line is a plain "$N to the Owl Rehabilitation Fund" — a claim that stays true even if the
-  cart changes afterwards.
+- **The donation is opt-in only, and never edited behind the shopper's back.** Nothing is
+  pre-selected, nothing is added to a total until the shopper taps an amount, and a donation already
+  in the cart shows an explicit Remove control. The round-up amount is recomputed from the live
+  non-donation subtotal each time the offer renders; once added, the gift is **pinned** at the amount
+  the shopper actually tapped. Silently re-computing a charitable gift they already consented to is a
+  dark pattern, so when a later cart change means the order total is no longer a whole $5, the panel
+  says so and offers an explicit re-round the shopper can take or ignore. The round-up gift is tagged
+  `custom.source = "roundup"` so the panel can tell it from a tier gift, which promised nothing about
+  the total and so is never re-offered.
 - **Mocked demand is labelled as mocked.** `offpeak-date-nudge` derives demand from a documented
   deterministic hash of the ISO date (same date ⇒ same demand, forever) and says "demo demand data" in
   the UI. The off-peak discount it advertises is genuinely applied to the line price, so the total the

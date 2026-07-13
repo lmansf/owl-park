@@ -35,7 +35,9 @@ the catalog is hardcoded into HTML or JS. Each product has:
   category a tab in `index.html` and it becomes storefront-visible with no JS change.
 - `capacity` — `{ adults, kids }` on tickets and memberships: how many people the product admits.
   This is what lets `smart-cart-savings` compute coverage and membership break-even from catalog data
-  instead of hardcoding party sizes.
+  instead of hardcoding party sizes. Coverage is checked **per dimension** — a product is only offered
+  when its `adults` covers the cart's adults _and_ its `kids` covers the cart's kids. Summing the two
+  into one head count would offer a party of three adults a pass that admits two.
 - Display fields: `name`, `tagline`, `description`, `price`, `unit`, `emoji`, `accent` (a hex color
   used as the card's accent), and an optional `featured` flag.
 
@@ -64,7 +66,9 @@ A line is `{ id, qty }` — plus three optional fields that let a line carry mor
   summary (as text, never markup). Core never learns what a "gift" is.
 - `custom` — self-describing overrides: `discountRate` (a share off the _live_ catalog price, e.g. an
   off-peak ticket), `price` (the whole price of a line with no catalog product at all, e.g. a
-  donation), plus `name`/`emoji`/`unit`/`plu`/`kind`/`fixed` (`fixed` hides the quantity stepper).
+  donation), plus `name`/`emoji`/`unit`/`plu`/`kind`/`fixed`/`source` (`fixed` hides the quantity
+  stepper; `source` records which offer a line came from, e.g. `conservation-roundup` tags its
+  round-up gift `"roundup"` so it can offer a re-round without ever silently editing the amount).
 
 A cart persists indefinitely and so outlives the catalog it was priced against, which is why a
 discounted line stores the **discount basis**, never a discounted amount: `resolveLine()` re-applies
@@ -83,7 +87,10 @@ Features can't `import` `js/cart.js`, so a feature that _mutates_ the cart write
 Because they can't import `js/products.js` either, the pricing rules are published on
 **`window.OwlPark`** (`resolveLine`, `cartTotal`, `discountOf`). A feature that prices cart lines
 **must** go through those — re-deriving price from `product.price × qty` silently drops donation
-lines and ignores off-peak discounts, and its total then disagrees with the drawer's.
+lines and ignores off-peak discounts, and its total then disagrees with the drawer's. `js/products.js`
+publishes that API as an import side effect, and both page entry points (`js/main.js`,
+`js/manager.js`) import it, so it exists wherever features are activated; a feature should still guard
+for its absence and stay quiet rather than throw.
 
 Checkout is fully mocked: clicking **Checkout** renders an order summary and a confirmation with a
 generated order id, then clears the cart. There's no real payment backend — this is a demo.
