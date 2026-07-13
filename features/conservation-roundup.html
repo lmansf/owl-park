@@ -169,13 +169,16 @@
     /**
      * What the shopper is actually paying for the park, before any giving — priced by core's own cart
      * arithmetic (window.OwlPark, js/products.js), so the round-up is computed off exactly the total
-     * the drawer shows.
+     * the drawer shows. Null on a page that does not publish that API: a round-up that cannot be
+     * priced against the real total is not one worth asking for.
      */
     function purchaseSubtotal() {
+      var api = window.OwlPark;
+      if (!api || typeof api.cartTotal !== "function") return null;
       var lines = readCart().filter(function (line) {
         return !isDonation(line);
       });
-      return window.OwlPark.cartTotal(lines, products);
+      return api.cartTotal(lines, products);
     }
 
     /** The next whole $5 above what they're paying, and the gift that gets them there. */
@@ -213,6 +216,26 @@
         custom: custom,
       });
       writeCart(lines);
+    }
+
+    /**
+     * The cart can change between a round-up being offered and its button being tapped. The gift is
+     * recomputed from the cart as it is at the tap and applied only if it is still the amount the
+     * button named: a shopper consents to a number, not to whatever their cart later makes of it. If
+     * it has moved, nothing is given and the panel redraws with the round-up that now applies.
+     */
+    function giveRoundUp(promised) {
+      var subtotal = purchaseSubtotal();
+      if (subtotal === null || subtotal <= 0) {
+        refresh();
+        return;
+      }
+      var up = roundUp(subtotal);
+      if (Math.abs(up.gift - promised.gift) >= 0.005) {
+        refresh();
+        return;
+      }
+      setDonation(up.gift, "roundup");
     }
 
     function clearDonation() {
@@ -261,6 +284,11 @@
 
       var subtotal = purchaseSubtotal();
       var donation = currentDonation();
+
+      if (subtotal === null) {
+        panelEl.hidden = true;
+        return;
+      }
 
       if (subtotal <= 0 && !donation) {
         panelEl.hidden = true;
@@ -317,7 +345,7 @@
           reBtn.textContent =
             "Round up to " + money(reUp.target) + " and give " + money(reUp.gift);
           reBtn.addEventListener("click", function () {
-            setDonation(reUp.gift, "roundup");
+            giveRoundUp(reUp);
           });
           panelEl.appendChild(reBtn);
         }
@@ -344,7 +372,7 @@
         btn.textContent =
           "Round up to " + money(up.target) + " and give " + money(up.gift);
         btn.addEventListener("click", function () {
-          setDonation(up.gift, "roundup");
+          giveRoundUp(up);
         });
         panelEl.appendChild(btn);
       }
@@ -358,11 +386,14 @@
       );
     }
 
-    function sync() {
-      var serialized = localStorage.getItem(CART_KEY);
-      if (serialized === lastSerialized) return;
-      lastSerialized = serialized;
+    function refresh() {
+      lastSerialized = localStorage.getItem(CART_KEY);
       render();
+    }
+
+    function sync() {
+      if (localStorage.getItem(CART_KEY) === lastSerialized) return;
+      refresh();
     }
 
     /**

@@ -24,16 +24,30 @@ function readCart() {
   }
 }
 
+let dispatching = false;
+
+/**
+ * Persist the lines and announce them on the same channel a feature uses, so a core mutation (Add to
+ * Cart, the drawer's +/-/Remove, `clear`) reaches feature panels at once rather than up to one poll
+ * interval later — a panel acting on a cart it has not seen yet acts on the wrong one. A listener
+ * that writes the cart back re-enters here, so the announcement is not re-entrant: the nested write
+ * is stored, and the announcement already in flight carries it (every listener re-reads storage).
+ */
 function writeCart(lines) {
   localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(lines));
+  if (dispatching) return;
+  dispatching = true;
+  try {
+    window.dispatchEvent(new CustomEvent("owl-park-cart-changed"));
+  } finally {
+    dispatching = false;
+  }
 }
 
 /** The key a line is addressed by. A plain line is addressed by its product id, as before. */
 export function lineKey(line) {
   return line.key || line.id;
 }
-
-let keyCounter = 0;
 
 const listeners = new Set();
 
@@ -44,7 +58,8 @@ function notify() {
 
 // Features can't `import` this module (the single-file plugin contract forbids imports), so a feature
 // that mutates the cart writes localStorage directly and dispatches this event to make the page
-// re-render from the new lines.
+// re-render from the new lines. `writeCart()` raises it too, so every cart change — core's or a
+// feature's — travels the one channel and this is the single place a change is announced.
 window.addEventListener("owl-park-cart-changed", notify);
 
 export const Cart = {
@@ -53,39 +68,20 @@ export const Cart = {
     return readCart();
   },
 
-  /**
-   * Add a product to the cart. With no options this merges into the plain line for that product,
-   * exactly as before. With `meta` and/or `custom` it always creates a new, separately addressable
-   * keyed line.
-   */
-  addItem(productId, options) {
+  /** Add a product to the cart, merging into the plain line for that product. */
+  addItem(productId) {
     const lines = readCart();
-    if (!options || (!options.meta && !options.custom)) {
-      const existing = lines.find((l) => lineKey(l) === productId);
-      if (existing) {
-        existing.qty += 1;
-      } else {
-        lines.push({ id: productId, qty: 1 });
-      }
+    const existing = lines.find((l) => lineKey(l) === productId);
+    if (existing) {
+      existing.qty += 1;
     } else {
-      keyCounter += 1;
-      const line = {
-        id: productId,
-        qty: options.qty || 1,
-        key: `${productId}#${Date.now().toString(36)}${keyCounter}`,
-      };
-      if (options.meta) line.meta = options.meta;
-      if (options.custom) line.custom = options.custom;
-      lines.push(line);
+      lines.push({ id: productId, qty: 1 });
     }
     writeCart(lines);
-    notify();
   },
 
   removeItem(key) {
-    const lines = readCart().filter((l) => lineKey(l) !== key);
-    writeCart(lines);
-    notify();
+    writeCart(readCart().filter((l) => lineKey(l) !== key));
   },
 
   setQty(key, qty) {
@@ -98,27 +94,10 @@ export const Cart = {
       line.qty = qty;
       writeCart(lines);
     }
-    notify();
-  },
-
-  /** Attach — or, with a null payload, drop — one namespaced metadata entry on a line. */
-  setLineMeta(key, namespace, payload) {
-    const lines = readCart();
-    const line = lines.find((l) => lineKey(l) === key);
-    if (!line) return;
-    line.meta = line.meta || {};
-    if (payload == null) {
-      delete line.meta[namespace];
-    } else {
-      line.meta[namespace] = payload;
-    }
-    writeCart(lines);
-    notify();
   },
 
   clear() {
     writeCart([]);
-    notify();
   },
 
   totalItemCount() {

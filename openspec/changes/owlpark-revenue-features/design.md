@@ -35,9 +35,11 @@ Every field beyond `id`/`qty` is optional, so existing stored carts keep working
 
 **Why a `key` and not just `id`:** two gift memberships for different recipients, or two GA tickets on
 different dates, are different lines that must not merge. `lineKey(line) = line.key || line.id`.
-`addItem(id)` with no options still merges into the plain line for that product (unchanged behavior);
-`addItem(id, { meta, custom })` always creates a new keyed line. `removeItem`/`setQty` match on
-`lineKey`, which for a plain line _is_ the product id — so every existing caller is unaffected.
+`addItem(id)` still merges into the plain line for that product (unchanged behavior); keyed lines are
+produced by the features, which write `localStorage` directly because the plugin contract forbids them
+importing `js/cart.js`. `Cart` therefore grows no keyed-line constructor it would have no caller for —
+`removeItem`/`setQty` match on `lineKey`, which for a plain line _is_ the product id, so every existing
+caller is unaffected.
 
 **Why `custom` carries the pricing basis:** it keeps the price where the total is computed.
 `resolveLine()` (in `js/products.js`) returns `{ name, price, emoji, plu, unit, fixed }` for a line,
@@ -73,6 +75,14 @@ that mutates the cart writes `localStorage["owl-park-cart"]` directly — as exi
 do for reads — and then dispatches `new CustomEvent("owl-park-cart-changed")` on `window`.
 `js/cart.js` listens for that event and re-runs its `onChange` notification, so `js/main.js`
 re-renders. On the manager page (no cart module loaded) the event is simply unobserved — harmless.
+
+The bridge runs both ways: `writeCart()` in `js/cart.js` raises the same event, so a core mutation
+(Add to Cart, the drawer's +/-/Remove, `clear`) reaches feature panels at once rather than up to one
+700 ms poll later — a panel acting on a cart it has not seen yet acts on the wrong one. The dispatch
+is not re-entrant (a listener that writes the cart back is stored but does not raise a second event,
+and every listener re-reads storage anyway), so it cannot loop. It is a latency fix, not a guarantee:
+a panel whose button mutates the cart still recomputes its offer from a fresh cart read **at click
+time** and declines to apply an offer the cart no longer supports.
 
 Rejected alternative: exposing `window.OwlParkCart`. It would only exist on the storefront page, so
 features would need the `localStorage` fallback anyway; the event bridge keeps one write path.

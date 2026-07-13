@@ -125,9 +125,22 @@
       return null;
     }
 
+    /**
+     * Core's cart arithmetic (js/products.js), or null on a page that does not publish it. Every
+     * number here is priced through it, so without it the feature shows nothing rather than guessing.
+     */
+    function pricing() {
+      var api = window.OwlPark;
+      if (!api) return null;
+      if (typeof api.resolveLine !== "function") return null;
+      if (typeof api.discountOf !== "function") return null;
+      return api;
+    }
+
     /** A line's effective price, straight from core's cart arithmetic (window.OwlPark, js/products.js). */
     function linePrice(line, product) {
-      var resolved = window.OwlPark.resolveLine(line, products);
+      var api = pricing();
+      var resolved = api ? api.resolveLine(line, products) : null;
       return resolved ? resolved.price : product.price;
     }
 
@@ -136,9 +149,18 @@
       return !!(line.meta && line.meta.gift);
     }
 
+    /**
+     * Who a product admits, or null when the catalog does not say. A missing capacity is unknown, not
+     * zero: counting it as zero people would make every coverage check below vacuously true and offer
+     * a membership that does not admit the visitor whose ticket is in the cart.
+     */
     function capacityOf(product) {
-      var cap = product.capacity || {};
-      return { adults: cap.adults || 0, kids: cap.kids || 0 };
+      var cap = product.capacity;
+      if (!cap || typeof cap !== "object") return null;
+      var adults = typeof cap.adults === "number" ? cap.adults : 0;
+      var kids = typeof cap.kids === "number" ? cap.kids : 0;
+      if (adults < 0 || kids < 0) return null;
+      return { adults: adults, kids: kids };
     }
 
     /**
@@ -148,12 +170,14 @@
      */
     function covers(product, basket) {
       var cap = capacityOf(product);
+      if (!cap) return false;
       return cap.adults >= basket.adults && cap.kids >= basket.kids;
     }
 
     /** The smallest number of `product` that admits the whole basket, or null if no number ever does. */
     function qtyToCover(product, basket) {
       var cap = capacityOf(product);
+      if (!cap) return null;
       var qty = 0;
       if (basket.adults > 0) {
         if (cap.adults <= 0) return null;
@@ -189,6 +213,7 @@
       var mixedCarry = false;
       var dated = false;
       var discounted = false;
+      var unknownParty = false;
 
       for (var i = 0; i < lines.length; i++) {
         var line = lines[i];
@@ -200,6 +225,12 @@
         if (product.category !== "ticket") continue;
         var cap = capacityOf(product);
         subtotal += linePrice(line, product) * line.qty;
+        if (!cap) {
+          // The catalog does not say who this ticket admits, so the party in the cart is unknown and
+          // no offer below can honestly claim to cover it.
+          unknownParty = true;
+          cap = { adults: 0, kids: 0 };
+        }
         adults += cap.adults * line.qty;
         kids += cap.kids * line.qty;
         count += line.qty;
@@ -225,11 +256,12 @@
         mixedCarry: mixedCarry,
         dated: dated,
         discounted: discounted,
+        unknownParty: unknownParty,
       };
     }
 
     function coverageText(product) {
-      var cap = capacityOf(product);
+      var cap = capacityOf(product) || { adults: 0, kids: 0 };
       var parts = [];
       if (cap.adults > 0) {
         parts.push(cap.adults + (cap.adults === 1 ? " adult" : " adults"));
@@ -246,6 +278,7 @@
      */
     function membershipOffer(basket) {
       if (basket.subtotal <= 0 || basket.hasMembership) return null;
+      if (basket.unknownParty) return null;
 
       var best = null;
       for (var i = 0; i < products.length; i++) {
@@ -271,6 +304,7 @@
      */
     function swapOffer(basket) {
       if (basket.subtotal <= 0) return null;
+      if (basket.unknownParty) return null;
       if (basket.adults + basket.kids <= 0) return null;
       if (basket.mixedCarry) return null;
 
@@ -295,8 +329,9 @@
 
     /** A product's price under a carried off-peak basis, rounded by core so it matches what is charged. */
     function offpeakPrice(product, rate) {
-      if (rate === null) return product.price;
-      return Math.max(0, product.price - window.OwlPark.discountOf(product.price, rate));
+      var api = pricing();
+      if (rate === null || !api) return product.price;
+      return Math.max(0, product.price - api.discountOf(product.price, rate));
     }
 
     /**
@@ -354,6 +389,11 @@
       if (!panelEl || !products) return;
       panelEl.innerHTML = "";
 
+      if (!pricing()) {
+        panelEl.hidden = true;
+        return;
+      }
+
       var basket = readTicketBasket();
       var membership = membershipOffer(basket);
       var swap = swapOffer(basket);
@@ -404,7 +444,12 @@
               money(membership.product.price) +
               ")";
             btn.addEventListener("click", function () {
-              swapTicketsFor(membership.product.id, 1, null);
+              var offer = membershipOffer(readTicketBasket());
+              if (!offer || offer.product.id !== membership.product.id) {
+                refresh();
+                return;
+              }
+              swapTicketsFor(offer.product.id, 1, null);
             });
             el.appendChild(btn);
           }),
@@ -453,7 +498,18 @@
             btn.className = "scs-swap-btn";
             btn.textContent = "Swap and save " + money(swap.saving);
             btn.addEventListener("click", function () {
-              swapTicketsFor(swap.product.id, swap.qty, basket.carry);
+              var fresh = readTicketBasket();
+              var offer = swapOffer(fresh);
+              if (
+                !offer ||
+                offer.product.id !== swap.product.id ||
+                offer.qty !== swap.qty ||
+                offer.saving < swap.saving - 0.005
+              ) {
+                refresh();
+                return;
+              }
+              swapTicketsFor(offer.product.id, offer.qty, fresh.carry);
             });
             el.appendChild(btn);
           }),
@@ -463,11 +519,14 @@
       panelEl.hidden = !membership && !swap;
     }
 
-    function sync() {
-      var serialized = localStorage.getItem(CART_KEY);
-      if (serialized === lastSerialized) return;
-      lastSerialized = serialized;
+    function refresh() {
+      lastSerialized = localStorage.getItem(CART_KEY);
       render();
+    }
+
+    function sync() {
+      if (localStorage.getItem(CART_KEY) === lastSerialized) return;
+      refresh();
     }
 
     /**

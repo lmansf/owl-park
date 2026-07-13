@@ -15,7 +15,9 @@ urgency theatre.
 
 - Add five self-contained `features/<id>.html` modules following the existing single-file plugin
   contract (manifest + scoped `<style>` + markup + plain `<script>` IIFE, no imports, no build step):
-  - `smart-cart-savings` — membership break-even and better-value ticket swaps, computed live.
+  - `smart-cart-savings` — membership break-even and better-value ticket swaps, computed live. Only
+    the membership break-even half can fire against the shipped catalog; the ticket → ticket swap
+    half is live code but **dormant** until the catalog gains a second multi-person ticket.
   - `conservation-roundup` — optional, never pre-selected donation attach in the cart.
   - `visit-addons` — one-tap attach rail for Parking, Fast-Track, Keeper Experience, Souvenir Cup.
   - `gift-mode` — gift memberships with recipient/message/delivery date and a printable certificate.

@@ -84,7 +84,12 @@ the checkout summary all go through it, so no total can disagree with any line.
 Features can't `import` `js/cart.js`, so a feature that _mutates_ the cart writes
 `localStorage["owl-park-cart"]` directly and then dispatches `owl-park-cart-changed` on `window`;
 `js/cart.js` listens for that event and re-runs its `onChange` notification, so the page re-renders.
-Because they can't import `js/products.js` either, the pricing rules are published on
+`js/cart.js` raises that same event from its own `writeCart()`, so **every** cart change — core's
+`addItem`/`setQty`/`removeItem`/`clear` as much as a feature's — travels the one channel, and a
+feature panel sees a core mutation at once instead of up to one poll interval later. A panel whose
+button acts on the cart should still recompute its offer from a fresh cart read at click time and
+decline to apply an offer the cart no longer supports; the event closes the window, it doesn't remove
+the need to check. Because they can't import `js/products.js` either, the pricing rules are published on
 **`window.OwlPark`** (`resolveLine`, `cartTotal`, `discountOf`). A feature that prices cart lines
 **must** go through those — re-deriving price from `product.price × qty` silently drops donation
 lines and ignores off-peak discounts, and its total then disagrees with the drawer's. `js/products.js`

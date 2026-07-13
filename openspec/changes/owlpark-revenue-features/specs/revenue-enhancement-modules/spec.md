@@ -42,6 +42,13 @@ only when — the arithmetic favours the shopper.
 An offer SHALL only be made when the target **strictly covers** the cart: its `capacity.adults` is at
 least the cart's adults and its `capacity.kids` is at least the cart's kids, each summed from the
 ticket lines' product capacity × qty. The two dimensions SHALL NOT be summed into a single head count.
+A product with no `capacity` in the catalog admits an **unknown** party, never a party of zero.
+
+With the shipped catalog only the membership half of this module can fire: the Family Day Pass is the
+sole ticket admitting more than one person, and it never costs less than a cart it can cover, so no
+ticket → ticket swap is reachable today. The swap rule is kept because it is the general, data-driven
+one and activates the moment the catalog gains a second group ticket — but it ships **dormant**, and
+nobody should read the code as exercised.
 
 #### Scenario: Membership break-even is stated honestly
 
@@ -75,6 +82,19 @@ ticket lines' product capacity × qty. The two dimensions SHALL NOT be summed in
   threshold, or the target does not strictly cover the cart, or the cart holds no tickets
 - **THEN** the module shows no offer at all
 
+#### Scenario: A ticket whose capacity the catalog does not state suppresses every offer
+
+- **WHEN** the cart holds a `ticket` product carrying no `capacity`
+- **THEN** the module makes no offer at all, since the party in the cart is unknown and any coverage
+  check against it would pass vacuously — recommending a target that admits nobody it needs to
+
+#### Scenario: An offer is applied only if the cart still supports it
+
+- **WHEN** the cart changes between an offer being drawn and its button being tapped
+- **THEN** the module recomputes the offer from the cart as it is at the tap, applies it only if it is
+  still the same target on the same terms, and otherwise applies nothing and redraws with the offer
+  the cart now supports
+
 ### Requirement: conservation-roundup attaches an optional donation
 
 `conservation-roundup` SHALL offer a round-up donation computed from the live non-donation cart
@@ -100,6 +120,13 @@ non-catalog cart line included in the cart total and the checkout summary.
 - **THEN** the donation stays pinned at exactly the amount the shopper tapped, and the panel states the
   new order total and offers an explicit re-round the shopper can take or ignore — the gift changes
   only on a further tap
+
+#### Scenario: Only the amount the shopper agreed to is ever given
+
+- **WHEN** the cart changes between a round-up being offered and its button being tapped, so the gift
+  that would round the order is no longer the amount on the button
+- **THEN** no donation is added, and the panel redraws with the round-up the cart now calls for — a
+  shopper consents to a number, not to whatever their cart later makes of it
 
 ### Requirement: visit-addons offers one-tap contextual add-ons
 
@@ -128,6 +155,13 @@ gift certificate on the mocked checkout confirmation.
 - **WHEN** the shopper completes the gift panel and adds the membership
 - **THEN** the cart holds a line for that membership carrying the recipient, message and delivery date,
   shown as a caption on the cart line, distinct from any non-gift line of the same membership
+
+#### Scenario: One gift line is one membership for one recipient
+
+- **WHEN** a gift line is in the cart
+- **THEN** it carries `custom.fixed`, so the drawer offers no quantity stepper on it and it cannot be
+  raised to a quantity that charges for two memberships while yielding the one certificate its named
+  recipient gets; a second gift is a second line, added from the panel again with its own recipient
 
 #### Scenario: Certificate is printable at checkout
 

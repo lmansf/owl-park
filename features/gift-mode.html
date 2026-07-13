@@ -153,12 +153,19 @@
       return now.getFullYear() + "-" + m + "-" + d;
     }
 
+    /**
+     * A gift line is one membership for one named recipient, and it carries `custom.fixed` so the
+     * drawer draws no quantity stepper on it: raising it to 2 would charge for two memberships and
+     * still yield the one certificate this line's recipient gets. A second gift is a second line,
+     * added from the panel again with its own recipient.
+     */
     function addGiftLine(productId, gift) {
       var lines = readCart();
       lines.push({
         id: productId,
         key: newLineKey(productId),
         qty: 1,
+        custom: { fixed: true },
         meta: {
           gift: {
             recipient: gift.recipient,

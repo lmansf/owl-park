@@ -5,10 +5,11 @@
       Keeper Experience, Souvenir Owl Cup) with their own PLUs.
 - [x] 1.3 `js/products.js`: add `resolveLine(line, products)` — the single place a line's
       name/price/emoji/plu/unit is decided (catalog product, overridden by `line.custom`).
-- [x] 1.4 `js/cart.js`: optional `key`/`meta`/`custom` on lines; `addItem(id, options)` creates a keyed
-      line when options are given and merges as before when they are not; `removeItem`/`setQty` match on
-      line key (which equals the product id for plain lines); add `setLineMeta`; listen for the
-      `owl-park-cart-changed` window event and re-notify. Existing contract unchanged.
+- [x] 1.4 `js/cart.js`: optional `key`/`meta`/`custom` on lines (written by the features, which cannot
+      import the module); `removeItem`/`setQty` match on line key (which equals the product id for plain
+      lines); listen for the `owl-park-cart-changed` window event and re-notify, and raise that same
+      event from `writeCart()` so a core mutation reaches feature panels at once. Existing contract
+      unchanged.
 - [x] 1.5 `js/main.js`: render cart lines and the checkout summary through `resolveLine`; use the line
       key in the drawer's data attributes; render `meta.*.note` captions with `textContent`; hide the
       quantity stepper on `custom.fixed` lines; show only categories that have a filter tab in the
@@ -17,7 +18,10 @@
 ## 2. The five modules
 
 - [x] 2.1 `features/smart-cart-savings.html` (behavioral) — membership break-even + quantity-break swap
-      in the cart drawer; fires only when the arithmetic favours the shopper.
+      in the cart drawer; fires only when the arithmetic favours the shopper. Ships with the membership
+      half live and the ticket → ticket swap half **dormant**: the Family Day Pass is the only
+      multi-person ticket in the catalog and never undercuts a cart it covers, so no swap is reachable
+      today. The rule is the general data-driven one and activates on a second group ticket.
 - [x] 2.2 `features/conservation-roundup.html` (behavioral) — round-up + adopt-an-owl tiers; opt-in
       only; adds a non-catalog donation line.
 - [x] 2.3 `features/visit-addons.html` (behavioral) — one-tap add-on rail in the cart drawer, shown only

@@ -31,7 +31,12 @@ This file is the project's committed home for project-intrinsic agent knowledge:
 - Features can't import `js/cart.js` (no imports allowed at all) — those that need cart contents
   read `localStorage.getItem("owl-park-cart")` directly and poll on an interval to react to changes.
   A feature that WRITES the cart writes that key and then dispatches `owl-park-cart-changed` on
-  `window`; `js/cart.js` listens and re-notifies so the storefront re-renders. A cart line is
+  `window`; `js/cart.js` listens and re-notifies so the storefront re-renders. `js/cart.js`'s own
+  `writeCart()` raises that same event, so a core mutation reaches feature panels at once instead of
+  up to one poll interval later (the dispatch is guarded against re-entry, so it can't loop). It's a
+  latency fix, not a guarantee: a feature panel whose button mutates the cart must still recompute its
+  offer from a fresh cart read AT CLICK TIME and decline an offer the cart no longer supports. A cart
+  line is
   `{ id, qty }` plus optional `key` / `meta` / `custom` — `resolveLine()` (`js/products.js`) is the
   only place a line's price and display fields are decided, so every total agrees. A discounted line
   (off-peak) stores `custom.discountRate`, a basis re-applied to the live catalog price on every
