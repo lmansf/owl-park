@@ -254,13 +254,19 @@ cached on `window.__owlHost`, so when several features are pasted together only 
 runs, yet each must still carry the full adapter to work when pasted alone. It resolves the host's
 product rows (`H.rows()` → zoo `tr.pluRow[data-plu]` or Owl Park `.product-row`, skipping Angular
 `{{…}}` template rows), each row's name/price/id, the list container to observe (`H.grid()` →
-`#SalesChannelDetailRepeater` or `#catalog-grid`), the heading (`H.heading()`), and the utility dock
-(`H.dock()` → the zoo `.view-cart`/`#sub-header`, else Owl Park's `.header-actions`, else a shared
-floating `#owlpark-fallback-actions` bar that is built _only_ when no dock exists and self-prunes when
-empty). Two rules when you edit: (1) the adapter is duplicated verbatim, so change it in every feature
-at once — `grep -l "function owlHost" features/*.html`; (2) zoo product rows are `<tr>`s, so a
-decoration Owl Park positioned absolutely on a `.product-row` branches on `H.isPlu(row)` and mounts
-inline in the ticket's name cell instead. `data/products.json` is Owl-Park-only (it 404s on the zoo
+`#SalesChannelDetailRepeater` or `#catalog-grid`) and the heading (`H.heading()`). Header / utility
+buttons (dark-mode, high-contrast, park-sounds, park-map, compare) deliberately do **not** dock into a
+foreign store's own chrome: that store reveals its `<body>` and re-renders its header/heading template
+after load, which hid the buttons outright — the real bug behind "the pasted dark-mode button never
+appeared anywhere." Each instead mounts into Owl Park's stable `.header-actions` / `.catalog-heading`
+when present, else a self-owned floating `#owlpark-fallback-actions` bar — fixed, a direct child of
+`<body>` so it survives the host re-rendering its content, built only when no stable dock exists and
+self-pruned when empty — backed by a ~1s watchdog that re-creates the button if the host removes it
+(and `sticky-mini-cart-bar` re-lifts its fixed bar to a direct `<body>` child for the same reason).
+Two rules when you edit: (1) the adapter is duplicated verbatim, so change it in every feature at once —
+`grep -l "function owlHost" features/*.html`; (2) zoo product rows are `<tr>`s, so a decoration Owl
+Park positioned absolutely on a `.product-row` branches on `H.isPlu(row)` and mounts inline in the
+ticket's name cell instead. `data/products.json` is Owl-Park-only (it 404s on the zoo
 store), so features that keyed off it now derive from the live rows and never block on the fetch. The
 zoo ticket-selection page has no in-page cart, so `sticky-mini-cart-bar` shows a live Σ(qty × price)
 "selection" total read from the `input.PLUQtyTextBox` boxes; checkout / order-confirmation features

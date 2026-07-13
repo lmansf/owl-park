@@ -160,6 +160,7 @@
 <script>
   (function () {
     var buttonEl = null;
+    var watchdogId = null;
 
     // Host-agnostic mount point. Prefer the storefront's own header, but fall
     // back to a shared floating bar on <body> so this snippet still shows its
@@ -206,25 +207,41 @@
       updateLabel();
     }
 
-    function activate() {
-      // Dock into the zoo web store's sub-header first, then Owl Park's header,
-      // then a floating bar if pasted into any other page body.
-      var actions =
-        document.querySelector(".view-cart") ||
-        document.querySelector("#sub-header") ||
-        document.querySelector(".header-actions") ||
-        owlparkFallbackBar();
+    // Owl Park's header is stable, so dock there. On any OTHER store the header
+    // chrome may be hidden before the host reveals its body, re-rendered from a
+    // template after load, or styled unpredictably — so use the self-owned
+    // floating bar, which is a direct child of <body> (a sibling of the host's
+    // own content wrapper) and therefore survives the host re-rendering itself.
+    function resolveDock() {
+      return document.querySelector(".header-actions") || owlparkFallbackBar();
+    }
 
+    function ensureButton() {
+      if (buttonEl && buttonEl.isConnected) {
+        updateLabel();
+        return;
+      }
       buttonEl = document.createElement("button");
       buttonEl.type = "button";
       buttonEl.className = "owlpark-feat-dark-mode-btn";
       buttonEl.setAttribute("data-owlpark-feature", "dark-mode");
-      actions.prepend(buttonEl);
-      updateLabel();
       buttonEl.addEventListener("click", onClick);
+      resolveDock().prepend(buttonEl);
+      updateLabel();
+    }
+
+    function activate() {
+      ensureButton();
+      // Re-assert the control if the host removes or replaces it after load
+      // (body reveal, template re-render); cheap isConnected check.
+      watchdogId = setInterval(ensureButton, 1000);
     }
 
     function deactivate() {
+      if (watchdogId) {
+        clearInterval(watchdogId);
+        watchdogId = null;
+      }
       document.body.classList.remove("owlpark-dark-mode-active");
       if (buttonEl) {
         buttonEl.removeEventListener("click", onClick);

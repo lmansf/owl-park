@@ -99,22 +99,33 @@ This file is the project's committed home for project-intrinsic agent knowledge:
   copy together; `grep "function owlHost"`). It resolves per host: `H.rows()` (zoo `tr.pluRow[data-plu]`
   / owlpark `.product-row`, skipping Angular `{{…}}` template rows), `H.rowName/rowPrice/rowId`,
   `H.grid()` to observe (`#SalesChannelDetailRepeater` / `#catalog-grid`, watched with `subtree:true`),
-  `H.dock()` for utility buttons (`.view-cart`/`#sub-header` → `.header-actions` → a floating
-  `#owlpark-fallback-actions` bar built ONLY when no dock exists and self-pruned when empty, so each
-  real storefront is untouched), and `H.heading()` (`#ContentHeading` / `.catalog-heading`). Zoo rows
-  are `<tr>`, so row decorations branch on `H.isPlu(row)` (inline in the name cell) vs owlpark's
-  absolute ribbons; docked utility buttons use a solid dark-teal style so they stay legible on the zoo
-  sub-header (not only owlpark's teal header). `dark-mode`/`accessibility-contrast` carry a second CSS
-  block targeting the zoo classes.
+  and `H.heading()` (`#ContentHeading` / `.catalog-heading`). Zoo rows are `<tr>`, so row decorations
+  branch on `H.isPlu(row)` (inline in the ticket name cell) vs owlpark's absolute ribbons, re-applied by
+  the grid observer after the host re-renders the list. `dark-mode`/`accessibility-contrast` carry a
+  second CSS block targeting the zoo classes so the whole zoo page themes, not just owlpark's.
+- SHARP EDGE — header/utility buttons must NOT dock into a foreign store's own chrome. That store
+  reveals `<body>` (it ships `display:none`) and re-renders its template regions (`data-replace`/
+  `data-html`, the ASP.NET form) AFTER load, which hides or destroys anything parked in the
+  sub-header/heading — the symptom is "the pasted button never appeared anywhere." So the five utility
+  features (`dark-mode`, `accessibility-contrast`, `ambient-park-sounds`, `park-map-modal`,
+  `ticket-comparison-table`) each mount via their own `resolveDock()` = owlpark's stable
+  `.header-actions`/`.catalog-heading` ELSE the self-owned floating `#owlpark-fallback-actions` bar
+  (fixed, a DIRECT child of `<body>`, so it survives the host re-rendering its `#page`; built only
+  off-owlpark, self-pruned when empty), plus a 1s `setInterval` watchdog that re-creates the button if
+  the host later removes it (cleared in `deactivate`). Same reason: `sticky-mini-cart-bar` relifts its
+  fixed bar to a direct `<body>` child on activate. Buttons use a solid dark-teal style to stay legible
+  on that bar. (The adapter still exposes `H.dock()` for completeness, but the utility features
+  deliberately bypass the zoo sub-header via `resolveDock()`.)
 - `data/products.json` is Owl-Park-only (404s on the zoo store), so features that keyed off it
   (product-info-tooltips, membership-glow, ticket-comparison-table, sticky-mini-cart-bar) now derive
   from the live rows and never block on the fetch (`.catch`). The zoo `ViewItems` page has no in-page
   cart, so `sticky-mini-cart-bar` sums `input.PLUQtyTextBox` × price into a live "selection" total and
   its View button follows `#ctl00_ViewCartHyperLink`; checkout/order-confirmation features
   (copy-order-id, printable-receipt, confetti-checkout, add-to-calendar, …) have no anchor on that
-  ticket-selection page and correctly stay no-ops there. Verified with headless Chromium against the
-  saved `ViewItems.aspx` and against `index.html` (owlpark shows zero behavior change, never builds the
-  floating bar, leaves zero residue after disable-all).
+  ticket-selection page and correctly stay no-ops there. Verified with headless Chromium: the dark-mode
+  snippet pasted RAW into the saved `ViewItems.aspx` body shows its control on the floating bar
+  (regardless of paste position) and self-heals when the host wipes it; `index.html` shows zero behavior
+  change (buttons in `.header-actions`, floating bar never built, zero residue after disable-all).
 - Verifying mobile with chrome-devtools-axi: `emulate --viewport "375x667x2,mobile,touch"` must be
   re-applied **after** every `open`/reload, and `window.innerWidth` lies under emulation — read
   `document.documentElement.clientWidth` instead. Chrome injects no real safe-area insets, so test

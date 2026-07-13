@@ -103,6 +103,7 @@
     var compareBtn = null;
     var overlayEl = null;
     var products = null;
+    var watchdogId = null;
 
     // --- Host adapter -------------------------------------------------------
     // Resolves whichever storefront this snippet was pasted into, preferring the
@@ -311,21 +312,36 @@
         });
     }
 
-    function activate() {
-      // Dock beside the zoo web store's content heading first, then Owl Park's
-      // catalog heading, then a floating bar if pasted into any other page body.
-      var heading = H.heading() || H.dock();
+    // Owl Park's catalog heading is stable, so dock there. On any OTHER store the
+    // heading is a re-rendered template region, so use the self-owned floating
+    // bar (a direct child of <body>) which survives the host re-rendering itself.
+    function resolveDock() {
+      return document.querySelector(".catalog-heading") || H.fallbackBar();
+    }
 
+    function ensureButton() {
+      if (compareBtn && compareBtn.isConnected) return;
       compareBtn = document.createElement("button");
       compareBtn.type = "button";
       compareBtn.className = "owlpark-feat-ticket-comparison-table-btn";
       compareBtn.setAttribute("data-owlpark-feature", FEATURE_ID);
       compareBtn.textContent = "⚖️ Compare";
       compareBtn.addEventListener("click", openCompare);
-      heading.appendChild(compareBtn);
+      resolveDock().appendChild(compareBtn);
+    }
+
+    function activate() {
+      ensureButton();
+      // Re-assert the control if the host removes or replaces it after load
+      // (body reveal, template re-render); cheap isConnected check.
+      watchdogId = setInterval(ensureButton, 1000);
     }
 
     function deactivate() {
+      if (watchdogId) {
+        clearInterval(watchdogId);
+        watchdogId = null;
+      }
       removeOverlay();
       if (compareBtn) {
         compareBtn.removeEventListener("click", openCompare);

@@ -329,6 +329,13 @@
 
     function activate() {
       lastSnapshot = null;
+      // Lift the fixed bar to be a direct child of <body> so a host that
+      // re-renders its own content wrapper (e.g. the zoo store's #page) can't
+      // take the bar down with it. It is position:fixed, so this is invisible.
+      var barEl = document.getElementById("smcb-bar");
+      if (barEl && barEl.parentElement !== document.body) {
+        document.body.appendChild(barEl);
+      }
       fetch("data/products.json")
         .then(function (res) {
           if (!res.ok) throw new Error("HTTP " + res.status);
