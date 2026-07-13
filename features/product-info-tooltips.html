@@ -73,14 +73,14 @@
     pointer-events: none;
     z-index: 5;
   }
-  /* `pit-open` is the single open-state, toggled by the icon's click handler —
-     which is also what Enter/Space on the focused icon fires, so touch and
-     keyboard share one path. Focus must NOT open the panel on its own: a second
-     tap or keypress could not then close it, because the icon still holds focus.
-     Hover is a preview for the floating desktop panel only: it is gated on
-     (hover: hover), or iOS Safari's sticky emulated hover would likewise pin the
-     panel open after a tap, and it is deliberately not extended to the in-flow
-     mobile panel, where merely hovering would reflow the whole row. */
+  /* `pit-open` is the ONE open-state, and nothing else may show the panel. Every
+     opener — tap, Enter/Space on the focused icon, and the desktop pointer — is
+     an *input* that sets this class (see the script); none of them displays the
+     panel on its own. A CSS :hover or :focus rule that painted the panel
+     independently would be a second, disagreeing open-state: the icon still
+     holds the pointer or the focus right after a close, so the panel would stay
+     on screen while `aria-expanded` said "collapsed" — a toggle that never
+     closes. */
   .owlpark-feat-product-info-tooltips.pit-info-wrap.pit-open .pit-tooltip {
     visibility: visible;
     opacity: 1;
@@ -91,12 +91,6 @@
        fine print, or selecting it, would close the panel. The panel is a child of
        .pit-info-wrap, so this keeps the hover path intact. */
     pointer-events: auto;
-  }
-  @media (hover: hover) {
-    .owlpark-feat-product-info-tooltips.pit-info-wrap:hover .pit-tooltip {
-      visibility: visible;
-      opacity: 1;
-    }
   }
 
   @media (max-width: 560px) {
@@ -143,6 +137,12 @@
 
     var observer = null;
     var byId = {};
+    var hoverSuppressed = false;
+    /* Where the panel floats beside the icon and a pointer can rest on it. Below
+       561px the panel is an in-flow disclosure that reflows the row, so hover
+       must not open it there; without (hover: hover), iOS Safari's sticky
+       emulated hover would pin it open after a tap. */
+    var desktopHover = window.matchMedia("(hover: hover) and (min-width: 561px)");
 
     function applyToRows() {
       document
@@ -181,6 +181,21 @@
             var wasOpen = wrap.classList.contains("pit-open");
             closeAllTooltips();
             if (!wasOpen) setOpen(wrap, true);
+            /* The pointer is still resting on the icon after a click that closed
+               the panel, so hover would immediately re-open it and the click
+               would look inert. Stay closed until the pointer leaves. */
+            hoverSuppressed = wasOpen;
+          });
+          wrap.addEventListener("mouseenter", function () {
+            if (!desktopHover.matches || hoverSuppressed) return;
+            if (wrap.classList.contains("pit-open")) return;
+            closeAllTooltips();
+            setOpen(wrap, true);
+          });
+          wrap.addEventListener("mouseleave", function () {
+            hoverSuppressed = false;
+            if (!desktopHover.matches) return;
+            setOpen(wrap, false);
           });
 
           var titleLine = row.querySelector(".row-title-line");
@@ -219,6 +234,7 @@
     }
 
     function activate() {
+      hoverSuppressed = false;
       document.addEventListener("click", onDocumentClick);
       document.addEventListener("keydown", onDocumentKeydown);
       fetch("data/products.json")
