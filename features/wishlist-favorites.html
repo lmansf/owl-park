@@ -29,6 +29,21 @@
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
     color: #9aa5a4;
   }
+  /* The painted heart stays 33.6px so the row looks exactly as it always has;
+     the 44pt thumb target is a transparent centred expander instead. It still
+     overhangs the heart by ~5px a side and hit-tests over whatever the heart is
+     absolutely positioned over — inherent to a 44pt target on a small floating
+     icon, and not fixed here. */
+  .owlpark-feat-wishlist-favorites::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+  }
   .owlpark-feat-wishlist-favorites.is-favorited {
     color: #a8321f;
   }

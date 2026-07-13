@@ -17,26 +17,48 @@
     margin-left: 0.3rem;
     vertical-align: middle;
   }
+  /* The *visible* dot stays 21px so the product title line still looks like a
+     title line, and the 44pt thumb target is a transparent centred ::before
+     expander. Horizontally the expander still overhangs the dot by ~11.5px a
+     side and hit-tests over the adjacent title text, which is therefore not
+     selectable there — that is inherent to a 44pt target on an inline icon and
+     is not fixed here. What IS fixed is the vertical collision: the mobile
+     panel below clears the expander's lower overhang (see its margin-top), so
+     the target no longer reaches down over the panel it opens. */
   .owlpark-feat-product-info-tooltips .pit-info-icon {
-    width: 1.3rem;
-    height: 1.3rem;
+    position: relative;
+    width: 21px;
+    height: 21px;
+    padding: 0;
     border-radius: 50%;
     background: var(--cove-teal-dark, #0a4d55);
     color: white;
     border: none;
     font-size: 0.72rem;
     font-weight: 700;
-    cursor: help;
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
   }
+  .owlpark-feat-product-info-tooltips .pit-info-icon::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+  }
   .owlpark-feat-product-info-tooltips .pit-tooltip {
     visibility: hidden;
     opacity: 0;
     position: absolute;
-    top: 1.6rem;
+    /* 100% is the 21px icon wrapper, so anything under it must clear the dot —
+       a negative offset here paints the panel over the bottom of the icon. */
+    top: calc(100% + 6px);
     left: 0;
     width: 15rem;
     max-width: 60vw;
@@ -51,10 +73,58 @@
     pointer-events: none;
     z-index: 5;
   }
-  .owlpark-feat-product-info-tooltips.pit-info-wrap:hover .pit-tooltip,
-  .owlpark-feat-product-info-tooltips .pit-info-icon:focus + .pit-tooltip {
+  /* `pit-open` is the ONE open-state, and nothing else may show the panel. Every
+     opener — tap, Enter/Space on the focused icon, and the desktop pointer — is
+     an *input* that sets this class (see the script); none of them displays the
+     panel on its own. A CSS :hover or :focus rule that painted the panel
+     independently would be a second, disagreeing open-state: the icon still
+     holds the pointer or the focus right after a close, so the panel would stay
+     on screen while `aria-expanded` said "collapsed" — a toggle that never
+     closes. */
+  .owlpark-feat-product-info-tooltips.pit-info-wrap.pit-open .pit-tooltip {
     visibility: visible;
     opacity: 1;
+    /* An open panel is a persistent disclosure, not a transient hover tooltip, so
+       it has to take its own clicks: with pointer-events:none they fall through
+       to the product row beneath, where the document listener's
+       .closest('.pit-tooltip') dismiss guard can never match — so reading the
+       fine print, or selecting it, would close the panel. The panel is a child of
+       .pit-info-wrap, so this keeps the hover path intact. */
+    pointer-events: auto;
+  }
+
+  @media (max-width: 560px) {
+    /* The title line wraps, so the icon can sit anywhere along it and a floating
+       panel anchored to the icon runs off one edge or the other. On a phone the
+       panel stops floating altogether and becomes an in-flow disclosure inside
+       the row: `display: contents` on the wrapper promotes the icon and the
+       panel into flex items of .row-title-line, and a 100% flex-basis drops the
+       panel onto its own line directly under the title, pushing the rest of the
+       row down. Tapping reflows the row, which is honest and predictable —
+       unlike a panel that floats over whatever happens to be beneath it. */
+    .owlpark-feat-product-info-tooltips.pit-info-wrap {
+      display: contents;
+    }
+    .owlpark-feat-product-info-tooltips .pit-tooltip {
+      /* display:none, not visibility:hidden — an in-flow panel would otherwise
+         reserve its full height in the row while closed. */
+      display: none;
+      position: static;
+      flex: 0 0 100%;
+      width: 100%;
+      max-width: none;
+      /* The icon's ::before target hangs (44px - 21px) / 2 = 11.5px below the
+         dot and paints above this in-flow panel, so taps in the panel's first
+         few pixels would land on the icon and toggle it shut. Clear that
+         overhang with a real gap rather than shrinking the thumb target. */
+      margin-top: 14px;
+      box-shadow: none;
+      pointer-events: auto;
+      transition: none;
+    }
+    .owlpark-feat-product-info-tooltips.pit-info-wrap.pit-open .pit-tooltip {
+      display: block;
+    }
   }
 </style>
 
@@ -67,6 +137,11 @@
 
     var observer = null;
     var byId = {};
+    /* Where the panel floats beside the icon and a pointer can rest on it. Below
+       561px the panel is an in-flow disclosure that reflows the row, so hover
+       must not open it there; without (hover: hover), iOS Safari's sticky
+       emulated hover would pin it open after a tap. */
+    var desktopHover = window.matchMedia("(hover: hover) and (min-width: 561px)");
 
     function applyToRows() {
       document
@@ -84,14 +159,61 @@
               ? MEMBERSHIP_FINE_PRINT
               : TICKET_FINE_PRINT;
 
+          var panelId =
+            "pit-panel-" + row.getAttribute("data-product-id");
+
           var wrap = document.createElement("div");
           wrap.className = "owlpark-feat-product-info-tooltips pit-info-wrap";
           wrap.setAttribute("data-owlpark-feature", "product-info-tooltips");
           wrap.innerHTML =
-            '<button type="button" class="pit-info-icon" aria-label="Product details">i</button>' +
-            '<div class="pit-tooltip" role="tooltip">' +
+            '<button type="button" class="pit-info-icon" aria-label="Product details" aria-expanded="false" aria-controls="' +
+            panelId +
+            '">i</button>' +
+            '<div class="pit-tooltip" id="' +
+            panelId +
+            '">' +
             finePrint +
             "</div>";
+          var icon = wrap.querySelector(".pit-info-icon");
+          /* Both flags live per row, in this closure, so one icon's state cannot
+             leak into another's and it dies with the row when renderCatalog()
+             replaces the grid — a shared flag could be stranded by a row that is
+             removed while the pointer is still over it, since boundary events
+             are not reliably dispatched for a removed node. */
+          var openedByHover = false;
+          var hoverSuppressed = false;
+
+          icon.addEventListener("click", function (ev) {
+            ev.stopPropagation();
+            var wasOpen = wrap.classList.contains("pit-open");
+            closeAllTooltips();
+            if (!wasOpen) setOpen(wrap, true);
+            /* An explicit click (or Enter/Space, which fires click too) pins the
+               panel: only another click, Escape, or a click outside may close it.
+               The pointer is still resting on the icon after a click that closed
+               the panel, so hover would immediately re-open it and the click
+               would look inert. Stay closed until the pointer leaves. */
+            openedByHover = false;
+            hoverSuppressed = wasOpen;
+          });
+          wrap.addEventListener("mouseenter", function () {
+            if (!desktopHover.matches || hoverSuppressed) return;
+            if (wrap.classList.contains("pit-open")) return;
+            closeAllTooltips();
+            setOpen(wrap, true);
+            openedByHover = true;
+          });
+          wrap.addEventListener("mouseleave", function () {
+            hoverSuppressed = false;
+            if (!desktopHover.matches) return;
+            /* Hover only takes back what hover gave: a pinned panel must not be
+               dismissed by the pointer drifting off the icon on its way to the
+               panel's fine print. */
+            if (!openedByHover) return;
+            openedByHover = false;
+            setOpen(wrap, false);
+          });
+
           var titleLine = row.querySelector(".row-title-line");
           if (titleLine) {
             titleLine.appendChild(wrap);
@@ -102,7 +224,34 @@
         });
     }
 
+    function setOpen(wrap, open) {
+      wrap.classList.toggle("pit-open", open);
+      var icon = wrap.querySelector(".pit-info-icon");
+      if (icon) icon.setAttribute("aria-expanded", open ? "true" : "false");
+    }
+
+    function closeAllTooltips() {
+      document
+        .querySelectorAll(".pit-info-wrap.pit-open")
+        .forEach(function (el) {
+          setOpen(el, false);
+        });
+    }
+
+    function onDocumentClick(ev) {
+      var target = ev.target;
+      if (target && target.closest && target.closest(".pit-tooltip")) return;
+      closeAllTooltips();
+    }
+
+    function onDocumentKeydown(ev) {
+      if (ev.key !== "Escape" && ev.key !== "Esc") return;
+      closeAllTooltips();
+    }
+
     function activate() {
+      document.addEventListener("click", onDocumentClick);
+      document.addEventListener("keydown", onDocumentKeydown);
       fetch("data/products.json")
         .then(function (res) {
           return res.json();
@@ -127,6 +276,8 @@
         observer.disconnect();
         observer = null;
       }
+      document.removeEventListener("click", onDocumentClick);
+      document.removeEventListener("keydown", onDocumentKeydown);
       document
         .querySelectorAll('[data-owlpark-feature="product-info-tooltips"]')
         .forEach(function (el) {

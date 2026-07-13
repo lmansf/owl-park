@@ -13,11 +13,19 @@
   .owlpark-feat-membership-upsell-overlay {
     position: fixed;
     inset: 0;
+    /* inset: 0 sizes this against the *large* viewport on iOS Safari, so 100% of
+       it is taller than what you can see. 100dvh pins it to the visible one. */
+    height: 100dvh;
+    box-sizing: border-box;
     background: rgba(10, 30, 32, 0.45);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 65;
+    padding: calc(1rem + env(safe-area-inset-top, 0px))
+      calc(1rem + env(safe-area-inset-right, 0px))
+      calc(1rem + env(safe-area-inset-bottom, 0px))
+      calc(1rem + env(safe-area-inset-left, 0px));
     animation: owlpark-membership-upsell-fade-in 0.2s ease;
   }
 
@@ -35,9 +43,14 @@
     border-radius: var(--radius-lg);
     padding: 1.8rem;
     max-width: 380px;
-    width: 90vw;
+    width: 100%;
+    box-sizing: border-box;
     text-align: center;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    /* Cap to the overlay box — the visible viewport, minus its safe-area
+       padding — so a short phone screen can still reach the buttons below. */
+    max-height: 100%;
+    overflow-y: auto;
   }
 
   .owlpark-feat-membership-upsell-card .mu-icon {

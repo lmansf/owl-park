@@ -53,6 +53,20 @@ This file is the project's committed home for project-intrinsic agent knowledge:
   full-viewport `#cart-overlay` sits on top and silently absorbs clicks meant for buttons underneath
   it (no error — the click just lands on the overlay instead), which looks like a feature's button
   handler never fired.
+- Mobile/iOS invariants (see the `--safe-*` and `--tap` tokens at the top of `css/storefront.css`):
+  edge-anchored chrome pads itself with `env(safe-area-inset-*)`, tappable controls hold a 44px
+  floor, and the one text input (`promo-code-field`) stays at `font-size: 16px` or iOS Safari zooms
+  the page on focus. Feature files can't use the storefront's CSS vars (they must work pasted
+  standalone), so they call `env(...)` and `44px` literally. `.header-actions` is the header's
+  extension point — features `prepend()` buttons into it, so `css/storefront.css` sizes
+  `.header-actions > button, > a` centrally, and below 560px the strip scrolls horizontally with
+  the cart pinned (otherwise the sticky header grows unbounded with each feature enabled).
+- Verifying mobile with chrome-devtools-axi: `emulate --viewport "375x667x2,mobile,touch"` must be
+  re-applied **after** every `open`/reload, and `window.innerWidth` lies under emulation — read
+  `document.documentElement.clientWidth` instead. Chrome injects no real safe-area insets, so test
+  them by overriding the `--safe-*` custom properties on `:root` and asserting the layout shifts.
+  CSS edits need `chrome-devtools-axi stop` first: the HTTP cache otherwise serves the old
+  stylesheet across reloads and you will "fix" things that never changed.
 
 ## Maintaining this file
 

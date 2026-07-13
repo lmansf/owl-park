@@ -20,6 +20,7 @@
     font-weight: 700;
     cursor: pointer;
     margin-left: auto;
+    min-height: 44px;
   }
   .owlpark-feat-ticket-comparison-table-btn:hover {
     background: var(--cove-sand, #faf3e6);
@@ -27,12 +28,20 @@
   .owlpark-feat-ticket-comparison-table-overlay {
     position: fixed;
     inset: 0;
+    /* inset: 0 sizes this against the *large* viewport on iOS Safari, so its
+       bottom edge — and the safe-area padding on it — lands below what you can
+       see. 100dvh pins it to the visible viewport. */
+    height: 100dvh;
+    box-sizing: border-box;
     background: rgba(10, 30, 32, 0.45);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 65;
-    padding: 1rem;
+    padding: calc(1rem + env(safe-area-inset-top, 0px))
+      calc(1rem + env(safe-area-inset-right, 0px))
+      calc(1rem + env(safe-area-inset-bottom, 0px))
+      calc(1rem + env(safe-area-inset-left, 0px));
   }
   .owlpark-feat-ticket-comparison-table-card {
     background: white;
@@ -40,18 +49,30 @@
     padding: 1.4rem;
     max-width: 720px;
     width: 100%;
+    box-sizing: border-box;
     max-height: 80vh;
-    overflow: auto;
+    max-height: 80dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
   }
   .owlpark-feat-ticket-comparison-table-card h3 {
     margin-top: 0;
     color: var(--cove-teal-dark, #0a4d55);
   }
+  /* Wide content scrolls inside its own container: the table pans here while the
+     card keeps the heading and the Close button fixed on screen. */
+  .owlpark-feat-ticket-comparison-table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
   .owlpark-feat-ticket-comparison-table-card table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.85rem;
+    /* Five columns cannot be read in 340px, so let the table keep a legible
+       width and pan rather than crushing every column to unreadable slivers. */
+    min-width: 460px;
   }
   .owlpark-feat-ticket-comparison-table-card th,
   .owlpark-feat-ticket-comparison-table-card td {
@@ -72,6 +93,7 @@
     border-radius: 999px;
     font-weight: 700;
     cursor: pointer;
+    min-height: 44px;
   }
 </style>
 
@@ -118,8 +140,10 @@
       overlay.innerHTML =
         '<div class="owlpark-feat-ticket-comparison-table-card">' +
         "<h3>⚖️ Compare Tickets &amp; Memberships</h3>" +
+        '<div class="owlpark-feat-ticket-comparison-table-scroll">' +
         "<table><thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Unit</th><th>PLU</th></tr></thead>" +
         "<tbody></tbody></table>" +
+        "</div>" +
         '<button type="button" class="owlpark-feat-ticket-comparison-table-close">Close</button>' +
         "</div>";
       var tbody = overlay.querySelector("tbody");

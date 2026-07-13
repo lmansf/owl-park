@@ -12,9 +12,21 @@
 <style>
   .owlpark-feat-sticky-mini-cart-bar {
     position: fixed;
-    left: 50%;
-    bottom: 1.2rem;
-    transform: translate(-50%, 0);
+    /* Centred via auto margins rather than left:50% + translate(-50%): with
+       left:50% the shrink-to-fit width is capped at *half* the viewport, which
+       on a phone squeezed the running total out of the bar entirely.
+       The 1rem here is the screen-edge gutter, and it is on the offsets rather
+       than on a max-width so that it survives the widget rules below, which push
+       ONE side further in: whichever side they do not touch keeps this gutter
+       instead of falling back to the bare edge. The insets keep it off the notch
+       when landscape safe areas are non-zero. */
+    left: calc(1rem + env(safe-area-inset-left, 0px));
+    right: calc(1rem + env(safe-area-inset-right, 0px));
+    margin-inline: auto;
+    width: fit-content;
+    /* Lift clear of the iPhone home indicator, which would otherwise sit on
+       top of this bar and swallow taps on "View Cart". */
+    bottom: calc(1.2rem + env(safe-area-inset-bottom, 0px));
     background: var(--cove-ink, #1e2a2b);
     color: white;
     border-radius: 999px;
@@ -26,9 +38,78 @@
     font-size: 0.86rem;
     font-weight: 600;
     z-index: 40;
+    box-sizing: border-box;
+  }
+  /* font-size-adjuster (bottom-right, ~158px wide) and keyboard-shortcuts-helper
+     (bottom-left, 44px) pin controls into this same bottom band at the same
+     1.2rem offset with a higher z-index, so on a narrow screen this bar runs
+     underneath them and "View Cart" — at the bar's right end — lands under the
+     adjuster, which silently absorbs the tap. So end the bar short of whichever
+     of them is on the page and let the three share the band side by side. Moving
+     the bar up is not an option: every offset above this one lands in some other
+     module's band (the shortcuts panel opens at 4.9rem). Raising z-index is not
+     one either — it would just move the dead zone onto them.
+     At 375px with BOTH widgets enabled the two footprints leave ~135px between
+     them, which is about the width of the "View Cart" button alone, so the
+     running total ellipsizes down to nothing there. That is the trade: a
+     tappable primary action over a legible total, and the item count is still on
+     the header cart button. Only the widths where the footprints actually
+     collide are touched — desktop is untouched, where the centred fit-content
+     bar never reaches the corners anyway.
+     Note these rules match the other two features by class name, so renaming
+     either of their root elements silently brings the dead zone back. */
+  @media (max-width: 560px) {
+    body:has(.owlpark-feat-keyboard-shortcuts-helper-btn)
+      .owlpark-feat-sticky-mini-cart-bar {
+      left: calc(1.2rem + 44px + 0.5rem + env(safe-area-inset-left, 0px));
+    }
+    body:has(.owlpark-feat-font-size-adjuster)
+      .owlpark-feat-sticky-mini-cart-bar {
+      right: calc(1.2rem + 158px + 0.5rem + env(safe-area-inset-right, 0px));
+    }
+    /* Either widget alone already narrows the band past the bar's *min-content*
+       width, and `fit-content` floors there rather than at the band — the bar
+       would overflow and slide right back under the widget. Stretching to the
+       band gives the flex layout a definite width, and only then does the
+       summary's min-width: 0 let it shrink and ellipsize, which is what keeps
+       the button inside the band. */
+    body:has(.owlpark-feat-keyboard-shortcuts-helper-btn)
+      .owlpark-feat-sticky-mini-cart-bar,
+    body:has(.owlpark-feat-font-size-adjuster)
+      .owlpark-feat-sticky-mini-cart-bar {
+      width: auto;
+    }
+    /* Trim the bar's own horizontal padding in that same squeezed two-widget
+       case so the button still fits inside the rounded background instead of
+       spilling out of it. One widget alone leaves room to spare, so it keeps the
+       roomier default padding. */
+    body:has(.owlpark-feat-keyboard-shortcuts-helper-btn):has(
+        .owlpark-feat-font-size-adjuster
+      )
+      .owlpark-feat-sticky-mini-cart-bar {
+      padding-left: 0.6rem;
+      padding-right: 0.4rem;
+    }
+    body:has(.owlpark-feat-keyboard-shortcuts-helper-btn):has(
+        .owlpark-feat-font-size-adjuster
+      )
+      .owlpark-feat-sticky-mini-cart-bar
+      .smcb-view-btn {
+      padding-left: 0.6rem;
+      padding-right: 0.6rem;
+    }
   }
   .owlpark-feat-sticky-mini-cart-bar[hidden] {
     display: none;
+  }
+  .owlpark-feat-sticky-mini-cart-bar #smcb-summary {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /* A flex item's default min-width:auto is the min-content width of nowrap
+       text, so without this the item refuses to shrink and the ellipsis above
+       never renders — a long total overflows the bar's rounded background. */
+    min-width: 0;
   }
   .owlpark-feat-sticky-mini-cart-bar .smcb-view-btn {
     background: white;
@@ -38,6 +119,8 @@
     padding: 0.4rem 0.9rem;
     font-weight: 700;
     cursor: pointer;
+    min-height: 44px;
+    flex-shrink: 0;
   }
 </style>
 

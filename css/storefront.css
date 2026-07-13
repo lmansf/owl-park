@@ -10,11 +10,32 @@
   --radius-lg: 18px;
   --radius-md: 12px;
   --shadow-card: 0 6px 20px rgba(15, 60, 65, 0.1);
+
+  /* iOS notch / Dynamic Island / home-indicator insets. Read through vars so
+     every fixed or edge-anchored element can pad itself consistently; they
+     resolve to 0px on hardware without insets. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+
+  /* Smallest comfortable touch target (44pt, per the iOS HIG). */
+  --tap: 44px;
+
   font-size: 16px;
 }
 
 * {
   box-sizing: border-box;
+}
+
+html {
+  /* Backstop against sideways page scroll: feature modules inject arbitrary
+     markup into the header and product rows, and one stray wide child must not
+     make the whole storefront pan horizontally. `clip` (not `hidden`) because
+     `hidden` would turn the root into a scroll container and break the sticky
+     header. */
+  overflow-x: clip;
 }
 
 body {
@@ -23,6 +44,8 @@ body {
   background: var(--cove-sand);
   color: var(--cove-ink);
   line-height: 1.5;
+  /* Stop iOS Safari from inflating text when the phone is rotated. */
+  -webkit-text-size-adjust: 100%;
 }
 
 a {
@@ -37,10 +60,16 @@ a {
 .site-header {
   background: linear-gradient(120deg, var(--cove-teal), var(--cove-teal-dark));
   color: white;
-  padding: 1.1rem 1.5rem;
+  padding: calc(1.1rem + var(--safe-top)) calc(1.5rem + var(--safe-right)) 1.1rem
+    calc(1.5rem + var(--safe-left));
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.75rem;
+  /* Feature modules prepend their own buttons into .header-actions, so the
+     header has to survive an unknown number of children rather than push them
+     off-screen. */
+  flex-wrap: wrap;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
   position: sticky;
   top: 0;
@@ -55,6 +84,8 @@ a {
   font-size: 1.35rem;
   letter-spacing: 0.2px;
   text-decoration: none;
+  white-space: nowrap;
+  min-height: var(--tap);
 }
 
 .brand .brand-mark {
@@ -64,7 +95,19 @@ a {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+/* Feature modules prepend their own buttons here (dark mode, high contrast,
+   park map, ...). The header owns the ergonomics of whatever lands in it, so
+   every injected control gets a thumb-sized hit area without each feature file
+   having to know about it. */
+.header-actions > button,
+.header-actions > a {
+  min-height: var(--tap);
 }
 
 .header-link {
@@ -74,6 +117,9 @@ a {
   padding: 0.4rem 0.7rem;
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.35);
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
 }
 .header-link:hover {
   background: rgba(255, 255, 255, 0.12);
@@ -91,6 +137,7 @@ a {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-height: var(--tap);
   box-shadow: 0 3px 10px rgba(226, 102, 45, 0.4);
 }
 .cart-button:hover {
@@ -153,7 +200,8 @@ a {
 }
 
 .hero {
-  padding: 2.2rem 1.5rem 2rem;
+  padding: 2.2rem calc(1.5rem + var(--safe-right)) 2rem
+    calc(1.5rem + var(--safe-left));
   text-align: center;
   background: var(--cove-sand);
 }
@@ -177,6 +225,9 @@ a {
   justify-content: space-between;
   max-width: 1100px;
   margin: 0 auto;
+  /* No safe-area inset here: this sits inside <main>, which already pads itself
+     clear of the notch. Adding it again indents the heading twice in landscape
+     and drifts it right of the catalog it labels. */
   padding: 0 1.5rem;
 }
 
@@ -206,6 +257,7 @@ a {
   cursor: pointer;
   font-weight: 600;
   color: var(--cove-teal-dark);
+  min-height: var(--tap);
 }
 .tab-btn.active {
   background: var(--cove-teal);
@@ -216,7 +268,8 @@ a {
 main {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 1.5rem 1.5rem 4rem;
+  padding: 1.5rem calc(1.5rem + var(--safe-right)) 4rem
+    calc(1.5rem + var(--safe-left));
 }
 
 .catalog-list {
@@ -317,6 +370,7 @@ main {
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
+  min-height: var(--tap);
 }
 .add-to-cart-btn:hover {
   filter: brightness(1.07);
@@ -360,12 +414,52 @@ main {
   opacity: 0.9;
 }
 
+/* Every feature module that adds a header button makes the action row longer.
+   Wrapping them all would grow the *sticky* header without bound (it hit
+   296px — 44% of an iPhone SE screen — with every module enabled). Instead the
+   actions become one swipeable strip, with the cart pinned to the right edge
+   so the primary action is never scrolled out of reach. A phone held sideways
+   is 667px wide — past the phone breakpoint but with only ~375px of height to
+   spend — so it needs the strip too, guarded the same way as the hero banner. */
+@media (max-width: 560px), (orientation: landscape) and (max-height: 500px) {
+  .header-actions {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    /* Claim only the space left beside the brand and scroll inside it, so the
+       strip shares the brand's row rather than forcing a second 44px row. */
+    flex: 1 1 0;
+    min-width: 0;
+    justify-content: flex-start;
+    /* Room for the pinned cart button to overlay the strip as it scrolls. */
+    padding-right: 0.25rem;
+  }
+  .header-actions::-webkit-scrollbar {
+    display: none;
+  }
+  .header-actions > * {
+    flex: 0 0 auto;
+  }
+  .header-actions > .cart-button {
+    position: sticky;
+    right: 0;
+    margin-left: auto;
+  }
+}
+
 @media (max-width: 560px) {
+  /* A portrait phone is too narrow to share the line: the brand alone eats most
+     of it, so the strip drops to a full-width row of its own. */
+  .header-actions {
+    flex-basis: 100%;
+  }
   .row-header {
     flex-direction: column;
   }
   .row-actions {
-    align-items: flex-start;
+    align-items: center;
     width: 100%;
     flex-direction: row;
     justify-content: space-between;
@@ -374,6 +468,22 @@ main {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.4rem;
+  }
+  /* Give the primary action real thumb area now that it sits on its own line. */
+  .add-to-cart-btn {
+    padding: 0.7rem 1.5rem;
+  }
+  .product-row {
+    padding: 1.1rem 1rem;
+  }
+}
+
+/* Hover lift is meaningless on touch and leaves rows stuck in the hovered state
+   after a tap on iOS — that is about the input device, not the window width. */
+@media (hover: none) {
+  .product-row:hover {
+    transform: none;
+    box-shadow: var(--shadow-card);
   }
 }
 
@@ -396,8 +506,13 @@ main {
   position: fixed;
   top: 0;
   right: 0;
+  /* 100% of a fixed element resolves against the *large* viewport on iOS
+     Safari, which is taller than what you can actually see — the drawer's
+     footer (and its Checkout button) would sit behind the browser chrome.
+     100dvh tracks the visible viewport instead. */
   height: 100%;
-  width: min(420px, 92vw);
+  height: 100dvh;
+  width: min(420px, calc(100vw - 2.5rem));
   background: white;
   box-shadow: -12px 0 30px rgba(0, 0, 0, 0.18);
   transform: translateX(100%);
@@ -405,17 +520,19 @@ main {
   z-index: 41;
   display: flex;
   flex-direction: column;
+  padding-right: var(--safe-right);
 }
 .cart-drawer.open {
   transform: translateX(0);
 }
 
 .cart-header {
-  padding: 1.2rem 1.4rem;
+  padding: calc(1.2rem + var(--safe-top)) 1.4rem 1.2rem;
   border-bottom: 1px solid var(--cove-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.5rem;
 }
 .cart-header h2 {
   margin: 0;
@@ -424,15 +541,25 @@ main {
 .cart-close-btn {
   background: none;
   border: none;
-  font-size: 1.4rem;
+  font-size: 1.6rem;
   cursor: pointer;
   color: #666;
   line-height: 1;
+  /* Was a 25x24px hit area — unhittable with a thumb. */
+  min-width: var(--tap);
+  min-height: var(--tap);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: -0.5rem;
+  border-radius: 50%;
 }
 
 .cart-items {
   flex-grow: 1;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   padding: 1rem 1.4rem;
   display: flex;
   flex-direction: column;
@@ -482,21 +609,26 @@ main {
 .cart-line-controls {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   margin-top: 0.35rem;
+  flex-wrap: wrap;
 }
 
 .qty-btn {
-  width: 1.6rem;
-  height: 1.6rem;
-  border-radius: 6px;
+  /* Was 1.6rem (25px) square — the single worst tap target in the cart. */
+  width: var(--tap);
+  height: var(--tap);
+  border-radius: 8px;
   border: 1px solid var(--cove-border);
   background: var(--cove-sand);
   cursor: pointer;
   font-weight: 700;
+  font-size: 1.1rem;
+  line-height: 1;
+  flex-shrink: 0;
 }
 .qty-value {
-  min-width: 1.4rem;
+  min-width: 1.8rem;
   text-align: center;
   font-weight: 600;
 }
@@ -506,9 +638,12 @@ main {
   background: none;
   border: none;
   color: #b23b3b;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   cursor: pointer;
   text-decoration: underline;
+  min-height: var(--tap);
+  padding: 0 0.4rem;
+  flex-shrink: 0;
 }
 
 .cart-line-subtotal {
@@ -519,7 +654,11 @@ main {
 
 .cart-footer {
   border-top: 1px solid var(--cove-border);
-  padding: 1.1rem 1.4rem 1.4rem;
+  /* The Checkout button lives here, pinned to the bottom of the drawer — it
+     has to clear the home indicator or it can't be tapped. */
+  padding: 1.1rem 1.4rem calc(1.4rem + var(--safe-bottom));
+  flex-shrink: 0;
+  background: white;
 }
 
 .cart-total-row {
@@ -540,6 +679,7 @@ main {
   font-weight: 700;
   font-size: 1rem;
   cursor: pointer;
+  min-height: var(--tap);
 }
 .checkout-btn:hover:not(:disabled) {
   background: var(--cove-teal-dark);
@@ -553,11 +693,17 @@ main {
 .modal-overlay {
   position: fixed;
   inset: 0;
+  /* inset: 0 alone sizes this against the *large* viewport on iOS Safari, so a
+     card capped to it still ends up under the browser chrome — same trap as the
+     cart drawer. 100dvh pins the overlay to the visible viewport instead. */
+  height: 100dvh;
   background: rgba(10, 30, 32, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 60;
+  padding: calc(1rem + var(--safe-top)) calc(1rem + var(--safe-right))
+    calc(1rem + var(--safe-bottom)) calc(1rem + var(--safe-left));
 }
 .modal-overlay.hidden {
   display: none;
@@ -568,9 +714,17 @@ main {
   border-radius: var(--radius-lg);
   padding: 2rem;
   max-width: 420px;
-  width: 92vw;
+  width: 100%;
   text-align: center;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  /* A long order summary used to overflow a short phone viewport with no way
+     to reach the Done button: the card is centred, so it got clipped at both
+     ends. Cap it to the overlay's box (the visible viewport, minus the overlay's
+     safe-area padding) and let the card itself scroll. */
+  max-height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 .modal-card .confirm-icon {
   font-size: 2.6rem;
@@ -601,15 +755,17 @@ main {
   background: var(--cove-teal);
   color: white;
   border: none;
-  padding: 0.65rem 1.4rem;
+  padding: 0.65rem 1.6rem;
   border-radius: 999px;
   font-weight: 700;
   cursor: pointer;
+  min-height: var(--tap);
 }
 
 .site-footer {
   text-align: center;
-  padding: 2rem 1rem 3rem;
+  padding: 2rem calc(1rem + var(--safe-right)) calc(3rem + var(--safe-bottom))
+    calc(1rem + var(--safe-left));
   color: #8a9091;
   font-size: 0.85rem;
 }
@@ -617,5 +773,50 @@ main {
 @media (max-width: 480px) {
   .hero h1 {
     font-size: 1.7rem;
+  }
+  /* 220px of decorative banner is a third of an iPhone SE screen before the
+     shopper sees a single ticket. */
+  .hero-banner {
+    height: 150px;
+  }
+  .hero-banner .hb-moon {
+    width: 54px;
+    height: 54px;
+    top: 18px;
+  }
+  .hero {
+    padding: 1.6rem calc(1.25rem + var(--safe-right)) 1.4rem
+      calc(1.25rem + var(--safe-left));
+  }
+  .site-header {
+    padding-left: calc(1rem + var(--safe-left));
+    padding-right: calc(1rem + var(--safe-right));
+  }
+  main {
+    padding-left: calc(1rem + var(--safe-left));
+    padding-right: calc(1rem + var(--safe-right));
+  }
+  .catalog-heading {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  .cart-header,
+  .cart-items,
+  .cart-footer {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* A phone held sideways has ~390px of height to work with, so the decorative
+   banner has to give way. Guarded on max-height as well as orientation —
+   a desktop window is "landscape" too, and must keep the full banner. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .hero-banner {
+    height: 120px;
+  }
+  .hero {
+    padding: 1.2rem calc(1.25rem + var(--safe-right)) 1rem
+      calc(1.25rem + var(--safe-left));
   }
 }

@@ -26,12 +26,20 @@
   .owlpark-feat-order-history-log-overlay {
     position: fixed;
     inset: 0;
+    /* inset: 0 sizes this against the *large* viewport on iOS Safari, so its
+       bottom edge — and the safe-area padding on it — lands below what you can
+       see. 100dvh pins it to the visible viewport. */
+    height: 100dvh;
+    box-sizing: border-box;
     background: rgba(10, 30, 32, 0.45);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 65;
-    padding: 1rem;
+    padding: calc(1rem + env(safe-area-inset-top, 0px))
+      calc(1rem + env(safe-area-inset-right, 0px))
+      calc(1rem + env(safe-area-inset-bottom, 0px))
+      calc(1rem + env(safe-area-inset-left, 0px));
   }
   .owlpark-feat-order-history-log-card {
     background: white;
@@ -39,7 +47,9 @@
     padding: 1.4rem;
     max-width: 460px;
     width: 100%;
+    box-sizing: border-box;
     max-height: 70vh;
+    max-height: 70dvh;
     overflow: auto;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
   }
@@ -67,6 +77,7 @@
     border-radius: 999px;
     font-weight: 700;
     cursor: pointer;
+    min-height: 44px;
   }
 </style>
 

@@ -1,7 +1,8 @@
 .manager-main {
   max-width: 900px;
   margin: 0 auto;
-  padding: 2rem 1.5rem 4rem;
+  padding: 2rem calc(1.5rem + var(--safe-right)) 4rem
+    calc(1.5rem + var(--safe-left));
 }
 
 .manager-intro {
@@ -21,6 +22,7 @@
   display: flex;
   gap: 0.6rem;
   margin-bottom: 1.2rem;
+  flex-wrap: wrap;
 }
 .manager-toolbar button {
   border: 1px solid var(--cove-border);
@@ -31,6 +33,7 @@
   font-size: 0.85rem;
   cursor: pointer;
   color: var(--cove-teal-dark);
+  min-height: var(--tap);
 }
 .manager-toolbar button:hover {
   background: var(--cove-sand);
@@ -97,12 +100,14 @@
   color: #9a9384;
 }
 
-/* Toggle switch */
+/* Toggle switch. The track stays 44x24, but the *hit area* is the full 44x44
+   thumb minimum — the slider is inset vertically inside a taller box rather
+   than the box being shrunk to the artwork. */
 .switch {
   position: relative;
   display: inline-block;
   width: 44px;
-  height: 24px;
+  height: 44px;
   flex-shrink: 0;
 }
 .switch input {
@@ -113,7 +118,7 @@
 .switch-slider {
   position: absolute;
   cursor: pointer;
-  inset: 0;
+  inset: 10px 0;
   background-color: #ccc;
   transition: 0.2s;
   border-radius: 999px;
@@ -140,4 +145,27 @@
   text-align: center;
   color: #8a9091;
   padding: 3rem 0;
+}
+
+@media (max-width: 560px) {
+  .manager-main {
+    padding: 1.5rem calc(1rem + var(--safe-right))
+      calc(3rem + var(--safe-bottom)) calc(1rem + var(--safe-left));
+  }
+  /* The name/description column and the toggle fight for the same 343px.
+     Drop the status word under the name and keep the switch on the right. */
+  .feature-row {
+    padding: 0.9rem 1rem;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .feature-row-info {
+    flex: 1 1 60%;
+  }
+  .feature-status {
+    min-width: 0;
+    text-align: left;
+    order: 3;
+    flex-basis: 100%;
+  }
 }

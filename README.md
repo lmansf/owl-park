@@ -45,6 +45,43 @@ reloads, and totals are always recomputed from current cart lines rather than ca
 Checkout is fully mocked: clicking **Checkout** renders an order summary and a confirmation with a
 generated order id, then clears the cart. There's no real payment backend — this is a demo.
 
+## Mobile & touch
+
+The storefront is built to be usable one-handed on a phone: the whole shopper path (browsing,
+cart drawer, checkout) fits an iPhone-sized screen with no pinch-zoom and no sideways scrolling.
+Both pages set `viewport-fit=cover` so the page can paint under the notch, which means the layout
+is responsible for keeping content out from under it. Four rules hold that together, and any new
+markup — site or feature — is expected to follow them:
+
+- **Safe areas.** `css/storefront.css` exposes the iOS insets as `--safe-top` / `--safe-right` /
+  `--safe-bottom` / `--safe-left` (each an `env(safe-area-inset-*, 0px)`, so they collapse to `0px`
+  on hardware without a notch). Anything edge-anchored — the sticky header, the cart drawer and its
+  footer, modal overlays, the footer, floating feature widgets — adds the relevant inset to its own
+  padding or offset rather than sitting flush against the edge.
+- **44px tap targets.** `--tap` is the iOS HIG's 44pt minimum. Every tappable control holds it as a
+  floor. Where the artwork must stay small (the manager's toggle switch, the tooltip info dot, the
+  wishlist heart), the _hit area_ is grown to 44px around the visible mark instead of the mark being
+  enlarged.
+- **Dynamic viewport units.** `100%`/`100vh` on a fixed element resolves against iOS Safari's
+  _large_ viewport, which is taller than what's actually visible — the bottom of the element ends up
+  behind the browser chrome. Full-height layers (the cart drawer, every modal overlay) use `100dvh`,
+  and overlong cards cap to `max-height: 100%` and scroll internally so their buttons stay reachable.
+- **16px form fields.** iOS Safari zooms the page in on focus for any input with a smaller
+  `font-size`. The site's one text input (`promo-code-field`) stays at exactly `16px`.
+
+Two layout behaviors are worth knowing about because they're easy to mistake for bugs:
+
+- `.header-actions` is the header's extension point — features `prepend()` their buttons into it, so
+  `css/storefront.css` sizes `.header-actions > button, > a` centrally rather than each feature file
+  doing it. Below 560px (and on a short landscape phone) the strip becomes one horizontally
+  scrollable row with the cart button pinned to the right edge; otherwise the *sticky* header grows a
+  new 44px row per enabled feature and eats the screen.
+- Hover-only affordances get a touch path. On a phone, `product-info-tooltips` opens as an in-flow
+  panel under the product title — it pushes the row down instead of floating over the content below
+  it — while desktop keeps the familiar floating panel anchored at the icon. Rows also drop their
+  hover-lift under `@media (hover: none)`, where iOS would otherwise leave a tapped row stuck in the
+  hovered state.
+
 ## The `features/` plugin system
 
 Each enhancement is ONE self-contained file, `features/<feature-id>.html` — no separate manifest,
@@ -120,6 +157,22 @@ Purely static shells (headings, close buttons) can keep using `innerHTML`.
 Don't render that derived value until the fetch resolves — show nothing rather than a wrong number
 (see `sticky-mini-cart-bar`, which stays hidden, and logs to the console, if its fetch fails).
 
+**Gotcha for mobile ergonomics in a feature file:** a feature must keep working when pasted
+standalone into a page that has none of the storefront's CSS, so it can't lean on the `--safe-*` and
+`--tap` tokens from the [Mobile & touch](#mobile--touch) section — feature files spell the same rules
+out literally, writing `env(safe-area-inset-*, 0px)` and `44px` inline (see `promo-code-field`,
+`font-size-adjuster`, `sticky-mini-cart-bar`). The one thing a feature does _not_ have to do itself
+is size a button it prepends into `.header-actions`; the header sizes its own children.
+
+**Gotcha for bottom-anchored feature widgets:** three modules pin controls into the same bottom band
+at the same `1.2rem` offset — `keyboard-shortcuts-helper` (bottom-left), `font-size-adjuster`
+(bottom-right), and the centred `sticky-mini-cart-bar`. On a phone the mini-cart bar would otherwise
+run underneath the corner widgets, which sit above it and silently absorb taps meant for its "View
+Cart" button. It resolves this below 560px by ending short of whichever widget is present, using
+`body:has(.owlpark-feat-keyboard-shortcuts-helper-btn)` / `body:has(.owlpark-feat-font-size-adjuster)`
+selectors — so renaming either of those elements silently reintroduces the dead zone. A new
+bottom-anchored widget has to be fitted into this shared band deliberately.
+
 ## The 35 enhancements
 
 | Feature                 | Category   | Description                                                                                    |
@@ -142,7 +195,7 @@ Don't render that derived value until the fetch resolves — show nothing rather
 | Loyalty Points Estimate | behavioral | Estimated loyalty points earned, shown at checkout.                                            |
 | High-Contrast Mode      | utility    | High-contrast accessibility mode toggle for improved readability.                              |
 | Font Size Adjuster      | utility    | Floating control to increase or decrease site-wide font size.                                  |
-| Product Info Tooltips   | utility    | Info icons on product rows with detailed inclusion tooltips.                                   |
+| Product Info Tooltips   | utility    | Info icons on product rows with inclusion fine print — hover on desktop, tap on touch.         |
 | Printable Receipt       | utility    | Adds a print/download receipt button to the checkout confirmation.                             |
 | Wishlist Favorites      | behavioral | Heart icon on product rows to save favorites, persisted across visits.                         |
 | Promo Code Field        | behavioral | Promo code field in the cart that applies a mock percentage discount.                          |
@@ -181,6 +234,11 @@ navigate back) and the change is already live. Enabled/disabled state is persist
 `localStorage` (`owl-park-enabled-features` key) so it survives reloads. "Enable All" /
 "Disable All" / "Reset to Defaults" toolbar buttons are provided for quickly comparing states.
 
+The manager reflows at phone width: the toolbar wraps, and each feature row drops its status word
+onto its own line so the name and the toggle aren't fighting for the same 343px. `css/manager.css`
+reads the `--safe-*` and `--tap` tokens from `css/storefront.css`, which the manager page loads
+first — the toggle switch keeps its 44x24 track but takes a full 44x44 hit area.
+
 ## Project structure
 
 ```
@@ -196,15 +254,20 @@ js/main.js                 storefront page glue
 js/manager.js              manager page glue
 features/index.json        registry of feature filenames
 features/<feature-id>.html one self-contained file per enhancement
-openspec/                  OpenSpec proposal/specs/design/tasks for this project
+openspec/                  OpenSpec proposals/specs/designs/tasks for the specced changes
 ```
 
 ## OpenSpec
 
-The product/PLU model, cart, features plugin system, and manager UI were specced before
-implementation — see `openspec/changes/critter-cove-shop/` for the proposal, design doc, per-
-capability specs, and task breakdown. The 15 round-2 enhancement modules were specced the same
-way — see `openspec/changes/owlpark-feat15-round2/`.
+Some of the work here was specced before implementation, and those specs live under
+`openspec/changes/`: the product/PLU model, cart, features plugin system, and manager UI in
+`openspec/changes/critter-cove-shop/` (proposal, design doc, per-capability specs, task
+breakdown), and the 15 round-2 enhancement modules in `openspec/changes/owlpark-feat15-round2/`.
+
+Not every change goes through OpenSpec. The mobile/touch responsiveness pass, for example, shipped
+without one — its durable invariants are recorded in the "Mobile & touch" section above rather
+than in a change directory. Don't assume an `openspec/changes/` entry exists for a given behavior;
+the code and this README are the source of truth for anything not listed above.
 
 ## Continuous Integration
 
