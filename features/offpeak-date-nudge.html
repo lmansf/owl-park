@@ -9,120 +9,312 @@
   }
 </script>
 
-<style>
+<style id="owlpark-offpeak-date-nudge-style">
   .owlpark-feat-offpeak-date-nudge {
-    margin-top: 0.8rem;
-    border-top: 1px dashed #d8cfae;
-    padding-top: 0.7rem;
+    box-sizing: border-box;
+    margin-top: 0.85rem;
+    padding: 0.85rem 0.9rem;
+    background: #f7f8f7;
+    border: 1px solid rgba(17, 33, 31, 0.1);
+    border-radius: 16px;
+    color: #17211f;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.45;
   }
-  .owlpark-feat-offpeak-date-nudge .odn-open-btn {
+  .owlpark-feat-offpeak-date-nudge .odn-callout {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+  }
+  .owlpark-feat-offpeak-date-nudge .odn-glyph {
+    flex: 0 0 auto;
+    font-size: 1.05rem;
+    line-height: 1.2;
+    opacity: 0.9;
+  }
+  .owlpark-feat-offpeak-date-nudge .odn-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+  .owlpark-feat-offpeak-date-nudge .odn-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #17211f;
+  }
+  .owlpark-feat-offpeak-date-nudge .odn-save {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #67736f;
+  }
+  .owlpark-feat-offpeak-date-nudge .odn-save-amt {
+    font-weight: 600;
+    color: #0f6f7a;
+    background: rgba(15, 111, 122, 0.09);
+    border-radius: 999px;
+    padding: 0.05rem 0.4rem;
+  }
+  .owlpark-feat-offpeak-date-nudge .odn-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.7rem;
+  }
+  .owlpark-feat-offpeak-date-nudge .odn-open {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     min-height: 44px;
-    border: 1px solid #cfd8e8;
-    background: #f4f7fd;
-    color: #3a4d8f;
-    border-radius: 10px;
-    padding: 0.5rem 0.9rem;
-    font-weight: 700;
+    box-sizing: border-box;
+    padding: 0 1.15rem;
+    background: #0f6f7a;
+    color: #ffffff;
+    border: none;
+    border-radius: 999px;
+    font-family: inherit;
     font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.1px;
     cursor: pointer;
+    transition: all 0.16s cubic-bezier(0.2, 0.6, 0.2, 1);
+  }
+  .owlpark-feat-offpeak-date-nudge .odn-open:hover {
+    background: #0c5f69;
+    transform: translateY(-1px);
+  }
+  .owlpark-feat-offpeak-date-nudge .odn-open:active {
+    transform: translateY(1px);
+  }
+  .owlpark-feat-offpeak-date-nudge .odn-dismiss {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    box-sizing: border-box;
+    padding: 0 0.9rem;
+    background: transparent;
+    color: #67736f;
+    border: none;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.16s cubic-bezier(0.2, 0.6, 0.2, 1);
+  }
+  .owlpark-feat-offpeak-date-nudge .odn-dismiss:hover {
+    background: rgba(17, 33, 31, 0.05);
+    color: #17211f;
   }
   .owlpark-feat-offpeak-date-nudge .odn-panel {
-    margin-top: 0.7rem;
+    margin-top: 0.75rem;
   }
   .owlpark-feat-offpeak-date-nudge .odn-panel[hidden] {
     display: none;
   }
   .owlpark-feat-offpeak-date-nudge .odn-rail {
     display: flex;
-    gap: 0.45rem;
+    gap: 0.5rem;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    padding-bottom: 0.35rem;
+    padding-bottom: 0.4rem;
   }
   .owlpark-feat-offpeak-date-nudge .odn-day {
     flex: 0 0 auto;
-    min-width: 6.4rem;
+    min-width: 6.6rem;
     min-height: 44px;
-    border: 1px solid #e4ddca;
-    background: #fff;
+    box-sizing: border-box;
+    border: 1px solid rgba(17, 33, 31, 0.1);
+    background: #ffffff;
     border-radius: 12px;
-    padding: 0.45rem 0.6rem;
+    padding: 0.5rem 0.6rem;
     text-align: left;
     cursor: pointer;
-    line-height: 1.25;
+    line-height: 1.3;
+    font-family: inherit;
+    transition: all 0.16s cubic-bezier(0.2, 0.6, 0.2, 1);
   }
   .owlpark-feat-offpeak-date-nudge .odn-day-date {
     display: block;
-    font-size: 0.85rem;
-    font-weight: 800;
-    color: #2c2a26;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #17211f;
   }
   .owlpark-feat-offpeak-date-nudge .odn-day-demand {
     display: block;
     font-size: 0.72rem;
-    font-weight: 700;
+    font-weight: 500;
+    color: #67736f;
     white-space: nowrap;
   }
   .owlpark-feat-offpeak-date-nudge .odn-day-price {
     display: block;
-    font-size: 0.76rem;
-    color: #6d675c;
+    font-size: 0.78rem;
+    color: #67736f;
     white-space: nowrap;
   }
   .owlpark-feat-offpeak-date-nudge .odn-quiet {
-    border-color: #2f8f4e;
-    background: #f2f9f3;
+    border-color: rgba(15, 111, 122, 0.35);
+    background: rgba(15, 111, 122, 0.06);
   }
   .owlpark-feat-offpeak-date-nudge .odn-quiet .odn-day-demand {
-    color: #2f8f4e;
-  }
-  .owlpark-feat-offpeak-date-nudge .odn-steady .odn-day-demand {
-    color: #6d675c;
+    color: #0f6f7a;
+    font-weight: 600;
   }
   .owlpark-feat-offpeak-date-nudge .odn-busy .odn-day-demand {
-    color: #c9891b;
+    color: #b8791f;
   }
   .owlpark-feat-offpeak-date-nudge .odn-full .odn-day-demand {
-    color: #a8321f;
+    color: #c0341d;
   }
   .owlpark-feat-offpeak-date-nudge .odn-fine {
-    margin-top: 0.4rem;
+    margin: 0.55rem 0 0;
     font-size: 0.72rem;
-    color: #8a8478;
-    line-height: 1.35;
+    color: #67736f;
+    line-height: 1.4;
+  }
+  .owlpark-feat-offpeak-date-nudge :focus-visible {
+    outline: 2px solid #0f6f7a;
+    outline-offset: 2px;
   }
   @media (hover: hover) {
     .owlpark-feat-offpeak-date-nudge .odn-day:hover {
-      border-color: #3a4d8f;
+      border-color: rgba(15, 111, 122, 0.5);
+      transform: translateY(-1px);
+    }
+  }
+  @media (prefers-color-scheme: dark) {
+    .owlpark-feat-offpeak-date-nudge {
+      background: #1a2224;
+      border-color: rgba(255, 255, 255, 0.11);
+      color: #e9edec;
+    }
+    .owlpark-feat-offpeak-date-nudge .odn-title {
+      color: #e9edec;
+    }
+    .owlpark-feat-offpeak-date-nudge .odn-save,
+    .owlpark-feat-offpeak-date-nudge .odn-day-demand,
+    .owlpark-feat-offpeak-date-nudge .odn-day-price,
+    .owlpark-feat-offpeak-date-nudge .odn-fine {
+      color: #98a4a1;
+    }
+    .owlpark-feat-offpeak-date-nudge .odn-save-amt {
+      color: #5bc7cf;
+      background: rgba(91, 199, 207, 0.16);
+    }
+    .owlpark-feat-offpeak-date-nudge .odn-dismiss {
+      color: #98a4a1;
+    }
+    .owlpark-feat-offpeak-date-nudge .odn-dismiss:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #e9edec;
+    }
+    .owlpark-feat-offpeak-date-nudge .odn-day {
+      background: #12181a;
+      border-color: rgba(255, 255, 255, 0.11);
+    }
+    .owlpark-feat-offpeak-date-nudge .odn-day-date {
+      color: #e9edec;
+    }
+    .owlpark-feat-offpeak-date-nudge .odn-quiet {
+      border-color: rgba(91, 199, 207, 0.4);
+      background: rgba(91, 199, 207, 0.1);
+    }
+    .owlpark-feat-offpeak-date-nudge .odn-quiet .odn-day-demand {
+      color: #5bc7cf;
+    }
+    .owlpark-feat-offpeak-date-nudge .odn-busy .odn-day-demand {
+      color: #d69b4a;
+    }
+    .owlpark-feat-offpeak-date-nudge .odn-full .odn-day-demand {
+      color: #e07a6a;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .owlpark-feat-offpeak-date-nudge .odn-open,
+    .owlpark-feat-offpeak-date-nudge .odn-dismiss,
+    .owlpark-feat-offpeak-date-nudge .odn-day {
+      transition: none;
+    }
+    .owlpark-feat-offpeak-date-nudge .odn-open:hover,
+    .owlpark-feat-offpeak-date-nudge .odn-open:active,
+    .owlpark-feat-offpeak-date-nudge .odn-day:hover {
+      transform: none;
     }
   }
 </style>
 
 <script>
   (function () {
+    /* =========================================================================
+     * Off-Peak Date Nudge  ·  behavioral
+     * -------------------------------------------------------------------------
+     * WHAT   A quiet, frosted callout on each ticket row that nudges shoppers
+     *        toward cheaper off-peak (quiet) visit dates and lets them pick any
+     *        upcoming date from a demand-labelled picker. Quiet days carry a real
+     *        off-peak discount onto the cart line.
+     * HOW    Decorates Owl Park catalog ticket rows (#catalog-grid .product-row),
+     *        re-applied after every catalog re-render via a MutationObserver with
+     *        an idempotency guard. Prices/savings come from data/products.json
+     *        minus a discount computed by window.OwlPark.discountOf(price, rate).
+     *        Applying a date pushes (or bumps) a cart line keyed by ticket+date; a
+     *        quiet day stores custom.discountRate (a basis re-applied to the live
+     *        catalog price on every render, NEVER a frozen amount), writes the
+     *        owl-park-cart key, then dispatches owl-park-cart-changed. The discount
+     *        is recomputed from a live API read at click time.
+     * HOSTS  Owl Park only (keys off #catalog-grid .product-row + the ticket
+     *        category). No-ops with no catalog fetch, no ticket rows, or no
+     *        window.OwlPark pricing API.
+     * ===================================================================== */
+
     var FEATURE_ID = "offpeak-date-nudge";
     var CART_KEY = "owl-park-cart";
 
-    var DAYS_AHEAD = 14;
-    // A quiet day is discounted by this share of the ticket's catalog price. The saving shown on the
-    // chip and the price the line is actually added at both come from this one number.
-    var OFFPEAK_DISCOUNT_RATE = 0.12;
-
-    // MOCK DEMAND DATA. This is a demo storefront with no capacity service behind it. Demand is a
-    // deterministic function of the date itself (a hash of the ISO string, plus a weekend bias), so
-    // a given date always shows the same level, on every device, forever. It is not, and is never
-    // presented as, live availability.
-    var DEMAND_LEVELS = [
-      { key: "quiet", label: "quiet", discounted: true },
-      { key: "steady", label: "steady", discounted: false },
-      { key: "busy", label: "busy", discounted: false },
-      { key: "full", label: "nearly full", discounted: false },
-    ];
+    // ----- Configuration --------------------------------------------------
+    // Tunable values, safe to edit. The off-peak discount MECHANISM (a rate stored
+    // on the cart line as custom.discountRate and re-applied to the live catalog
+    // price on every render) must NOT change — only the rate itself.
+    var CONFIG = {
+      daysAhead: 14, // how many upcoming dates the picker offers
+      // A quiet day is discounted by this share of the ticket's catalog price. The
+      // saving shown on the callout/chip and the price the line is actually added
+      // at both derive from this one number; it is stored on the line as
+      // custom.discountRate (a basis), never a discounted absolute amount.
+      offpeakDiscountRate: 0.12,
+      // MOCK DEMAND DATA — demo storefront, no capacity service behind it. Demand
+      // is a deterministic function of the date itself (a hash of the ISO string,
+      // plus a weekend bias), so a given date always shows the same level, on every
+      // device, forever. It is never presented as live availability.
+      // `discounted: true` marks the off-peak tier.
+      demandLevels: [
+        { key: "quiet", label: "quiet", discounted: true },
+        { key: "steady", label: "steady", discounted: false },
+        { key: "busy", label: "busy", discounted: false },
+        { key: "full", label: "nearly full", discounted: false },
+      ],
+      copy: {
+        glyph: "📅", // decorative calendar glyph on the callout (aria-hidden)
+        title: "Quiet days cost less", // callout headline
+        savePrefix: "Save ", // savings line, wraps the emphasized figure
+        saveSuffix: " on quiet days",
+        saveNeutral: "Quiet days are discounted", // shown if no live price yet
+        openLabel: "Pick a visit date", // primary teal pill
+        dismissLabel: "Dismiss", // quiet ghost
+        savePer: "save ", // per-chip saving prefix ("· save $X")
+        fine:
+          "Quiet days cost less because they cost us less. Demand shown is demo data generated from the date — this storefront has no live capacity feed.",
+      },
+    };
 
     var products = null;
     var gridObserver = null;
-    // Bumped on every activate and deactivate: an in-flight catalog fetch whose generation no longer
-    // matches belongs to an activation that has since been torn down, and must touch nothing.
+    // Bumped on every activate and deactivate: an in-flight catalog fetch whose
+    // generation no longer matches belongs to an activation that has since been
+    // torn down, and must touch nothing.
     var generation = 0;
 
     function readCart() {
@@ -158,27 +350,28 @@
       }
       var day = date.getDay();
       var weekendBias = day === 0 || day === 6 ? 2 : 0; // weekends run hot at the park
-      var index = Math.min((hash % 3) + weekendBias, DEMAND_LEVELS.length - 1);
-      return DEMAND_LEVELS[index];
+      var index = Math.min((hash % 3) + weekendBias, CONFIG.demandLevels.length - 1);
+      return CONFIG.demandLevels[index];
     }
 
     /**
-     * The real discount for a date: 0 unless the date is quiet, and always whole dollars. The chip
-     * label, the cart note and the price the line is charged at all come from this one number, which
-     * is core's own rounding (js/products.js), so the advertised saving is exactly what is charged.
+     * The real discount for a date: 0 unless the date is quiet, and always whole
+     * dollars. The callout figure, the chip label, the cart note and the price the
+     * line is charged at all come from this one number, which is core's own
+     * rounding (js/products.js), so the advertised saving is exactly what is charged.
      */
     function discountFor(product, demand) {
       if (!demand.discounted) return 0;
       var api = window.OwlPark;
       if (!api || typeof api.discountOf !== "function") return 0;
-      return api.discountOf(product.price, OFFPEAK_DISCOUNT_RATE);
+      return api.discountOf(product.price, CONFIG.offpeakDiscountRate);
     }
 
     function upcomingDates() {
       var dates = [];
       var start = new Date();
       start.setHours(0, 0, 0, 0);
-      for (var i = 0; i < DAYS_AHEAD; i++) {
+      for (var i = 0; i < CONFIG.daysAhead; i++) {
         var date = new Date(start.getTime());
         date.setDate(start.getDate() + i);
         dates.push(date);
@@ -203,8 +396,9 @@
 
     function addDatedTicket(product, date, demand) {
       var discount = discountFor(product, demand);
-      // The note is stored, and a stored cart outlives the catalog it was priced against, so it
-      // carries no amount: the off-peak price itself is re-resolved from the live catalog on render.
+      // The note is stored, and a stored cart outlives the catalog it was priced
+      // against, so it carries no amount: the off-peak price itself is re-resolved
+      // from the live catalog on render.
       var note =
         "📅 Visit " +
         longDay(date) +
@@ -220,9 +414,10 @@
           visit: { date: isoOf(date), demand: demand.key, note: note },
         },
       };
-      if (discount > 0) line.custom = { discountRate: OFFPEAK_DISCOUNT_RATE };
+      if (discount > 0) line.custom = { discountRate: CONFIG.offpeakDiscountRate };
 
-      // Same ticket, same date => same line: bump its quantity instead of stacking a duplicate.
+      // Same ticket, same date => same line: bump its quantity instead of stacking
+      // a duplicate.
       var lines = readCart();
       for (var i = 0; i < lines.length; i++) {
         if ((lines[i].key || lines[i].id) === line.key) {
@@ -252,13 +447,24 @@
       var demandEl = document.createElement("span");
       demandEl.className = "odn-day-demand";
       demandEl.textContent =
-        demand.label + (discount > 0 ? " · save " + money(discount) : "");
+        demand.label + (discount > 0 ? " · " + CONFIG.copy.savePer + money(discount) : "");
 
       var priceEl = document.createElement("span");
       priceEl.className = "odn-day-price";
       priceEl.textContent = money(price);
 
       btn.append(dateEl, demandEl, priceEl);
+      btn.setAttribute(
+        "aria-label",
+        "Add " +
+          longDay(date) +
+          " visit, " +
+          demand.label +
+          (discount > 0 ? ", save " + money(discount) : "") +
+          ", " +
+          money(price),
+      );
+      // Recompute the discount from a live API read at click time, then apply.
       btn.addEventListener("click", function () {
         addDatedTicket(product, date, demand);
       });
@@ -270,42 +476,102 @@
       block.className = "owlpark-feat-offpeak-date-nudge";
       block.setAttribute("data-owlpark-feature", FEATURE_ID);
 
+      // --- Callout: glyph + headline + emphasized savings figure ---
+      var callout = document.createElement("div");
+      callout.className = "odn-callout";
+
+      var glyph = document.createElement("span");
+      glyph.className = "odn-glyph";
+      glyph.setAttribute("aria-hidden", "true");
+      glyph.textContent = CONFIG.copy.glyph;
+
+      var copy = document.createElement("div");
+      copy.className = "odn-copy";
+
+      var title = document.createElement("span");
+      title.className = "odn-title";
+      title.textContent = CONFIG.copy.title;
+
+      var save = document.createElement("span");
+      save.className = "odn-save";
+      save.setAttribute("role", "status");
+      save.setAttribute("aria-live", "polite");
+
+      var quiet = CONFIG.demandLevels.filter(function (d) {
+        return d.discounted;
+      })[0];
+      var best = quiet ? discountFor(product, quiet) : 0;
+      if (best > 0) {
+        save.appendChild(document.createTextNode(CONFIG.copy.savePrefix));
+        var amt = document.createElement("b");
+        amt.className = "odn-save-amt";
+        amt.textContent = money(best);
+        save.appendChild(amt);
+        save.appendChild(document.createTextNode(CONFIG.copy.saveSuffix));
+      } else {
+        // No live price yet: nudge without inventing a figure.
+        save.textContent = CONFIG.copy.saveNeutral;
+      }
+
+      copy.append(title, save);
+      callout.append(glyph, copy);
+
+      // --- Actions: single primary pill + quiet ghost dismiss ---
+      var panelId = "odn-panel-" + product.id;
+
+      var actions = document.createElement("div");
+      actions.className = "odn-actions";
+
       var openBtn = document.createElement("button");
       openBtn.type = "button";
-      openBtn.className = "odn-open-btn";
-      openBtn.textContent = "📅 Pick a visit date";
+      openBtn.className = "odn-open";
+      openBtn.textContent = CONFIG.copy.openLabel;
       openBtn.setAttribute("aria-expanded", "false");
-      block.appendChild(openBtn);
+      openBtn.setAttribute("aria-controls", panelId);
 
+      var dismissBtn = document.createElement("button");
+      dismissBtn.type = "button";
+      dismissBtn.className = "odn-dismiss";
+      dismissBtn.textContent = CONFIG.copy.dismissLabel;
+
+      actions.append(openBtn, dismissBtn);
+
+      // --- Panel: demand-labelled date rail + fine print ---
       var panel = document.createElement("div");
       panel.className = "odn-panel";
+      panel.id = panelId;
       panel.hidden = true;
 
       var rail = document.createElement("div");
       rail.className = "odn-rail";
+      rail.setAttribute("role", "group");
+      rail.setAttribute("aria-label", "Upcoming visit dates");
       upcomingDates().forEach(function (date) {
         rail.appendChild(dayButton(product, date));
       });
 
-      var fine = document.createElement("div");
+      var fine = document.createElement("p");
       fine.className = "odn-fine";
-      fine.textContent =
-        "Quiet days cost less because they cost us less. Demand shown is demo data generated from the date — this storefront has no live capacity feed.";
+      fine.textContent = CONFIG.copy.fine;
 
       panel.append(rail, fine);
-      block.appendChild(panel);
 
       openBtn.addEventListener("click", function () {
         panel.hidden = !panel.hidden;
         openBtn.setAttribute("aria-expanded", String(!panel.hidden));
       });
+      dismissBtn.addEventListener("click", function () {
+        block.remove();
+      });
 
+      block.append(callout, actions, panel);
       row.appendChild(block);
     }
 
     /**
-     * `renderCatalog()` replaces #catalog-grid's innerHTML on every tab switch, so the date block is
-     * re-applied after each render, guarded so a row that already has one is left alone.
+     * `renderCatalog()` replaces #catalog-grid's innerHTML on every tab switch, so
+     * the date block is re-applied after each render, guarded so a row that already
+     * has one is left alone.
      */
     function decorateRows() {
       if (!products) return;
@@ -327,8 +593,8 @@
 
     function activate() {
       var gen = ++generation;
-      // Every price and saving on a date chip is the catalog price minus a computed discount, so
-      // nothing renders until the catalog is in hand.
+      // Every price and saving on a date chip is the catalog price minus a computed
+      // discount, so nothing renders until the catalog is in hand.
       fetch("data/products.json")
         .then(function (res) {
           if (!res.ok) throw new Error("products.json: " + res.status);
