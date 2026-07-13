@@ -28,6 +28,15 @@ This file is the project's committed home for project-intrinsic agent knowledge:
   `data-owlpark-feature="<id>"` so `js/feature-loader.js`'s cleanup pass can catch it. Verified via
   automated enable-all/disable-all DOM audits (zero `[data-owlpark-feature]`/stray `<style>` residue
   after disabling) — re-run that style of check after touching the loader or any feature.
+- All 40 features follow a shared structure + visual standard (README's "Feature structure & visual
+  standard"): the behavior IIFE opens with a `WHAT`/`HOW`/`HOSTS` header block, then a commented
+  `var CONFIG` holding every tunable; the look is the sleek/minimal system (frosted near-white
+  surfaces, hairline `rgba(17,33,31,.10)` borders, ink `#17211f`/muted `#67736f` text, one teal
+  `#0f6f7a` accent, soft shadows, `prefers-color-scheme: dark` + `prefers-reduced-motion` blocks,
+  44px taps, focus-visible rings). `features/seasonal-banner.html` (strip) and
+  `features/park-map-modal.html` (dock button + modal) are the reference implementations — match them
+  when adding or restyling a feature; `node --check` only catches syntax, so drive a feature in a real
+  browser (activate → interact → deactivate) to catch runtime `ReferenceError`s and residue.
 - Features can't import `js/cart.js` (no imports allowed at all) — those that need cart contents
   read `localStorage.getItem("owl-park-cart")` directly and poll on an interval to react to changes.
   A feature that WRITES the cart writes that key and then dispatches `owl-park-cart-changed` on
