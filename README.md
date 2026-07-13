@@ -168,10 +168,14 @@ file contains, in order:
 - optional static markup — wrapped in an element carrying that same `.owlpark-feat-<id>` class,
   for features that need an always-present container (a banner, a floating widget).
 - a single plain `<script>` (no `type="module"`, no `import`/`export`) — an IIFE that defines
-  `activate()`/`deactivate()`, calls `activate()` itself immediately (so the snippet works if
+  `activate()`/`deactivate()`, calls `activate()` itself on load (so the snippet works if
   pasted standalone into any page, no orchestration required), and registers itself:
   `window.__owlParkFeatures["<id>"] = { activate, deactivate }`, so the Owl Park loader can call
-  `deactivate()`/`activate()` again later without re-injecting the whole snippet.
+  `deactivate()`/`activate()` again later without re-injecting the whole snippet. That self-call
+  is deferred to `DOMContentLoaded` while the document is still parsing, so a snippet pasted at the
+  **top of a page `<body>`** still renders correctly — its header/grid/cart mount points, which come
+  later in the body, exist by the time it runs. The loader always injects after parsing, so there
+  `activate()` still runs synchronously.
 
 `features/index.json` is the registry: a flat JSON array of feature filenames. The runtime loader
 (`js/feature-loader.js`) fetches each file's raw text once, parses out the manifest for discovery,

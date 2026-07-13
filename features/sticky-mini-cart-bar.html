@@ -465,7 +465,15 @@
       viewClickHandler = null;
     }
 
-    activate();
+    // Defer the first mount until the DOM is parsed, so this snippet
+    // renders correctly even when pasted at the top of a page <body>
+    // (host header / grid / cart below it do not exist yet at parse time).
+    // The loader injects after parse, so activate() still runs at once there.
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", activate, { once: true });
+    } else {
+      activate();
+    }
 
     window.__owlParkFeatures = window.__owlParkFeatures || {};
     window.__owlParkFeatures[FEATURE_ID] = {
