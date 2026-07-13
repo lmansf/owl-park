@@ -73,16 +73,13 @@
     pointer-events: none;
     z-index: 5;
   }
-  /* `pit-open` is the touch path: a phone has no hover, and iOS Safari does not
-     reliably focus a <button> on tap, so hover/focus alone left this tooltip
-     completely unreachable on an iPhone. Tapping the icon toggles the class.
-     Hover is gated on (hover: hover) and focus narrowed to :focus-visible, or
-     iOS Safari's sticky emulated hover and the focus a tap leaves behind would
-     keep the panel open and the second tap would never close it. */
-  .owlpark-feat-product-info-tooltips.pit-info-wrap.pit-open .pit-tooltip,
-  .owlpark-feat-product-info-tooltips.pit-info-wrap:not(.pit-dismissed)
-    .pit-info-icon:focus-visible
-    + .pit-tooltip {
+  /* `pit-open` is the single open-state, toggled by the icon's click handler —
+     which is also what Enter/Space on the focused icon fires, so touch and
+     keyboard share one path. Focus must NOT open the panel on its own: a second
+     tap or keypress could not then close it, because the icon still holds focus.
+     Hover is a desktop-only preview gated on (hover: hover), or iOS Safari's
+     sticky emulated hover would likewise pin the panel open after a tap. */
+  .owlpark-feat-product-info-tooltips.pit-info-wrap.pit-open .pit-tooltip {
     visibility: visible;
     opacity: 1;
   }
@@ -122,10 +119,7 @@
       pointer-events: auto;
       transition: none;
     }
-    .owlpark-feat-product-info-tooltips.pit-info-wrap.pit-open .pit-tooltip,
-    .owlpark-feat-product-info-tooltips.pit-info-wrap:not(.pit-dismissed)
-      .pit-info-icon:focus-visible
-      + .pit-tooltip {
+    .owlpark-feat-product-info-tooltips.pit-info-wrap.pit-open .pit-tooltip {
       display: block;
     }
   }
@@ -184,9 +178,6 @@
             closeAllTooltips();
             if (!wasOpen) setOpen(wrap, true);
           });
-          icon.addEventListener("blur", function () {
-            wrap.classList.remove("pit-dismissed");
-          });
 
           var titleLine = row.querySelector(".row-title-line");
           if (titleLine) {
@@ -200,7 +191,6 @@
 
     function setOpen(wrap, open) {
       wrap.classList.toggle("pit-open", open);
-      if (open) wrap.classList.remove("pit-dismissed");
       var icon = wrap.querySelector(".pit-info-icon");
       if (icon) icon.setAttribute("aria-expanded", open ? "true" : "false");
     }
@@ -221,15 +211,6 @@
 
     function onDocumentKeydown(ev) {
       if (ev.key !== "Escape" && ev.key !== "Esc") return;
-      var focused = document.activeElement;
-      var focusedWrap =
-        focused && focused.closest ? focused.closest(".pit-info-wrap") : null;
-      if (!focusedWrap && !document.querySelector(".pit-info-wrap.pit-open"))
-        return;
-      /* The icon keeps focus after Escape, so the :focus-visible open rule would
-         immediately re-show the panel; pit-dismissed suppresses it until focus
-         next leaves the icon. */
-      if (focusedWrap) focusedWrap.classList.add("pit-dismissed");
       closeAllTooltips();
     }
 
