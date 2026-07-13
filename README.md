@@ -164,6 +164,18 @@ out literally, writing `env(safe-area-inset-*, 0px)` and `44px` inline (see `pro
 `font-size-adjuster`, `sticky-mini-cart-bar`). The one thing a feature does _not_ have to do itself
 is size a button it prepends into `.header-actions`; the header sizes its own children.
 
+**Gotcha for header/heading-docked controls pasted into a foreign page:** a utility whose only tie to
+the storefront is _where its button mounts_ must still activate when neither `.header-actions` nor the
+catalog `.catalog-heading` exists — otherwise it silently dies the moment it's pasted into any other
+page body. `dark-mode`, `accessibility-contrast`, `ambient-park-sounds`, `park-map-modal`, and
+`ticket-comparison-table` resolve their mount as `document.querySelector(anchor) || owlparkFallbackBar()`,
+where the inline `owlparkFallbackBar()` helper lazily builds one shared floating bar
+(`#owlpark-fallback-actions`, fixed top-right, dark backdrop so the header-styled buttons stay legible,
+44px tap floor, created once and removed again once its last button leaves). The bar is built _only_
+when the preferred anchor is missing, so on the storefront itself nothing moves. Storefront-data
+features (product-row decorators, cart/checkout hooks) keep their existing graceful no-op instead — a
+floating button would have no product row or cart total to act on.
+
 **Gotcha for bottom-anchored feature widgets:** three modules pin controls into the same bottom band
 at the same `1.2rem` offset — `keyboard-shortcuts-helper` (bottom-left), `font-size-adjuster`
 (bottom-right), and the centred `sticky-mini-cart-bar`. On a phone the mini-cart bar would otherwise

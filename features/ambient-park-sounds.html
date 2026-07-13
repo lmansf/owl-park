@@ -34,6 +34,40 @@
     var chirpIntervalId = null;
     var playing = false;
 
+    // Host-agnostic mount point. Prefer the storefront's own header, but fall
+    // back to a shared floating bar on <body> so this snippet still shows its
+    // control when pasted anywhere in ANY page's body (not just Owl Park's).
+    function owlparkFallbackBar() {
+      var bar = document.getElementById("owlpark-fallback-actions");
+      if (bar) return bar;
+      bar = document.createElement("div");
+      bar.id = "owlpark-fallback-actions";
+      bar.setAttribute("data-owlpark-fallback", "actions");
+      bar.style.cssText =
+        "position:fixed;z-index:2147483000;display:flex;flex-wrap:wrap;gap:8px;" +
+        "align-items:center;justify-content:flex-end;max-width:calc(100vw - 20px);" +
+        "top:calc(10px + env(safe-area-inset-top, 0px));" +
+        "right:calc(10px + env(safe-area-inset-right, 0px));" +
+        "padding:8px 10px;background:rgba(10,77,85,0.96);border-radius:12px;" +
+        "box-shadow:0 8px 24px rgba(0,0,0,0.28);";
+      var barStyle = document.createElement("style");
+      barStyle.id = "owlpark-fallback-actions-style";
+      barStyle.setAttribute("data-owlpark-fallback", "actions");
+      barStyle.textContent =
+        "#owlpark-fallback-actions>button,#owlpark-fallback-actions>a" +
+        "{min-height:44px;box-sizing:border-box;}";
+      document.head.appendChild(barStyle);
+      document.body.appendChild(bar);
+      return bar;
+    }
+    function owlparkPruneFallbackBar() {
+      var bar = document.getElementById("owlpark-fallback-actions");
+      if (!bar || bar.children.length) return;
+      bar.remove();
+      var barStyle = document.getElementById("owlpark-fallback-actions-style");
+      if (barStyle) barStyle.remove();
+    }
+
     function updateLabel() {
       if (!buttonEl) return;
       buttonEl.textContent = playing ? "🔇 Stop Ambience" : "🔊 Park Sounds";
@@ -106,8 +140,8 @@
     }
 
     function activate() {
-      var actions = document.querySelector(".header-actions");
-      if (!actions) return;
+      var actions =
+        document.querySelector(".header-actions") || owlparkFallbackBar();
 
       buttonEl = document.createElement("button");
       buttonEl.type = "button";
@@ -126,6 +160,7 @@
         buttonEl.remove();
         buttonEl = null;
       }
+      owlparkPruneFallbackBar();
     }
 
     activate();
