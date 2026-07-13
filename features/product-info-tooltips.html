@@ -36,7 +36,7 @@
     border: none;
     font-size: 0.72rem;
     font-weight: 700;
-    cursor: help;
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -80,7 +80,9 @@
      iOS Safari's sticky emulated hover and the focus a tap leaves behind would
      keep the panel open and the second tap would never close it. */
   .owlpark-feat-product-info-tooltips.pit-info-wrap.pit-open .pit-tooltip,
-  .owlpark-feat-product-info-tooltips .pit-info-icon:focus-visible + .pit-tooltip {
+  .owlpark-feat-product-info-tooltips.pit-info-wrap:not(.pit-dismissed)
+    .pit-info-icon:focus-visible
+    + .pit-tooltip {
     visibility: visible;
     opacity: 1;
   }
@@ -121,7 +123,9 @@
       transition: none;
     }
     .owlpark-feat-product-info-tooltips.pit-info-wrap.pit-open .pit-tooltip,
-    .owlpark-feat-product-info-tooltips .pit-info-icon:focus-visible + .pit-tooltip {
+    .owlpark-feat-product-info-tooltips.pit-info-wrap:not(.pit-dismissed)
+      .pit-info-icon:focus-visible
+      + .pit-tooltip {
       display: block;
     }
   }
@@ -158,22 +162,31 @@
               ? MEMBERSHIP_FINE_PRINT
               : TICKET_FINE_PRINT;
 
+          var panelId =
+            "pit-panel-" + row.getAttribute("data-product-id");
+
           var wrap = document.createElement("div");
           wrap.className = "owlpark-feat-product-info-tooltips pit-info-wrap";
           wrap.setAttribute("data-owlpark-feature", "product-info-tooltips");
           wrap.innerHTML =
-            '<button type="button" class="pit-info-icon" aria-label="Product details">i</button>' +
-            '<div class="pit-tooltip" role="tooltip">' +
+            '<button type="button" class="pit-info-icon" aria-label="Product details" aria-expanded="false" aria-controls="' +
+            panelId +
+            '">i</button>' +
+            '<div class="pit-tooltip" id="' +
+            panelId +
+            '">' +
             finePrint +
             "</div>";
-          wrap
-            .querySelector(".pit-info-icon")
-            .addEventListener("click", function (ev) {
-              ev.stopPropagation();
-              var wasOpen = wrap.classList.contains("pit-open");
-              closeAllTooltips();
-              if (!wasOpen) wrap.classList.add("pit-open");
-            });
+          var icon = wrap.querySelector(".pit-info-icon");
+          icon.addEventListener("click", function (ev) {
+            ev.stopPropagation();
+            var wasOpen = wrap.classList.contains("pit-open");
+            closeAllTooltips();
+            if (!wasOpen) setOpen(wrap, true);
+          });
+          icon.addEventListener("blur", function () {
+            wrap.classList.remove("pit-dismissed");
+          });
 
           var titleLine = row.querySelector(".row-title-line");
           if (titleLine) {
@@ -185,11 +198,18 @@
         });
     }
 
+    function setOpen(wrap, open) {
+      wrap.classList.toggle("pit-open", open);
+      if (open) wrap.classList.remove("pit-dismissed");
+      var icon = wrap.querySelector(".pit-info-icon");
+      if (icon) icon.setAttribute("aria-expanded", open ? "true" : "false");
+    }
+
     function closeAllTooltips() {
       document
         .querySelectorAll(".pit-info-wrap.pit-open")
         .forEach(function (el) {
-          el.classList.remove("pit-open");
+          setOpen(el, false);
         });
     }
 
@@ -199,8 +219,23 @@
       closeAllTooltips();
     }
 
+    function onDocumentKeydown(ev) {
+      if (ev.key !== "Escape" && ev.key !== "Esc") return;
+      var focused = document.activeElement;
+      var focusedWrap =
+        focused && focused.closest ? focused.closest(".pit-info-wrap") : null;
+      if (!focusedWrap && !document.querySelector(".pit-info-wrap.pit-open"))
+        return;
+      /* The icon keeps focus after Escape, so the :focus-visible open rule would
+         immediately re-show the panel; pit-dismissed suppresses it until focus
+         next leaves the icon. */
+      if (focusedWrap) focusedWrap.classList.add("pit-dismissed");
+      closeAllTooltips();
+    }
+
     function activate() {
       document.addEventListener("click", onDocumentClick);
+      document.addEventListener("keydown", onDocumentKeydown);
       fetch("data/products.json")
         .then(function (res) {
           return res.json();
@@ -226,6 +261,7 @@
         observer = null;
       }
       document.removeEventListener("click", onDocumentClick);
+      document.removeEventListener("keydown", onDocumentKeydown);
       document
         .querySelectorAll('[data-owlpark-feature="product-info-tooltips"]')
         .forEach(function (el) {

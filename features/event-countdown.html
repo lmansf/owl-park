@@ -46,8 +46,8 @@
       top: auto;
       /* Bottom-anchored on phones, so it has to clear the home indicator. */
       bottom: calc(1.2rem + env(safe-area-inset-bottom, 0px));
-      left: 1rem;
-      right: 1rem;
+      left: calc(1rem + env(safe-area-inset-left, 0px));
+      right: calc(1rem + env(safe-area-inset-right, 0px));
       justify-content: center;
     }
   }
