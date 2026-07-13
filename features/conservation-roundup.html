@@ -185,15 +185,32 @@
       return Math.round(amount * 100) % (ROUND_TO * 100) === 0;
     }
 
+    /** The next whole $5 above `subtotal`, and the gift that gets an order there. */
+    function nextRound(subtotal) {
+      var target = (Math.floor(subtotal / ROUND_TO) + 1) * ROUND_TO;
+      return { target: target, gift: target - subtotal };
+    }
+
     /**
-     * The next whole $5 above what they're paying, and the gift that gets them there — or null when
-     * the amount is already whole. Advancing a round total to the next multiple is not a rounding
-     * correction, it is a flat $5 ask wearing rounding clothes; the tiers below make that ask plainly.
+     * The opening offer — or null when what they're paying is already whole. Advancing a round total
+     * to the next multiple is not a rounding correction, it is a flat $5 ask wearing rounding clothes;
+     * the tiers below make that ask plainly.
      */
     function roundUp(subtotal) {
       if (isRound(subtotal)) return null;
-      var target = (Math.floor(subtotal / ROUND_TO) + 1) * ROUND_TO;
-      return { target: target, gift: target - subtotal };
+      return nextRound(subtotal);
+    }
+
+    /**
+     * The offer for a shopper who already rounded up and then changed their cart. It is the ORDER
+     * total — what they'd actually pay — being off a whole $5 that breaks the promise they accepted,
+     * so a subtotal that happens to have landed on a whole $5 suppresses nothing here: the pinned gift
+     * is itself the remainder to round away. Null once the order total is whole again, however it got
+     * there. The gift is never applied without a tap; this only offers.
+     */
+    function reRound(subtotal, donationAmount) {
+      if (isRound(subtotal + donationAmount)) return null;
+      return nextRound(subtotal);
     }
 
     /**
@@ -229,13 +246,13 @@
      * button named: a shopper consents to a number, not to whatever their cart later makes of it. If
      * it has moved, nothing is given and the panel redraws with the round-up that now applies.
      */
-    function giveRoundUp(promised) {
+    function giveRoundUp(promised, recompute) {
       var subtotal = purchaseSubtotal();
       if (subtotal === null || subtotal <= 0) {
         refresh();
         return;
       }
-      var up = roundUp(subtotal);
+      var up = recompute(subtotal);
       if (!up || Math.abs(up.gift - promised.gift) >= 0.005) {
         refresh();
         return;
@@ -330,12 +347,11 @@
         // Their cart changed after they rounded up, so the total they were promised is no longer the
         // one they'd pay. The gift stays exactly as they left it; re-rounding is theirs to choose.
         var orderTotal = subtotal + donation.custom.price;
-        var reUp = subtotal > 0 ? roundUp(subtotal) : null;
-        if (
-          donation.custom.source === "roundup" &&
-          reUp &&
-          !isRound(orderTotal)
-        ) {
+        var reUp =
+          subtotal > 0 && donation.custom.source === "roundup"
+            ? reRound(subtotal, donation.custom.price)
+            : null;
+        if (reUp) {
           panelEl.appendChild(
             textLine(
               "cru-fine",
@@ -350,7 +366,10 @@
           reBtn.textContent =
             "Round up to " + money(reUp.target) + " and give " + money(reUp.gift);
           reBtn.addEventListener("click", function () {
-            giveRoundUp(reUp);
+            giveRoundUp(reUp, function (now) {
+              var pinned = currentDonation();
+              return reRound(now, pinned ? pinned.custom.price : 0);
+            });
           });
           panelEl.appendChild(reBtn);
         }
@@ -377,7 +396,7 @@
         btn.textContent =
           "Round up to " + money(up.target) + " and give " + money(up.gift);
         btn.addEventListener("click", function () {
-          giveRoundUp(up);
+          giveRoundUp(up, roundUp);
         });
         panelEl.appendChild(btn);
       }

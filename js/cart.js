@@ -25,22 +25,39 @@ function readCart() {
 }
 
 let dispatching = false;
+let restated = false;
+
+/** How many times one write may be re-announced before we stop and assume two listeners are feuding. */
+const MAX_RESTATEMENTS = 5;
 
 /**
  * Persist the lines and announce them on the same channel a feature uses, so a core mutation (Add to
  * Cart, the drawer's +/-/Remove, `clear`) reaches feature panels at once rather than up to one poll
- * interval later — a panel acting on a cart it has not seen yet acts on the wrong one. A listener
- * that writes the cart back re-enters here, so the announcement is not re-entrant: the nested write
- * is stored, and the announcement already in flight carries it (every listener re-reads storage).
+ * interval later — a panel acting on a cart it has not seen yet acts on the wrong one.
+ *
+ * The event dispatches synchronously, so a listener that writes the cart back re-enters here while
+ * earlier listeners have already run against the older lines. That nested write is stored and then
+ * re-announced once the dispatch in flight unwinds, rather than dropped — otherwise the drawer, whose
+ * listener runs first, would keep rendering lines a later listener has already replaced. Two listeners
+ * writing at each other would recur forever, so the restatements are capped.
  */
 function writeCart(lines) {
   localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(lines));
-  if (dispatching) return;
+  if (dispatching) {
+    restated = true;
+    return;
+  }
   dispatching = true;
   try {
-    window.dispatchEvent(new CustomEvent("owl-park-cart-changed"));
+    for (let round = 0; round <= MAX_RESTATEMENTS; round++) {
+      restated = false;
+      window.dispatchEvent(new CustomEvent("owl-park-cart-changed"));
+      if (!restated) return;
+    }
+    console.warn("Cart changes kept re-announcing; stopping to avoid a loop.");
   } finally {
     dispatching = false;
+    restated = false;
   }
 }
 

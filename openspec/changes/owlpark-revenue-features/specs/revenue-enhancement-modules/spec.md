@@ -109,7 +109,8 @@ non-catalog cart line included in the cart total and the checkout summary.
 
 #### Scenario: Nothing is rounded when there is nothing to round
 
-- **WHEN** the purchase subtotal is already an exact multiple of the rounding unit
+- **WHEN** the purchase subtotal is already an exact multiple of the rounding unit and no round-up has
+  been accepted
 - **THEN** no round-up button is shown — only the plainly labelled adopt-an-owl tiers — because advancing
   a whole total to the next multiple is a flat ask, not a rounding correction, and tapping a stale
   round-up whose subtotal has since become whole adds nothing
@@ -123,7 +124,9 @@ non-catalog cart line included in the cart total and the checkout summary.
 
 #### Scenario: A later cart change never edits the gift, and never leaves a stale promise
 
-- **WHEN** the cart changes after a round-up was accepted, so the order total is no longer a whole $5
+- **WHEN** the cart changes after a round-up was accepted, so the order total is no longer a whole $5 —
+  including when the purchase subtotal itself has become a whole $5, which suppresses the opening offer
+  but not this one, since the pinned gift is then the remainder that breaks the total
 - **THEN** the donation stays pinned at exactly the amount the shopper tapped, and the panel states the
   new order total and offers an explicit re-round the shopper can take or ignore — the gift changes
   only on a further tap

@@ -129,10 +129,13 @@ features would need the `localStorage` fallback anyway; the event bridge keeps o
   dark pattern, so when a later cart change means the order total is no longer a whole $5, the panel
   says so and offers an explicit re-round the shopper can take or ignore. The round-up gift is tagged
   `custom.source = "roundup"` so the panel can tell it from a tier gift, which promised nothing about
-  the total and so is never re-offered. A subtotal that is *already* a whole $5 gets no round-up button
-  at all: "round up to $105 and give $5" on an order of exactly $100 is a flat $5 ask wearing rounding
-  clothes. `roundUp()` returns null there, so the offer, the re-round and the click-time revalidation
-  all decline it together and only the honestly labelled tiers remain.
+  the total and so is never re-offered. A subtotal that is *already* a whole $5 gets no *opening*
+  round-up button at all: "round up to $105 and give $5" on an order of exactly $100 is a flat $5 ask
+  wearing rounding clothes. `roundUp()` returns null there, so the opening offer and its click-time
+  revalidation both decline it and only the honestly labelled tiers remain. The re-round is a separate
+  question and asks it of the **order total**, not the subtotal (`reRound()`): a pinned gift whose
+  order total is off a whole $5 is a broken promise even when the subtotal has since landed on one, so
+  the notice and the re-round still appear — the gift there is itself the remainder to round away.
 - **Mocked demand is labelled as mocked.** `offpeak-date-nudge` derives demand from a documented
   deterministic hash of the ISO date (same date ⇒ same demand, forever) and says "demo demand data" in
   the UI. The off-peak discount it advertises is genuinely applied to the line price, so the total the
